@@ -34,10 +34,10 @@ public class StandardQueryTools extends java.lang.Object {
             System.out.println("Location 3");
             StandardQueryTools sqt = new StandardQueryTools();
             sqt.UpdateStandardQueriesToDB(con);
-            //sqt.UpdateQuarterHourlyHistoricalRecords("20010430",con);
+            sqt.UpdateQuarterHourlyHistoricalRecords("20010430",con);
             System.out.println("Location 4");
             sqt.UpdateDailyLoadTimes("20010430", con);
-            //sqt.UpdateHourlyHistoricalRecords("20010430",con);
+            sqt.UpdateHourlyHistoricalRecords("20010430",con);
             System.out.println("Location 5");
         }catch (SQLException se){
             se.printStackTrace();
@@ -155,12 +155,13 @@ public class StandardQueryTools extends java.lang.Object {
             ht4.put(new Integer(2),tp);
             ht4.put(new Integer(3), new Integer(qid));
             System.out.println("Machine" + rs.getInt("Machine") + " tp " + tp + " qid " +qid);
-            ResultSet HistoricalRecordsPKRS = QueryService.executeRSQuery(LPConstants.ORACLE_getQHRPK,ht4,con);
+            PreparedStatement pstmt = QueryService.getPreparedStatementQuery(LPConstants.ORACLE_getQHRPK,ht4,con);
+            ResultSet HistoricalRecordsPKRS = pstmt.executeQuery();
 
-            
             if(!HistoricalRecordsPKRS.next()){
                 // This means we did not find the Unique key, and are therefore inserting
                 HistoricalRecordsPKRS.close();
+                pstmt.close();
                 Hashtable ht2 = new Hashtable();
                 ht2.put(new Integer(1),new Integer(rs.getInt("Machine")));
                 
@@ -189,6 +190,7 @@ public class StandardQueryTools extends java.lang.Object {
                 // This means we found the Unique Key, and are therefore Updating.
                 String hrpk = HistoricalRecordsPKRS.getString("HR_ID");
                 HistoricalRecordsPKRS.close();
+                pstmt.close();
                 Hashtable ht2 = new Hashtable();
                 ht2.put(new Integer(1),new Integer(rs.getInt("distSessions")));
                 ht2.put(new Integer(2),new Integer(rs.getInt("totalSessions")));
@@ -229,12 +231,14 @@ public class StandardQueryTools extends java.lang.Object {
             ht4.put(new Integer(1), new Integer(rs.getInt("machineid")));
             ht4.put(new Integer(2), new Integer(rs.getInt("pageid")));
             ht4.put(new Integer(3), rs.getString("timePeriod"));
-            ResultSet dltPKRS = QueryService.executeRSQuery(LPConstants.ORACLE_getDLTPK,ht4,con);
+            PreparedStatement pstmt = QueryService.getPreparedStatementQuery(LPConstants.ORACLE_getDLTPK,ht4,con);
+            ResultSet dltPKRS = pstmt.executeQuery();
 
             
             if(!dltPKRS.next()){
                 // This means we did not find the Unique key, and are therefore inserting
                 dltPKRS.close();
+                pstmt.close();
                 Hashtable ht2 = new Hashtable();
                 try{
                     ht2.put(new Integer(1),new java.sql.Date((LPConstants.yyyyMMddFormat.parse(rs.getString("timePeriod"))).getTime()));
@@ -261,6 +265,7 @@ public class StandardQueryTools extends java.lang.Object {
                 
                 String dltpk = dltPKRS.getString("dltid");
                 dltPKRS.close();
+                pstmt.close();
                 Hashtable ht2 = new Hashtable();
                 ht2.put(new Integer(1),new Integer(rs.getInt("alt")));
                 ht2.put(new Integer(2),new Integer(rs.getInt("maxlt")));
@@ -321,12 +326,14 @@ public class StandardQueryTools extends java.lang.Object {
             ht4.put(new Integer(1), new Integer(rs.getInt("Machine")));
                 ht4.put(new Integer(2),rs.getString("timePeriod"));
            ht4.put(new Integer(3), new Integer(qid));
-            ResultSet HistoricalRecordsPKRS = QueryService.executeRSQuery(LPConstants.ORACLE_getHRPK,ht4,con);
+            PreparedStatement pstmt = QueryService.getPreparedStatementQuery(LPConstants.ORACLE_getHRPK,ht4,con);
+            ResultSet HistoricalRecordsPKRS = pstmt.executeQuery() ;
 
             
             if(!HistoricalRecordsPKRS.next()){
                 // This means we did not find the Unique key, and are therefore inserting
                 HistoricalRecordsPKRS.close();
+                pstmt.close();
                 Hashtable ht2 = new Hashtable();
                 ht2.put(new Integer(1),new Integer(rs.getInt("Machine")));
                 System.out.println(rs.getString("timePeriod")+"0000");
@@ -351,6 +358,7 @@ public class StandardQueryTools extends java.lang.Object {
                 // This means we found the Unique Key, and are therefore Updating.
                 String hrpk = HistoricalRecordsPKRS.getString("HR_ID");
                 HistoricalRecordsPKRS.close();
+                pstmt.close();
                 Hashtable ht2 = new Hashtable();
                 ht2.put(new Integer(1),new Integer(rs.getInt("distSessions")));
                 ht2.put(new Integer(2),new Integer(rs.getInt("totalSessions")));

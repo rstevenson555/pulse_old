@@ -25,7 +25,6 @@ public class IndependentDataObject extends java.lang.Object {
         _type="na";
         _min="na";
         _max="na";
-    
     }
     
     protected Stack getStackValues(){
@@ -40,6 +39,14 @@ public class IndependentDataObject extends java.lang.Object {
     }
     public IndependentDataObject(Hashtable ht) {
         _values = ht;
+    }
+    
+    
+    public IndependentDataObject(Hashtable ht,String type) {
+        _values = ht;
+        _type = type;
+        _max = (String)_values.get(new Integer(_values.size()));
+        _min = (String)_values.get(new Integer(1));
     }
 
     public void addObject(Integer num,java.lang.String value) {
@@ -59,16 +66,23 @@ public class IndependentDataObject extends java.lang.Object {
     }
 
     public String getMax() {
-        return (String)_values.get(new Integer(_values.size()));
+        if(_max.equalsIgnoreCase("na"))
+            findMaxMin();
+        return _max;
     }
 
     public String getMin() {
-        return (String)_values.get(new Integer(1));
+        if(_min.equalsIgnoreCase("na"))
+            findMaxMin();
+        return _min;
     }
     
     public int getCount(){
         return _values.size();
     }
     
-
+    private void findMaxMin(){
+        _max = (String)_values.get(new Integer(_values.size()));
+        _min = (String)_values.get(new Integer(1));
+    }
 }

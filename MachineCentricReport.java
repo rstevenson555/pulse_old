@@ -106,6 +106,9 @@ public class MachineCentricReport implements ReportBuilder {
     private LinkedList getDataQueue(){
         LinkedList rowQueue = null;
         System.out.println("MCR.getDataQueue() Location 1");
+        if(!isValid()){
+            repair();
+        }
         if(isValid()){
         System.out.println("MCR.getDataQueue() Location 2");
             rowQueue = new LinkedList();
@@ -119,6 +122,11 @@ public class MachineCentricReport implements ReportBuilder {
             }
         }
         return rowQueue;
+    }
+    
+    boolean repair(){
+        System.out.println("Repair was called !!!!!!!!!!!");
+        return true;
     }
     
     

@@ -13,9 +13,9 @@ import java.text.*;
  */
 public class LPConstants extends java.lang.Object {
 
-    //*********************************************************************************************
+    //**********************************************************************************
     //Various date formatters used throughout the project.
-    //*********************************************************************************************
+    //**********************************************************************************
     public static final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
     public static final SimpleDateFormat logFileFormat = new SimpleDateFormat("MM/dd/yyyy, hh:mm:ss aa");
     public static final SimpleDateFormat MySQLTimeStampFormat = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -99,6 +99,23 @@ public class LPConstants extends java.lang.Object {
     
     public static final String ORACLE_addQueries = "INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) "+
                     " VALUES (QUERIESSEQUENCE.NEXTVAL,?,?,?)";
+    
+    
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    //Queries from the standard report Tables  
+    ////////////////////////////////////////////////////////////////////////////
+    
+    public static final String ORACLE_SessionsDataM = "SELECT hr.Time, hr.Distinct_Hits, hr.Total_Hits "+
+                   "From HistoricalRecords hr, Queries q, Machines m "+
+                   "Where m.Machine_ID=hr.Machine_ID AND "+
+                   "m.MachineName=? AND "+
+                   "hr.query_ID=q.query_ID AND "+
+                   "q.queryName=? AND "+
+                   "TO_CHAR(Time,'yyyymmdd')=? ";
+    
+    
     
     /*
  

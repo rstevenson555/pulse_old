@@ -17,7 +17,7 @@ import java.io.*;
  */ 
 public class Tester extends java.lang.Object {
 
-    /** Creates new Tester */
+    /** Creates new Tester */ 
     public Tester() {
     }
 
@@ -25,8 +25,85 @@ public class Tester extends java.lang.Object {
     * @param args the command line arguments
     */
     public static void main (String args[]) {
-
+        Hashtable sdht1 = new Hashtable();
+        Hashtable sdht2 = new Hashtable();
+        Stack ss = new Stack();
+        sdht1.put(new Integer(1), "NAS1");
+        sdht1.put(new Integer(2), "HourlySessions");
+        sdht1.put(new Integer(3), "20010430");
+        sdht2.put(new Integer(1), "NAS3");
+        sdht2.put(new Integer(2), "HourlySessions");
+        sdht2.put(new Integer(3), "20010430");
+        Stack sQueryObj = new Stack();
+        sQueryObj.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht1));
+        sQueryObj.add
+        QueryMacro qm = new QueryMacro(sQueryObj);
+        ReportObject ro = qm.getReportObject("Comp");
+        ss.add(ro);
+         ReportDirector rd = new ReportDirector();
+         rd.BuildCSVReports(ss.elements());
+     
+      
+    }   
+    
+     
+    
+    static void oldmain(){
+      // Test 1  
       String sql = "SELECT * from Pages";
+      Stack sss = new Stack();
+      sss.add(new QueryObject(sql,new Hashtable()));
+      QueryMacro qm = new QueryMacro(sss);
+      ReportObject ro =qm.getReportObject();
+     try{
+        PrintWriter pw = RecordRecords.getPrintWriter("Test");
+        ro.writeToFile(pw);
+     }catch (IOException ioe){
+         ioe.printStackTrace();
+     }
+     
+     
+     //Test 2
+     sss = new Stack();
+   /*  Hashtable ht1 = new Hashtable();
+     ht1.put(new Integer(1),new Integer(22));
+     sss.add(new QueryObject(LPConstants.MySQL_GetHourlyDataResultSet,new Hashtable()));
+     sss.add(new QueryObject(LPConstants.MySQL_CreateHourlyDataPerDay,ht1));
+     qm = new QueryMacro(sss);
+     ro = qm.getReportObject();
+     try{
+         PrintWriter pw = RecordRecords.getPrintWriter("HourlyReport");
+         ro.writeToFile(pw);
+     }catch (IOException ioe){
+         ioe.printStackTrace();
+     }
+     */
+     sss.add(new QueryObject(LPConstants.MySQL_CreateQuarterHourlyResultSet,new Hashtable()));
+     qm = new QueryMacro(sss);
+     ro = qm.getReportObject();
+     try{ 
+         PrintWriter pw = RecordRecords.getPrintWriter("QHR");
+         ro.writeToFile(pw); 
+     }catch (IOException ioe){
+         ioe.printStackTrace();
+     }
+        
+        
+     
+        
+        
+    }
+
+    
+    
+            //
+     //
+     //  Not so old main
+     //  but old non the less
+     //
+     //
+    static void notSoOldMain(){
+        String sql = "SELECT * from Pages";
       Stack sss = new Stack();
       Stack ss = new Stack();
       Stack ts = new Stack();      
@@ -85,55 +162,6 @@ public class Tester extends java.lang.Object {
       ReportDirector rd = new ReportDirector();
       rd.BuildCSVReports(ss.elements());
       
-      
-    }  
-    
-     
-    
-    static void oldmain(){
-      // Test 1  
-      String sql = "SELECT * from Pages";
-      Stack sss = new Stack();
-      sss.add(new QueryObject(sql,new Hashtable()));
-      QueryMacro qm = new QueryMacro(sss);
-      ReportObject ro =qm.getReportObject();
-     try{
-        PrintWriter pw = RecordRecords.getPrintWriter("Test");
-        ro.writeToFile(pw);
-     }catch (IOException ioe){
-         ioe.printStackTrace();
-     }
-     
-     
-     //Test 2
-     sss = new Stack();
-   /*  Hashtable ht1 = new Hashtable();
-     ht1.put(new Integer(1),new Integer(22));
-     sss.add(new QueryObject(LPConstants.MySQL_GetHourlyDataResultSet,new Hashtable()));
-     sss.add(new QueryObject(LPConstants.MySQL_CreateHourlyDataPerDay,ht1));
-     qm = new QueryMacro(sss);
-     ro = qm.getReportObject();
-     try{
-         PrintWriter pw = RecordRecords.getPrintWriter("HourlyReport");
-         ro.writeToFile(pw);
-     }catch (IOException ioe){
-         ioe.printStackTrace();
-     }
-     */
-     sss.add(new QueryObject(LPConstants.MySQL_CreateQuarterHourlyResultSet,new Hashtable()));
-     qm = new QueryMacro(sss);
-     ro = qm.getReportObject();
-     try{ 
-         PrintWriter pw = RecordRecords.getPrintWriter("QHR");
-         ro.writeToFile(pw); 
-     }catch (IOException ioe){
-         ioe.printStackTrace();
-     }
-        
-        
-        
-        
-        
     }
     static void display(ResultSet rs) throws SQLException {
         System.out.println("Displaying the result set");

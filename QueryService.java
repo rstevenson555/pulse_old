@@ -48,10 +48,30 @@ public class QueryService extends Object {
         }
         //System.out.println("Location 6");
             ResultSet rs = pstmp.executeQuery();
-            
+            //pstmp.close();
             return rs;
         
     }
+    
+    public static PreparedStatement getPreparedStatementQuery(String Query, java.util.Hashtable hs, Connection con) throws SQLException{
+        //System.out.println("Location 1");
+        PreparedStatement pstmp = con.prepareStatement(Query);
+        //System.out.println("Location 2");
+        Enumeration ekeys = hs.keys();
+        //System.out.println("Location 3");
+        if(ekeys != null){ 
+        //System.out.println("Location 4");
+            while(ekeys.hasMoreElements()){
+        //System.out.println("Location 5");
+                Integer inv = ((Integer)ekeys.nextElement());
+                buildPS(pstmp,inv.intValue(), hs.get(inv));
+            }
+        }
+        //System.out.println("Location 6");
+            return pstmp;
+        
+    }
+
 
     private static void buildPS(PreparedStatement ps, int location, Integer value) throws SQLException {
         ps.setInt(location,value.intValue());
