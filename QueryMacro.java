@@ -54,6 +54,36 @@ public class QueryMacro extends Object {
     
     
     public ReportObject getReportObject(){
+
+/*
+ 
+        IndependentDataObject ido = new IndependentDataObject();
+        DependentDataObject ddo = new DependentDataObject();
+        try{
+            process(getRS(), ido,ddo);
+        }catch (SQLException se){
+            se.printStackTrace();
+        }
+*/      
+        
+        DataObject dataobject = getDataObject();
+        return new ReportObject(dataobject);
+    }
+    
+    public DataObject getDataObject(){
+        IndependentDataObject ido = new IndependentDataObject();
+        DependentDataObject ddo = new DependentDataObject();
+        try{
+            process(getRS(), ido,ddo);
+        }catch (SQLException se){
+            se.printStackTrace();
+        }
+        return new DataObject(ido,ddo);
+        
+    }
+    
+    
+    public ReportObject getReportObject(String s){
         IndependentDataObject ido = new IndependentDataObject();
         DependentDataObject ddo = new DependentDataObject();
         try{
@@ -62,8 +92,9 @@ public class QueryMacro extends Object {
             se.printStackTrace();
         }
         DataObject dataobject = new DataObject(ido,ddo);
-        return new ReportObject(dataobject);
+        return new ReportObject(dataobject,s);
     }
+
     
     
     void process(ResultSet rs,IndependentDataObject ido, DependentDataObject ddo) throws SQLException {

@@ -20,7 +20,7 @@ import java.sql.*;
 public class RecordRecords extends java.lang.Object {
     public static final boolean debug1 = false;
     public static final boolean debug2 = true;
-    public static final boolean type4Driver = false;
+    public static final boolean type4Driver = true;
 
     /** Creates new RecordRecords */
     public RecordRecords() {
@@ -207,6 +207,15 @@ public class RecordRecords extends java.lang.Object {
         PrintWriter pwError = new PrintWriter(oswError);
         return pwError;
     }
+        static PrintWriter getPrintWriter(String pre,String post) throws IOException {
+        java.util.Date d = new java.util.Date(System.currentTimeMillis());
+        String fname = pre+LPConstants.SimpleFileNameFormat.format(d) + post;
+        FileOutputStream fsoError = new FileOutputStream(fname);
+        OutputStreamWriter oswError = new OutputStreamWriter(fsoError);
+        PrintWriter pwError = new PrintWriter(oswError);
+        return pwError;
+    }
+
 
 }
 

@@ -27,6 +27,17 @@ public class IndependentDataObject extends java.lang.Object {
         _max="na";
     
     }
+    
+    protected Stack getStackValues(){
+        Stack ls = new Stack();
+        for(int j=_values.size(); j>0;--j){
+            ls.addElement(_values.get(new Integer(j)));
+            
+        }
+        ls.addElement(_type);
+        return ls;
+        
+    }
     public IndependentDataObject(Hashtable ht) {
         _values = ht;
     }
@@ -48,15 +59,16 @@ public class IndependentDataObject extends java.lang.Object {
     }
 
     public String getMax() {
-        return _max;
+        return (String)_values.get(new Integer(_values.size()));
     }
 
     public String getMin() {
-        return _min;
+        return (String)_values.get(new Integer(1));
     }
     
     public int getCount(){
         return _values.size();
     }
+    
 
 }

@@ -9,7 +9,7 @@ import java.util.*;
 public class ConnectionPoolT {
   private final int CONNECTIONS = 6;
   private static Hashtable _hashConnections = null;
-  public static final boolean type4Driver = false;
+  public static final boolean type4Driver = true;
   private String driverName;
   private String connectionURL;
   

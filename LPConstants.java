@@ -17,6 +17,7 @@ public class LPConstants extends java.lang.Object {
     public static final SimpleDateFormat MySQLTimeStampFormat = new SimpleDateFormat("yyyyMMddHHmmss");
     public static final SimpleDateFormat TimeStampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.000000000");
     public static final SimpleDateFormat FileNameFormat = new SimpleDateFormat("ddMMyyyyHHmmss");
+    public static final SimpleDateFormat SimpleFileNameFormat = new SimpleDateFormat("MMdd");
     
     
     public static final String MySQL_CreateHourlyDataPerDay = "Create Temporary table StagingHourly as "+ 
@@ -48,8 +49,8 @@ public class LPConstants extends java.lang.Object {
 	                       "TRUNCATE(DATE_FORMAT(Time,\"%i\")/15,0)*15 + DATE_FORMAT(TIME,\"%H\")*60 "+
 	                       "as MinSinceMidnight,   "+
                                "FORMAT(TRUNCATE(DATE_FORMAT(Time,\"%i\")/15,0)*15,0) as yyz "+
-	                       "from accessrecords  "+
-	                       "where DATE_FORMAT(Time,\"%d\")='23'  "+
+	                       "from AccessRecords  "+
+	                       "where DATE_FORMAT(Time,\"%d\")='20'  "+
                                "GROUP BY MinSinceMidnight";
     
     

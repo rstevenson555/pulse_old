@@ -28,6 +28,14 @@ public class DataObject extends java.lang.Object {
         _dd = d;
     }
 
+    IndependentDataObject getIDO(){
+        return _id;
+    }
+    
+    DependentDataObject getDDO(){
+        return _dd;
+    }
+    
     public boolean isValidData() {
         if(_id.getCount() == _dd.getCount())  
             return true;
@@ -41,6 +49,15 @@ public class DataObject extends java.lang.Object {
             return _id.getCount();
         else
             return 0;
+    }
+    
+    public String getFirstIndependentValue(){
+        return _id.getMin();
+    }
+    
+    
+    public String getLastIndependentValue(){
+        return _id.getMax();
     }
     
 
@@ -65,8 +82,12 @@ public class DataObject extends java.lang.Object {
         _currentPair = i;
     }
     
+    
     public int getCurrentPair(){
         return _currentPair;
+    }
+    protected String getDependent(int i){
+        return (String)_dd.getObject(new Integer(i));
     }
 
 }

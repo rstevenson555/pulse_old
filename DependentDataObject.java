@@ -18,6 +18,7 @@ public class DependentDataObject extends java.lang.Object {
     private String _type;
     private String _min;
     private String _max;
+    private String _heading;
     
     /** Creates new IndependentDataObject */
     public DependentDataObject() {
@@ -27,6 +28,11 @@ public class DependentDataObject extends java.lang.Object {
         _max="na";
  
     }
+   
+    public String getHeading(){
+        return _heading;
+    }
+    
     public DependentDataObject(Hashtable ht) {
         _values = ht;
     }
