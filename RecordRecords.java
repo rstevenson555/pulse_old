@@ -631,7 +631,11 @@ public class RecordRecords extends java.lang.Object {
             }
             tc.UpdateTime = tc.UpdateTime + ( System.currentTimeMillis()-tc.startUpdateTime );
         }
-        displayTimingData();
+	try{
+            displayTimingData();
+	}catch(ArithmeticException ae){
+	    System.out.println("ArithmeticException thrown in displayTimingData");
+	}
         con.commit();
         con.close();
         con=null;
