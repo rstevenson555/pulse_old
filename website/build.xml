@@ -111,7 +111,7 @@
     <war destfile="logparser-website.war" webxml="logParser-website.xml">
       <webinf dir="${basedir}/WEB-INF" includes="*.xml"/>
       <fileset dir="${logparser-website.html.src}"/>
-      <zipfileset dir="${logparser-website.xsl.src}" prefix="WEB-INF/stylesheets" />
+      <zipfileset dir="${logparser-website.xsl.src}" prefix="stylesheets" />
       <fileset dir="${logparser-website.xsl.src}"/>
       <fileset dir="${logparser-website.applet.jars}"/>
       <!--

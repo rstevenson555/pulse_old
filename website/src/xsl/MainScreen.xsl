@@ -3,198 +3,155 @@
 <xsl:stylesheet version="1.0"
  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<!-- Diversity Settings -->
-<!-- General Diversity Text/Icon -->
-<xsl:variable name="MWBE_Text" select="'MWBE (general diversity): This product is manufactured by a Minority and Women -owned Business Enterprise, part of our Supplier Diversity program.'"/>
-<xsl:variable name="MWBE_Icon" select="'images/general/i_mwbe.gif'"/>
+  <xsl:template match="/">
 
-<!-- Minority Owned Business -->
-<xsl:variable name="MBE_Text" select="'MBE: This product is manufactured by a Minority-owned Business Enterprise, part of our Supplier Diversity program.'"/>
-<xsl:variable name="MBE_Icon" select="'images/general/i_mbe.gif'"/>
+<head>
+ <title>ART Client - Online statistical reporting for boiseoffice.com</title>
+ <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+ <meta name="author" content="Will Webb"/>
+ <link rel="stylesheet" type="text/css" href="css/default.css" title="default" media="screen"/>
+</head>
 
-<!-- Women Owned Business -->
-<xsl:variable name="WBE_Text" select="'WBE: This product is manufactured by a Women-owned Business Enterprise, part of our Supplier Diversity program.'"/>
-<xsl:variable name="WBE_Icon" select="'images/general/i_wbe.gif'"/>
+<body id="artclient" class="homepage">
+<div id="container">
 
-<!-- Phisically Challenged Business -->
-<xsl:variable name="PC_Text" select="'PHYSICALLY CHALLENGED: This product is manufactured by a non-profit organization providing employment and training for Persons with Physical and Developmental Challenges. It is part of our Supplier Diversity program.'"/>
-<xsl:variable name="PC_Icon" select="'images/general/i_pc.gif'"/>
+<div id="header">
+ <a href="/" title="Return to home page" accesskey="1"><img src="images/ARTlogo.jpg" width="209" alt="ART logo"/></a>
+ <div id="tools">
+  <ul id="mainNav">
+   <li><a href="download.html" title="Real time charts of boiseoffice.com performance">Production Environment</a></li>
+   <li><a href="products/" title="Historical charst of boiseoffice.com performance">Test Environment</a></li>
+   <li><a href="support/" title="Report a bug">Development Environment</a></li>
+  </ul>
+  <!-- closes #textSize-->
+  <div id="sf">
+    <!-- <label>boiseoffice.com dashboard:</label> -->
+    <div id="realtimegraphs">
+        <img src="images/newtechnom1.jpg" alt="Server 1 - Wait Queue: 3.2"/>
+        <img src="images/newtechnom2.jpg" alt="Server 2 - Wait Queue: 3.0"/>
+        <img src="images/newtechnom3.jpg" alt="Server 3 - Wait Queue: 2.2"/>
+        <img src="images/newtechnom4.jpg" alt="Server 4 - Wait Queue: 1.9"/>
+        <!--
+    <APPLET ARCHIVE="jfreechart-0.9.14.jar,jcommon-0.8.9.jar,logParser-applets.jar" 
+            CODE="ARTApplet"
+            width=640 height=270 ALT="You should see an applet, not this text.">
+    </APPLET>
+    -->
+    </div>
+  </div>
+ </div>
+ <!-- closes #tools-->
+</div>
+<!-- closes #header-->
+<hr class="hide"/>
 
-<!-- Javits-Wagner-O Day Act Business -->
-<xsl:variable name="JWOD_Text" select="'JWOD: This product is manufactured by a non-profit organization providing employment and training for Persons who are Blind or have other Severe Disabilities, under the Javits-Wagner-O`Day Act. It is part of our Supplier Diversity program.'"/>
-<xsl:variable name="JWOD_Icon" select="'images/general/i_jwod.gif'"/>
+<div id="mBody">
+ <div id="side">
+  <h2>Other Graphs</h2>
+  <p>Navigate to other graphs and information...</p>
 
-<!-- Other filter attributes -->
+ <ul id="oN">
+   <li>
+     <a href="http://support.decisionone.com/mozilla/mozilla_help_main.htm">Realtime Charts</a>
+   </li>
+   <li>
+     <a href="foundation/donate.html">Historical Charts</a>
+   </li>
+   <li>
+     <a href="http://newsletter.mozdev.org/">About ART</a>
+   </li>
+  </ul>
 
-<!-- Small Business -->
-<xsl:variable name="SB_Text" select="'SMALL BUSINESS: This product is manufactured by a Small Business which qualifies for certain government set-aside programs.'"/>
-<xsl:variable name="SB_Icon" select="'images/general/i_sb.gif'"/>
+ </div>
+ <!-- closes #side -->
+ <hr class="hide"/>
 
-<!-- Recycled Items -->
-<xsl:variable name="Recy_Text" select="'RECYCLED: This item is recycled.'"/>
-<xsl:variable name="Recy_Icon" select="'images/general/i_recycle.gif'"/>
+ 
+ <div id="mainContent">
+  <div id="finds">
+    <h2>What am I looking at?</h2>
 
-<!-- Promotional Items -->
-<xsl:variable name="Promo_Text" select="'This is a promotional item.'"/>
-<xsl:variable name="Promo_Icon" select="'images/general/i_save.gif'"/>
+	<p>The Art Client application provides a view into information and statistics provided by the Art System.
+    </p>
 
-<!-- Contract Items -->
-<xsl:variable name="Contract_Text" select="'CONTRACT: This item is on your company`s contract.'"/>
-<xsl:variable name="Contract_Icon" select="'images/general/i_contract.gif'"/>
+  </div>
+  <!-- closes #finds-->
 
-<!-- Restricted Items -->
-<xsl:variable name="Restrict_Text" select="'RESTRICTED: Your company has restricted you from ordering this item.'"/>
-<xsl:variable name="Restrict_Icon" select="'images/general/i_restricted.gif'"/>
+  <div id="which">
 
-<!-- SOS Items -->
-<xsl:variable name="SOS_Text" select="'SOS: This item is in the SOS catalog.'" />
-<xsl:variable name="SOS_Icon" select="'images/general/i_sos.gif'" />
+   <h2>Mercado Search Performance</h2>
+   <dl>
+   <dt class="im"/>
+   <dd>
 
-<xsl:variable name="Imprint_Text" select="'IMPRINT: Custom Print Items must be personalized individually'" />
-<xsl:variable name="Imprint_Icon" select="'images/shop/printicon.gif'" />
+	 <ul id="ftr">
+     <p class="d1">The following are realtime graphs of External calls to XYZ.</p>
+      <img src="images/graph.jpg"/>
+      <img src="images/graph.jpg"/>
+      <img src="images/graph.jpg"/>
+      <img src="images/graph.jpg"/>
+	 </ul>
 
-  <xsl:template match="Diversity">
-	<xsl:if test="Text">
-	<xsl:element name="A">
-		<xsl:attribute name="href">
-			<xsl:choose>
-				<xsl:when test="Text='MWBE'">javascript:showLegend();</xsl:when>
-				<xsl:when test="Text='MBE'">javascript:showLegend();</xsl:when>
-				<xsl:when test="Text='WBE'">javascript:showLegend();</xsl:when>
-				<xsl:when test="Text='PC'">javascript:showLegend();</xsl:when>
-				<xsl:when test="Text='JWOD'">javascript:showLegend();</xsl:when>
-			</xsl:choose>
-		</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC">
-				<xsl:choose>
-					<xsl:when test="Text='MWBE'"><xsl:value-of select="$MWBE_Icon"/></xsl:when>
-					<xsl:when test="Text='MBE'"><xsl:value-of select="$MBE_Icon"/></xsl:when>
-					<xsl:when test="Text='WBE'"><xsl:value-of select="$WBE_Icon"/></xsl:when>
-					<xsl:when test="Text='PC'"><xsl:value-of select="$PC_Icon"/></xsl:when>
-					<xsl:when test="Text='JWOD'"><xsl:value-of select="$JWOD_Icon"/></xsl:when>
-				</xsl:choose>
-			</xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    </xsl:if>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+	<div style="clear: both"></div>
 
-  <xsl:template match="Promo[@isPromo='true']">
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$Promo_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+   </dd>
+   </dl>
 
-  <xsl:template match="Contract[@isOnContract='true']">
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$Contract_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
 
-  <xsl:template match="Recycle[@isRecycleable='true']">
+   <h2>AS400 Connectivity Performance</h2>
+   <dl>
+    <dt class="im"/>
+    <dd>
+     <p>Customer Validation Response Time</p>
+      <img src="images/graph.jpg"/>
+    </dd>
+    
+    <dt class="im"/>
+    <dd>
+     <p>Customer Pricing Response Time</p>
+      <img src="images/graph.jpg"/>
+    </dd>
+    
+    <dt class="im"/>
+    <dd>
+     <p>Campaigns Response Time</p>
+      <img src="images/graph.jpg"/>
+    </dd>
+   </dl>
 
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$Recy_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+   <h2>Contact us on issues identified in ART</h2>
+   <dl>
+    <dt class="im"><a href="http://www.bugzilla.org/"><img src="images/ico-bugz.gif" width="34" height="34" alt="Bugzilla"/></a></dt>
+    <dt><a href="http://www.bugzilla.org/">Bugzilla</a></dt>
+    <dd>
 
-  <xsl:template match="Restricted[@isRestricted='true']">
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$Restrict_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+     <p>Enterprise-grade bug tracking software [<a href="http://www.bugzilla.org/">more</a>]</p>
+    </dd>
+   </dl>
+  </div>
+  <!-- closes #which -->
+  
+  <hr class="hide"/>
+  <div id="footer">
 
-  <xsl:template match="SmallBusiness[@isSmallBusiness='true']">
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$SB_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+   <ul id="bn">
+    <li><a href="sitemap.html">Site Map</a></li>
+    <li><a href="contact/">Contact Us</a></li>
+    <li><a href="foundation/donate.html">About ART</a></li>
+   </ul>
+   <p>Copyright ; 1998-2003 BoiseOffice Solutions</p>
 
-  <xsl:template match="SOS[@isSOS='true']">
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$SOS_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+  </div>
+  
+ </div>
+ <!-- closes #mainContent-->
+</div>
+<!-- closes #mBody-->
 
-  <xsl:template match="ImprintItem[@isImprintItem='true']">
-	<xsl:element name="A">
-		<xsl:attribute name="href">javascript:showLegend();</xsl:attribute>
-		<xsl:element name="IMG">
-			<xsl:attribute name="SRC"><xsl:value-of select="$Imprint_Icon"/></xsl:attribute>
-			<xsl:attribute name="alt"></xsl:attribute>
-			<xsl:attribute name="HSPACE">6</xsl:attribute>
-			<xsl:attribute name="VSPACE">2</xsl:attribute>
-			<xsl:attribute name="BORDER">0</xsl:attribute>
-		</xsl:element>
-	</xsl:element>
-    <xsl:if test="position() mod 3=0"><BR/></xsl:if>
-  </xsl:template>
+</div>
+<!-- closes #container -->
 
-  <xsl:template match="itemComments">
-      <xsl:element name="A">
-          <xsl:attribute name="href">javascript:alert('<xsl:value-of select="Text"/>');</xsl:attribute>
-          <xsl:element name="IMG">
-              <xsl:attribute name="SRC">images/shop/comments_on.gif</xsl:attribute>
-              <xsl:attribute name="alt"></xsl:attribute>
-              <xsl:attribute name="HSPACE">6</xsl:attribute>
-              <xsl:attribute name="VSPACE">2</xsl:attribute>
-              <xsl:attribute name="BORDER">0</xsl:attribute>
-          </xsl:element>
-      </xsl:element>
-      <xsl:if test="position() mod 3=0"><BR/></xsl:if>
+</body>
+
   </xsl:template>
 </xsl:stylesheet>

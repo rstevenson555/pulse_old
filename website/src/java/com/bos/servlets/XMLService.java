@@ -91,8 +91,8 @@ public class XMLService extends HttpServlet {
 
     static {
         System.setProperty("javax.xml.transform.TransformerFactory","org.apache.xalan.processor.TransformerFactoryImpl");
-        System.setProperty("javax.xml.parsers.DocumentBuilderFactory","org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
-        //System.setProperty("javax.xml.parsers.SAXParserFactory","org.apache.xerces.jaxp.SAXParserFactoryImpl");
+        System.setProperty("jvax.xml.parsers.DocumentBuilderFactory","org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+        System.setProperty("javax.xml.parsers.SAXParserFactory","org.apache.xerces.jaxp.SAXParserFactoryImpl");
 
         initSAXFactory(null, true, false);
 
@@ -350,7 +350,7 @@ public class XMLService extends HttpServlet {
      */
     private Templates reload(String isString) throws IOException {
         String stylesheetName = isString;
-        isString = "/WEB-INF" + isString;
+        //isString = "/WEB-INF" + isString;
         logger.info("@@@@@@@@@@@@@@@"+isString+"@@@@@@@@@@@@@@@");
         BufferedInputStream is = null;
 

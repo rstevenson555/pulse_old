@@ -2,19 +2,17 @@
 
 package com.bos.actions;
 //  java
-import java.sql.SQLException;
-import java.math.BigDecimal;
-//  javax
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-//  apache
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
-//  w3c
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-//  bcop-arch
 import com.bcop.arch.logger.Logger;
 
 /**
@@ -22,7 +20,6 @@ import com.bcop.arch.logger.Logger;
  */
 
 public class MainScreenAction extends BaseAction {
-    protected static final String _DOM = "xmldoc";
 
 	static {
 		logger =
@@ -54,8 +51,23 @@ public class MainScreenAction extends BaseAction {
 		String requestId = null;
         actionForward = mapping.findForward("success");
 		//run XMLBuilder
-
+        
         //build xmlDoc
+        DocumentBuilderFactory factory = null;
+        DocumentBuilder builder = null;
+        Document doc = null;
+
+        try {
+            factory = DocumentBuilderFactory.newInstance();
+            builder = factory.newDocumentBuilder();
+            doc = builder.newDocument();
+        } catch (Exception ex) {
+        }
+
+        MainScreenDoc = doc;
+        Element element = MainScreenDoc.createElement("testElement");
+        MainScreenDoc.appendChild(element);
+        
         request.setAttribute(DOM, MainScreenDoc);
 
 		return actionForward;
