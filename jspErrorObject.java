@@ -71,6 +71,14 @@ public class jspErrorObject extends java.lang.Object {
         }else{
            // System.out.println("******************  Ratical Error ******************");
         }
+        
+        if(LPConstants.MachineNameMethod.equalsIgnoreCase("LOCAL")){
+            _machine = LPConstants.MachineName;          
+        }else if(LPConstants.MachineNameMethod.equalsIgnoreCase("SYSTEM")){
+            _machine = System.getProperty("_INIT_UTS_NODENAME");
+        }else {}
+        
+        
      }
 
      

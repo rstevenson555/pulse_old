@@ -71,6 +71,16 @@ public class RecordRecords extends java.lang.Object {
         long startdummyTime = System.currentTimeMillis();
         long dummyTime = 0;
         String stemp;
+        if(LPConstants.MachineNameMethod.equalsIgnoreCase("LOCAL")){
+            EasyReader ler = new EasyReader("Machine.txt");
+            String mn = ler.stringInputLine();
+            LPConstants.MachineName = mn;
+            try{
+                ler.close();
+            }catch (IOException ioe){
+                ioe.printStackTrace();
+            }
+        }
         
         EasyReader er = new EasyReader(sfile);
         String[] ForeignKeys;
@@ -184,6 +194,14 @@ public class RecordRecords extends java.lang.Object {
     static PrintWriter getPrintWriter() throws IOException {
         java.util.Date d = new java.util.Date(System.currentTimeMillis());
         String fname = "jeoError"+LPConstants.FileNameFormat.format(d) + ".log";
+        FileOutputStream fsoError = new FileOutputStream(fname);
+        OutputStreamWriter oswError = new OutputStreamWriter(fsoError);
+        PrintWriter pwError = new PrintWriter(oswError);
+        return pwError;
+    }
+    static PrintWriter getPrintWriter(String s) throws IOException {
+        java.util.Date d = new java.util.Date(System.currentTimeMillis());
+        String fname = s+LPConstants.FileNameFormat.format(d) + ".log";
         FileOutputStream fsoError = new FileOutputStream(fname);
         OutputStreamWriter oswError = new OutputStreamWriter(fsoError);
         PrintWriter pwError = new PrintWriter(oswError);
