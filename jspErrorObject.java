@@ -35,6 +35,7 @@ public class jspErrorObject extends java.lang.Object {
     private String _machine;
     private String _loadTime;
     private String _browser;
+    private String _status;
     private boolean allowCharsInSession = false;
     
     /** Creates new jspErrorObject */
@@ -81,13 +82,16 @@ public class jspErrorObject extends java.lang.Object {
         
      }
      
+     public String getOracleCSVRecord(){
+         StringBuffer sb = new StringBuffer();
+         sb.append(_Page+"~").append(_status+"~").append(_sdate+", ")
+           .append(_userId+"~")
+           .append(_fullSessionId+"~").append(_IPaddress+"~")
+           .append(_machine+"~").append(_loadTime+"~");
+         return sb.toString();
+     }
+     
      public jspErrorObject(String s, String queueName, Hashtable ht){
-         /*
-         <EVENT  type="log"  id="jsptiming"  appname="orderpoint"  servername="op-099/10.3.12.75"><PAGE  name
-="preferences/p_shopping"  begin="true"><DATE>07/30/2001</DATE><TIME> 02:07:01 PM</TIME><USERINFO  s
-essionid="50vp5ieh21127.0.0.1"><IP>op-ias.bcop.com</IP><USERKEY>014260uuser3501</USERKEY></USERINFO>
-</PAGE></EVENT>
-         */
          //Hashkeys should includ the following:
          //EVENT_type
          //EVENT_id
@@ -100,14 +104,37 @@ essionid="50vp5ieh21127.0.0.1"><IP>op-ias.bcop.com</IP><USERKEY>014260uuser3501<
          //USERINFO_sessionid
          //IP_chars
          //USERKEY_chars
-         
-         
-         
-        
-         
-         
-         
-         
+         //ELAPSED_chars
+    _Page= (String)ht.get("PAGE_name");
+    _status= (String) ht.get("PAGE_begin");
+    if(_status.equalsIgnoreCase("true"))
+        _status="begin";
+    else
+        _status="end";
+    _type=  (String)ht.get("EVENT_type");
+    _sdate=  ((String)ht.get("DATE_CHARS")).trim();
+    _stime=  ((String)ht.get("TIME_CHARS")).trim();
+    //_utilDate ht.get("");
+    _userId=  (String)ht.get("USERKEY_CHARS");
+    _fullSessionId=  (String)ht.get("USERINFO_sessionid");
+    _IPaddress=  (String)ht.get("IP_CHARS");
+    _machine=  (String)ht.get("EVENT_servername");
+    _loadTime=  (String)ht.get("ELAPSED_CHARS");
+    _browser=  (String)ht.get("Not working");
+    _sdate=_sdate +", "+_stime;
+    
+    
+    if(_Page!=null && 
+               _sdate != null &&
+               _stime != null &&
+               _userId != null &&
+               _fullSessionId != null &&
+               _machine != null &&
+               _loadTime != null
+      )
+        _valid=true;
+    else
+        _valid=false;
          
          
      }
@@ -144,7 +171,10 @@ essionid="50vp5ieh21127.0.0.1"><IP>op-ias.bcop.com</IP><USERKEY>014260uuser3501<
             }catch (Exception e){
                 System.out.println("Error Parsing*********************** "+ _sdate);
             }
-
+          if(_utilDate == null){
+              System.out.println("Null utilDate " + _sdate);
+              System.out.println("session id: "+ _fullSessionId);
+          }
          String s =TimeStampFormat.format(_utilDate); 
          //System.out.println("Got s: ");
         return s;
@@ -155,6 +185,9 @@ essionid="50vp5ieh21127.0.0.1"><IP>op-ias.bcop.com</IP><USERKEY>014260uuser3501<
      }
      public boolean isValid(){
          return _valid;
+     }
+     public String getStatus(){
+        return _status;   
      }
      public String getMachine(){
         return _machine;

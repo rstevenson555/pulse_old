@@ -165,7 +165,21 @@ public class LPConstants extends java.lang.Object {
                     " AND pg.page_id=a.page_id "+
                     " ORDER BY (nas1.AVERAGELoadtime + nas3.averageLoadtime + nas4.averageLoadtime) ";
 
-    /*
+ 
+    
+    public static final String ORACLE_30SecondLoads = "select rownum, "+
+                    "PAGE_NAME, LOAD_TIME, MACHINE_NAME, USERS, Time "+
+                    "FROM( select "+
+                    "p.pageName as PAGE_NAME, "+
+                    "m.machineNAME as MACHINE_NAME, "+
+                    "a.loadtime/1000 AS LOAD_TIME,   u.userNAME AS USERS,    "+         
+                    "to_char(a.time,'HH:MI:ss') as Time from accessrecords a, "+       
+                    "pages p, machines m, users u  "+     
+                    "where a.page_id=p.page_id and m.machine_id=a.machine_id      "+   
+                    "AND a.user_id=u.user_id And "+ 
+                    "to_char(a.time,'mmdd')=? and a.loadtime>30000      "+
+                    ") order by rownum";
+/*
  
                 INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) 
                          VALUES (QUERIESSEQUENCE.NEXTVAL,'TEST',1,'Test')
@@ -257,9 +271,9 @@ public class LPConstants extends java.lang.Object {
 
     
      
+     
     
-    
-    public static final String MachineNameMethod = "LOCAL";// or "SYSTEM" or "LOGFILE"
+    public static final String MachineNameMethod = "LOGFILE";// or "SYSTEM" or "LOGFILE"
     public static String MachineName = "NA";
     
     //  Be sure to set the correct driver, make a new driver if the database changes.

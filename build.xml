@@ -1,0 +1,115 @@
+<!-- ======================================================================= -->
+<!-- LogParser build file                                                    -->
+<!-- ======================================================================= -->
+
+<project name="logParser" default="all" basedir=".">
+
+  <property name="Name" value="LOGPARSER"/>
+  <property name="name" value="logParser"/>
+  <property name="version" value="1.0-rc1"/>
+
+  <property name="remote.logparser" value="/apps/artadmin/jars"/>
+  <property name="logparser.src" value="${basedir}"/>
+  <property name="logparser.bin" value="${basedir}/bin"/>
+  <property name="logparser.jars" value="${basedir}/jars"/>
+  <property name="logparser.colorado" value="${basedir}/../colorado/"/>
+ 
+  <property name="packages" value="org.apache.tools.*"/> 
+  <property name="manifest" value="src\etc\manifest"/>
+
+  <property name="classpath" value="${basedir}/../;${basedir}/../jars/coloradoER.jar;c:/bla/classes;${basedir}/../jars/jaxp.jar;${basedir}/../jars/crimson.jar;${basedir}/../jars/xalan.jar"/>
+
+  <target name="prepare">
+  	<!-- make necessary build directories -->
+	<!-- doesnt do anything right now -->
+  </target>
+  
+  <target name="compile">
+     <javac srcdir="${logparser.src}"
+           destdir="${logparser.src}"
+           debug="on"
+           optimize="off" 
+	   classpath="${classpath}"
+	   excludes="logs/"
+	   >
+    </javac>
+  </target>
+
+  <target name="compile_optimize">
+     <javac srcdir="${logparser.src}"
+           destdir="${logparser.src}"
+           debug="off"
+           optimize="on" 
+	   classpath="${classpath}"
+	   excludes="javaxml/**,logs/"
+	   
+	   >
+    </javac>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Generates documentation from the source code using javadoc          -->
+  <!-- =================================================================== -->
+  <target name="docs">
+    <mkdir dir="${logparser.src}\docs\api" />
+
+    <javadoc packagenames="com.bcop.*"
+           sourcepath="${logparser.src}"
+           destdir="${logparser.src}\docs\api"
+           classpath="${classpath}"
+           author="Programmers"
+           version="1.0"
+           use="true"
+           windowtitle="Orderpoint API"
+           doctitle="&lt;h1&gt;System Documentation&lt;\h1&gt;"
+           bottom="&lt;i&gt;Copyright &#169; Boise Cascade. All Rights Reserved.&lt;\i&gt;"
+     />
+  </target>
+
+  <target name="makejar" depends="compile">
+     <mkdir dir="${logparser.bin}"/>
+     <jar jarfile="${logparser.bin}\logParser.jar"
+		basedir="${logparser.src}"
+		includes="**\*.class"
+     />
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Compiles the whole project                                          -->
+  <!-- =================================================================== -->
+  <target name="all" depends="prepare,compile,makejar" >   
+  </target>
+
+  <target name="dist.prod" >
+     <echo message=""/>
+     <echo message="[ Copying logParser app to prod, ${remote.logparser}/bin ]"/>   
+
+     <ftp server="beta-db1.int.bcop.com" userid="artadmin" password="abc123" remotedir="${remote.logparser}" >
+       <fileset dir="${logparser.bin}" includes="logParser.jar" />
+     </ftp>
+  </target>
+ 
+  <!-- =================================================================== -->
+  <!-- Cleans up generated stuff                                           -->
+  <!-- =================================================================== -->
+  <target name="clean">
+    <echo message="cleaning build directories"/>
+    <delete>
+	<fileset dir="${logparser.src}"
+		includes="**/*.class">
+	</fileset>
+   </delete>
+   </target>
+
+  <target name="help">
+    <echo message=""/> 
+    <echo message="ant                    - builds default projects"/>
+    <echo message="ant dist.beta   		  - distributes app to beta"/>
+    <echo message="ant dist.prod   		  - distributes app to prod"/>
+    <echo message="ant compile_optimize   - builds java optimized"/>
+    <echo message="ant docs               - builds javadocs"/>
+    <echo message="ant all                - build everything"/>
+    <echo message="ant clean              - cleans build directory"/> 
+  </target>
+
+</project>

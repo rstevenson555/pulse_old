@@ -69,21 +69,21 @@ public class QueryMacro extends Object {
     }
     
     public ResultSet getRS()throws SQLException{
-        System.out.println("QM:getRS Locaiton 1");
+       // System.out.println("QM:getRS Locaiton 1");
         con = cp.getConnection();
-        System.out.println("QM:getRS Locaiton 2");
+        //System.out.println("QM:getRS Locaiton 2");
         runNRSQueries();
-        System.out.println("QM:getRS Locaiton 3");
+        //System.out.println("QM:getRS Locaiton 3");
         ResultSet rs= null;
-        System.out.println("QM:getRS Locaiton 4");
+        //System.out.println("QM:getRS Locaiton 4");
         if(_qStack.size() == 1){
-        System.out.println("QM:getRS Locaiton 5");
+        //System.out.println("QM:getRS Locaiton 5");
             QueryObject qo = (QueryObject)_qStack.pop();
-        System.out.println("QM:getRS Locaiton 6");
-            System.out.println(qo.getSqlStatement());
+        //System.out.println("QM:getRS Locaiton 6");
+            //System.out.println(qo.getSqlStatement());
             rs =QueryService.executeRSQuery(qo.getSqlStatement(),qo.getParameters(),con);
         }       
-        System.out.println("QM:getRS Locaiton 7");
+        //System.out.println("QM:getRS Locaiton 7");
         return rs;
     }
     
@@ -106,19 +106,19 @@ public class QueryMacro extends Object {
     }
     
     public DataObject getDataObject(){
-        System.out.println("QM:getDataObject location1");
+        //System.out.println("QM:getDataObject location1");
         IndependentDataObject ido = new IndependentDataObject();
-        System.out.println("QM:getDataObject location2");
+        //System.out.println("QM:getDataObject location2");
         DependentDataObject ddo[] =null;
-        System.out.println("QM:getDataObject location3");
+        //System.out.println("QM:getDataObject location3");
         try{
-        System.out.println("QM:getDataObject location4");
+        //System.out.println("QM:getDataObject location4");
             ddo = process(getRS(), ido);
         }catch (SQLException se){
-        System.out.println("QM:getDataObject location5");
+        //System.out.println("QM:getDataObject location5");
             se.printStackTrace();
         }
-        System.out.println("QM:getDataObject location6");
+        //System.out.println("QM:getDataObject location6");
         return new DataObject(ido,ddo);
         
     }
@@ -139,23 +139,23 @@ public class QueryMacro extends Object {
     
     
     void process(ResultSet rs,IndependentDataObject ido, DependentDataObject ddo) throws SQLException {
-        System.out.println("Displaying the result set");
+        //System.out.println("Displaying the result set");
         ResultSetMetaData rsmd = rs.getMetaData();
         int colcount = rsmd.getColumnCount();
         String[] colnames = new String[colcount+1];
         int[] colTypes = new int[colcount+1];
          
-        System.out.println("Starting to use the metadata");
+        //System.out.println("Starting to use the metadata");
         for(int i = 1; i<=colcount;++i){
             colnames[i] = rsmd.getColumnName(i);
             colTypes[i] = rsmd.getColumnType(i);
         }
 
         for(int i = 1; i<=colcount;++i){
-            System.out.print(" " + colnames[i]);
+            //System.out.print(" " + colnames[i]);
         }
         
-        System.out.println();
+        //System.out.println();
         int row = 1;
         while(rs.next()){
             ido.addObject(new Integer(row),getString(rs,1,colTypes[1]));
@@ -166,60 +166,60 @@ public class QueryMacro extends Object {
 
     
     DependentDataObject[] process(ResultSet rs,IndependentDataObject ido) throws SQLException {
-        System.out.println("QM:process Location1");
-        System.out.println("Displaying the result set");
+        //System.out.println("QM:process Location1");
+        //System.out.println("Displaying the result set");
         ResultSetMetaData rsmd = rs.getMetaData();
-        System.out.println("QM:process Location2");
+        //System.out.println("QM:process Location2");
         int colcount = rsmd.getColumnCount();
-        System.out.println("QM:process Location3");
+        //System.out.println("QM:process Location3");
         DependentDataObject[] ddo = new DependentDataObject[colcount -1];
-        System.out.println("QM:process Location4");
+        //System.out.println("QM:process Location4");
         for(int i =0;i<colcount-1;++i){
-        System.out.println("QM:process Location5");
+        //System.out.println("QM:process Location5");
             ddo[i] = new DependentDataObject();
         }
-        System.out.println("QM:process Location6");
+        //System.out.println("QM:process Location6");
         String[] colnames = new String[colcount+1];
-        System.out.println("QM:process Location7");
+        //System.out.println("QM:process Location7");
         int[] colTypes = new int[colcount+1];
-        System.out.println("QM:process Location8");
+        //System.out.println("QM:process Location8");
          
-        System.out.println("Starting to use the metadata");
-        System.out.println("QM:process Location9");
+        //System.out.println("Starting to use the metadata");
+        //System.out.println("QM:process Location9");
         for(int i = 1; i<=colcount;++i){
-        System.out.println("QM:process Location10");
+        //System.out.println("QM:process Location10");
             colnames[i] = rsmd.getColumnName(i);
-        System.out.println("QM:process Location1");
+        //System.out.println("QM:process Location1");
             colTypes[i] = rsmd.getColumnType(i);
-        System.out.println("QM:process Location11");
+        //System.out.println("QM:process Location11");
         }
         
         ido.setHeading(colnames[1]);
         ido.setType(""+colTypes[1]);
         
 
-        System.out.println("QM:process Location12");
+        //System.out.println("QM:process Location12");
         for(int i = 2; i<=colcount;++i){
         ddo[i-2].setHeading(colnames[i]);
         ddo[i-2].setType(""+colTypes[i]);
         
-        System.out.println("QM:process Location13");
+        //System.out.println("QM:process Location13");
         
         }
-        System.out.println("QM:process Location14");
+        //System.out.println("QM:process Location14");
         
-        System.out.println();
+        //System.out.println();
         int row = 1;
         while(rs.next()){
-        System.out.println("QM:process Location15");
+        //System.out.println("QM:process Location15");
             ido.addObject(new Integer(row),getString(rs,1,colTypes[1]));
             for(int i = 2;i<=colcount;++i){
                 ddo[i-2].addObject(new Integer(row),getString(rs,i,colTypes[i]));
             }
             row++;
-        System.out.println("QM:process Location16");
+        //System.out.println("QM:process Location16");
         }
-        System.out.println("QM:process Location17");
+        //System.out.println("QM:process Location17");
         return ddo;
     }
    

@@ -57,9 +57,7 @@ public class IndependentDataObject extends java.lang.Object {
     }
 
     public void addObject(Integer num,java.lang.String value) {
-        System.out.println("IDO addObject l1");
         _values.put(num,value);
-        System.out.println("IDO addObject 21");
         _hashMapValues.put(num,value);
     }
     

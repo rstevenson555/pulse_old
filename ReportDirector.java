@@ -36,5 +36,11 @@ public class ReportDirector extends java.lang.Object {
         }
         
     }
+    public void BuildHTMLReports(Enumeration sr){
+        while(sr.hasMoreElements()){
+            ((ReportBuilder)sr.nextElement()).BuildHTMLFile();
+        }
+        
+    }
 
 }

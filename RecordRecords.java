@@ -13,6 +13,9 @@ import java.io.*;
 import java.sql.*;
 
 
+import logParser.Tools.*;
+
+
 /**
  *
  * @author  i0360d3
@@ -119,34 +122,36 @@ public class RecordRecords extends java.lang.Object {
         System.out.println("Location 4 in main");
 
         
-        File[] filearray = FileTool.getFiles(".");
-        LinkedList UpTimesLL = FileTool.getUpTimes(filearray);
+        File[] filearray = FileTool.getOrderpointXMLFiles(".");
+        //LinkedList UpTimesLL = FileTool.getUpTimes(filearray);
                 System.out.println("Location 5 in main");
 
         for (int jj = 0; jj< filearray.length; ++jj){
             System.out.println("Location 6 in main");
-            int linesInDatabase = ConnectionT.getLinesInDatabase(filearray[jj].toString(),con);
+            //int linesInDatabase = ConnectionT.getLinesInDatabase(filearray[jj].toString(),con);
             System.out.println("Location 7 in main");
-            er = new EasyReader(filearray[jj].toString());
+            //er = new EasyReader(filearray[jj].toString());
             System.out.println("Location 8 in main");
-            egressToCurrentLocation(er,linesInDatabase);
+            //egressToCurrentLocation(er,linesInDatabase);
            //Record should return the total number of lines contained in the file.
             //  if the file already was processed then it should just return 0.
-            int linesInserted = Record(er,con);
+            int linesInserted = Record(filearray[jj],con);
             try{ 
-                er.close();
-                ConnectionT.PopulateUptimes((java.util.Date[])UpTimesLL.removeFirst(),filearray[jj].toString(),linesInserted+linesInDatabase,con);
-            }catch (IOException ioe){
-                ioe.printStackTrace();
-            }catch (SQLException se){
-                se.printStackTrace();
-            }catch (RecordRecordsException rre){
-                rre.printStackTrace();
+                //er.close();
+                //ConnectionT.PopulateUptimes((java.util.Date[])UpTimesLL.removeFirst(),filearray[jj].toString(),linesInserted+linesInDatabase,con);
+//            }catch (IOException ioe){
+//                ioe.printStackTrace();
+//            }catch (SQLException se){
+//                se.printStackTrace();
+//            }catch (RecordRecordsException rre){
+//                rre.printStackTrace();
+            }catch (Exception e){
+                e.printStackTrace();
             }
         }
         
-        FileTool.addToArchive(filearray,new File("."));
-        FileTool.deleteFiles(filearray);
+        //FileTool.addToArchive(filearray,new File("."));
+        //FileTool.deleteFiles(filearray);
         
         
         /*
@@ -452,6 +457,172 @@ public class RecordRecords extends java.lang.Object {
         
     }
 
+    
+    static int Record(File f, Connection con){
+        System.out.println("Processing File: " + f.toString());
+        String nextLine=null;
+        jspErrorObject jeoObj = null;
+        boolean hasForeignKeys=true;
+        int totalRecords = 0;
+        long startTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
+        long startFKTime = System.currentTimeMillis();
+        long FKTime = 0;
+        long startUpdateTime = System.currentTimeMillis();
+        long UpdateTime = 0;
+        long startReadTime = System.currentTimeMillis();
+        long ReadTime =0;
+        long startJEOTime = System.currentTimeMillis();
+        long JEOTime = 0;
+        long startdummyTime = System.currentTimeMillis();
+        long dummyTime = 0;
+        String stemp;
+        
+        
+        
+        
+        String[] ForeignKeys = null;
+        PrintWriter pw = null;
+        PrintWriter LoadLog = null;
+        try{
+            LoadLog = getPrintWriter("LoadLog","log");
+            pw = getPrintWriter();
+        }catch(IOException ioe){
+            ioe.printStackTrace();
+        }
+        
+        
+        xmlOracleParser.parseXML(f);
+        try{
+            
+            while(xmlOracleParser.jeoObjects.size()>0){
+                
+                //System.out.println("Entering ForeignKeys");
+                 startReadTime = System.currentTimeMillis();
+   //              System.out.println("Next Line: " + nextLine);
+                 ReadTime += System.currentTimeMillis() - startReadTime;
+                //System.out.println("Retruning From Foreign Keys");
+
+
+
+                 startFKTime = System.currentTimeMillis();
+                try{
+                   //System.out.print("~");
+                    startJEOTime = System.currentTimeMillis();
+     //               System.out.println("getting the jeoObj");
+                    jeoObj = (jspErrorObject)xmlOracleParser.jeoObjects.pop();
+                    if(xmlOracleParser.jeoObjects.size()%1000==0)
+                    System.out.println("Removing the top record" + xmlOracleParser.jeoObjects.size());
+                    //System.out.println("jeoObj.isValid(): " + jeoObj.isValid());
+                    if(!jeoObj.isValid()){
+                        //A poorly formed log entry has been encountered.
+                        //record to the log file and exit.
+      //                 System.out.println("I should be performing a continue");
+        //                pw.println(nextLine);
+                        continue;
+                    }
+                    JEOTime += System.currentTimeMillis() - startJEOTime; 
+                    //System.out.println("getting the foriegn Keys");
+                    try{
+                        ForeignKeys = ConnectionT.getForiegnKeys2(jeoObj,con);
+                    }catch (NullPointerException ne){
+                        hasForeignKeys=false;
+                        pw.println(jeoObj.getOracleCSVRecord());
+                    }
+                    //System.out.println("Returning from the foreign Keys");
+
+                }catch (SQLException se){
+                    System.out.println("Some SQL ERROR Getting Foreign Keys: " + nextLine);
+                    throw new Exception();
+                }
+                 FKTime += System.currentTimeMillis() - startFKTime;
+
+                    startdummyTime = System.currentTimeMillis();
+                    ConnectionT.dummyCall();
+
+                    dummyTime += System.currentTimeMillis() - startdummyTime; 
+
+
+
+
+                 startUpdateTime = System.currentTimeMillis();
+                try{
+                    //System.out.print(".");
+                    //stemp = erin.stringQuery("Add another Recod ->");
+                    if(hasForeignKeys){
+                        if(ConnectionT.addRecord(ForeignKeys,con))
+                         ;//  System.out.println("Adding the Record");//                    System.out.println("Record Added");
+                    
+                        else
+                            System.out.println("Error Adding Record");
+                    }else{
+                        hasForeignKeys=true;
+                    }
+                    if(++totalRecords%10000 == 0){
+                        endTime = System.currentTimeMillis();
+                        LoadLog.println("" + totalRecords + " Total Records added in " + 
+                                    ( endTime -startTime)/1000 + " seconds " + 
+                                    (endTime-startTime)/(totalRecords/100) +" millis per 100 Records");
+                        LoadLog.println("                   File Read Time Per 100 Records (millis): "
+                                           + ReadTime / (totalRecords/100));
+                        LoadLog.println("          Foreign Key Lookup Time Per 100 Records (millis): "
+                                           + FKTime / (totalRecords/100));
+                        LoadLog.println("               Time in the database for FK Lookup (millis): "
+                                           +  ConnectionT.fkTimer/(totalRecords/100));
+                        LoadLog.println("               Record Update Time Per 100 Records (millis): "
+                                           + UpdateTime / (totalRecords/100));
+                        LoadLog.println("                JEO Record Create Per 100 Records (millis): "
+                                           + JEOTime / (totalRecords/100));
+                        LoadLog.println("                       Dummy Call tot All Records (millis): "
+                                           + dummyTime  );
+                        LoadLog.flush();
+                        //startTime=endTime
+                        if(totalRecords%50000 == 0){
+                         //Time to clse a connection, and start a new one.
+                            con.close();
+                            try{
+                                if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
+                                    con = DriverManager.getConnection(connectionURL,"root","");
+                                }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
+                                    con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+                                }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+                                    con = DriverManager.getConnection(connectionURL);
+                                    con.setAutoCommit(true);
+                                }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+                                    con = DriverManager.getConnection(connectionURL);
+                                    con.setAutoCommit(true);
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+
+                             System.gc();
+                        }
+                    }
+                }catch (RecordRecordsException rre){
+                    System.out.println("Error Writing Record: " + nextLine);
+                }catch (SQLException se){
+                    System.out.println("Some SQL ERROR ADDING A RECORD: " + nextLine);
+                }
+                UpdateTime += System.currentTimeMillis() - startUpdateTime;
+               
+            }
+        }catch (SQLException sqle){
+            sqle.printStackTrace();
+        }catch (NullPointerException ne){ 
+            ne.printStackTrace();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        try{
+            pw.flush();
+            pw.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return totalRecords;
+        
+    }
 
 }
 

@@ -49,9 +49,7 @@ public class PageCentricReport implements ReportBuilder {
         DataObject tldo = (DataObject)e.nextElement();
         if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE){
             _idoType= "Date";
-            System.out.println("Fond a Date type");
         }
-        System.out.println("*********************independent type =" + tldo.getIndependentType());
         if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.VARCHAR){
             System.out.println("Fond a VARCHAR type");
             _idoType = "VARCHAR";
@@ -60,11 +58,21 @@ public class PageCentricReport implements ReportBuilder {
             Enumeration le = _sdataObj.elements();
             vido = new Vector();
             while(le.hasMoreElements()){
-                System.out.println("Location 1");
                 ldo = (DataObject)le.nextElement();
-                System.out.println("Location 2");
                 ido = ldo.getIDO();
-                System.out.println("This IDO has " + ido.getCount());
+                vido.add(ido);
+            } 
+        }
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.NUMERIC){
+            System.out.println("Fond a Numeric type");
+            _idoType = "NUMERIC";
+            DataObject ldo;
+            IndependentDataObject ido;
+            Enumeration le = _sdataObj.elements();
+            vido = new Vector();
+            while(le.hasMoreElements()){
+                ldo = (DataObject)le.nextElement();
+                ido = ldo.getIDO();
                 vido.add(ido);
             } 
         }
@@ -72,28 +80,18 @@ public class PageCentricReport implements ReportBuilder {
     }
     
     private Hashtable getMergedIDO(Vector v){
-        System.out.println("Test Location 1");
         Hashtable ht = new Hashtable();
-        System.out.println("Test Location 2");
         for (int i = 0; i<v.size(); ++i){
-        System.out.println("Test Location 3");
             IndependentDataObject lido=(IndependentDataObject)v.elementAt(i);
-        System.out.println("Test Location 4");
             for(int j=0;j<lido.getCount(); ++j){
-        System.out.println("Test Location 5");
-                ht.put(lido.getObject(new Integer(j+1)),"na");
+                ht.put(lido.getObject(new Integer(j+1)),""+j);
             }
         }
-        System.out.println("Test Location 6");
         Enumeration e = ht.keys();
-        System.out.println("Test Location 7");
         Vector svec = new Vector();
-        System.out.println("Test Location 8");
         while(e.hasMoreElements()){
-        System.out.println("Test Location 9");
             svec.add(e.nextElement());
         }
-        System.out.println("Test Location 10");
         return sortVectorOfStringsIntoHashtable(svec);
     }
 
@@ -102,7 +100,9 @@ public class PageCentricReport implements ReportBuilder {
         int i=1;
         Hashtable ht = new Hashtable();
         Iterator iter = v.iterator();
-        while(iter.hasNext()){
+        //while(iter.hasNext()){
+        
+          while(iter.hasNext()){
             ht.put(new Integer(i),iter.next());
             ++i;
         }
@@ -140,15 +140,10 @@ public class PageCentricReport implements ReportBuilder {
 
     private LinkedList getDataQueue(){
         LinkedList rowQueue = null;
-        System.out.println("MCR.getDataQueue() Location 1");
         if(isValid()){
-        System.out.println("MCR.getDataQueue() Location 2");
             rowQueue = new LinkedList();
-        System.out.println("MCR.getDataQueue() Location 3");
             rowQueue.addLast(getHeader());
-        System.out.println("MCR.getDataQueue() Location 4");
             for(int i = 1;i<getSize();++i){        
-        System.out.println("MCR.getDataQueue() Location 5");
                 rowQueue.addLast(getNextRow(i));
             
             }
@@ -274,6 +269,42 @@ public class PageCentricReport implements ReportBuilder {
     }
     
     public void BuildHTMLFile(java.io.PrintWriter pw) {
+        LinkedList dq = getDependentDataObjectList();
+        System.out.println("calling getMergedIDOj");
+        Hashtable htIDO = getMergedIDO(getVectorIDO());
+        System.out.println("Returning from getMergedIDO");
+        String[] headings = getHeader();
+        pw.println("<HTML>");
+        pw.println("<HEAD><TITLE>PAGE CENTRIC REPORT STYLE  HTML</TITLE></HEAD>");
+        pw.println("<TABLE border=2><TR><TD><TABLE>");
+
+        pw.println("<TR>");
+
+        pw.println("<TH>");
+        
+        pw.print(_idoType);
+        
+        pw.println("</TH>");
+
+        for(int i=0;i<headings.length;++i){
+            pw.print("<TH>"+headings[i]+"</TH>");
+        }
+        pw.println("</TR>");
+        for(int i=1;i<=htIDO.size();++i){
+            pw.println("<TR>");
+//            System.out.println((String)htIDO.get(new Integer(i)));
+            Iterator iter = dq.iterator();
+            pw.print("<TD ALIGN=RIGHT>"+(String) htIDO.get(new Integer(i))+"</TD>");
+            while(iter.hasNext()){
+                DependentDataObject ddo = (DependentDataObject)iter.next();
+                pw.print("<TD ALIGN=RIGHT>"+ddo.getHMV((String) htIDO.get(new Integer(i)))+"</TD>");
+            }
+            pw.println("</TR>");
+        }
+        pw.println("</TABLE></TD></TR></TABLE>");
+        pw.println("</HTML>");
+
+
     }
     
     public void BuildXMLFile(java.io.PrintWriter pw) {
@@ -292,13 +323,8 @@ public class PageCentricReport implements ReportBuilder {
             }
         }
         BuildCSVFile(pw);
-        //try{
             pw.flush();
             pw.close();
-  
-        //}catch(IOException ioe){
-        //    ioe.printStackTrace();
-        //}
     }
     
     public void BuildFormattedFile() {
@@ -308,6 +334,18 @@ public class PageCentricReport implements ReportBuilder {
     }
     
     public void BuildHTMLFile() {
+        PrintWriter pw = null;
+        if(_fsn != null){
+            try{
+                pw =RecordRecords.getPrintWriter(_fsn,".html");
+            }catch(IOException ioe){
+                ioe.printStackTrace();
+            }
+        }
+        BuildHTMLFile(pw);
+            pw.flush();
+            pw.close();
+        
     }
     
     public void BuildXMLFile() {

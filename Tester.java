@@ -26,117 +26,78 @@ public class Tester extends java.lang.Object {
     */
     public static void main (String args[]) {
 
-        /*
-        Hashtable sdht1 = new Hashtable();
-        Hashtable sdht2 = new Hashtable();
-        Hashtable sdhtb1 = new Hashtable();
-        Hashtable sdhtb2 = new Hashtable();
-        sdht1.put(new Integer(1), "NAS1");
-        sdht1.put(new Integer(2), "HourlySessions");
-        sdht1.put(new Integer(3), "20010430");
-        sdht2.put(new Integer(1), "NAS3");
-        sdht2.put(new Integer(2), "HourlySessions");
-        sdht2.put(new Integer(3), "20010430");
-        sdhtb1.put(new Integer(1), "NAS1");
-        sdhtb1.put(new Integer(2), "QuarterHourlySession");
-        sdhtb1.put(new Integer(3), "20010430");
-        sdhtb2.put(new Integer(1), "NAS3");
-        sdhtb2.put(new Integer(2), "QuarterHourlySession");
-        sdhtb2.put(new Integer(3), "20010430");
-
-        
-        Stack sQueryObj = new Stack();
-        Stack sQueryObj2 = new Stack();
-        Stack sQueryObjb = new Stack();
-        Stack sQueryObjb2 = new Stack();
-        Stack sPageQuery = new Stack(); 
-        Hashtable htPageData = new Hashtable();
-        htPageData.put(new Integer(1),"NAS1");
-        htPageData.put(new Integer(2),"20010430");
-        
-        sPageQuery.add(new QueryObject(LPConstants.ORACLE_CreateDailyLoadTimesM,htPageData));
-
-        sQueryObj.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht1));
-        sQueryObj2.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht2));
-        sQueryObjb.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdhtb1));
-        sQueryObjb2.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdhtb2));
-        
-        QueryMacro qmPageQuery = new QueryMacro(sPageQuery);
-        QueryMacro qm = new QueryMacro(sQueryObj);
-        QueryMacro qm2 = new QueryMacro(sQueryObjb);
-        
-        Stack sDataobject2 = new Stack();
-        Stack sDataobject = new Stack();
-        Stack sPageQueryObject = new Stack();
-        sPageQueryObject.add(qmPageQuery.getDataObject()); 
- 
-        sDataobject.add(qm.getDataObject());
-        sDataobject2.add(qm2.getDataObject());
-        
-        qm = new QueryMacro(sQueryObj2); 
-        qm2 = new QueryMacro(sQueryObjb2);
-
-        sDataobject.add(qm.getDataObject());
-        sDataobject2.add(qm2.getDataObject());
-        */
         
         java.util.Date date = new java.util.Date(System.currentTimeMillis());
         GregorianCalendar localCal = new GregorianCalendar();
         localCal.setTime(date);
         localCal.add(GregorianCalendar.DAY_OF_MONTH,-1);
         date=localCal.getTime();
-
         System.out.println(LPConstants.yyyyMMddFormat.format(date));
         
 
         
         
+
+
+///////////////////////////////////////////////////////////////////////////////
+//  Daily Load Times Report
+///////////////////////////////////////////////////////////////////////////////
         Stack sPageQuery = new Stack(); 
-
-
-        
-        //Making a new page centric report
-        
-        
         Hashtable htPageData = new Hashtable();
         htPageData.put(new Integer(1),"NAS1");
         if(args != null && args.length==1)
             htPageData.put(new Integer(2),args[0]);
         else
             htPageData.put(new Integer(2),LPConstants.yyyyMMddFormat.format(date));
-
-        
         sPageQuery.add(new QueryObject(LPConstants.ORACLE_CreateDailyLoadTimesM,htPageData));
         QueryMacro qmPageQuery = new QueryMacro(sPageQuery);
         System.out.println("after qmPageQuery2");
         Stack sPageQueryObject = new Stack();
         sPageQueryObject.add(qmPageQuery.getDataObject()); 
-  
+        PageCentricReport pcr = new PageCentricReport(sPageQueryObject,"PageData");
+//      The Page Centric Prport pcr is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+        
+        
         System.out.println("after sPageQueryObject2");
         
         
-        
+///////////////////////////////////////////////////////////////////////////////
+//    Hourly Report, using the Assembly Design Pattern (Much easier)
+///////////////////////////////////////////////////////////////////////////////
         MachineCentricReport mcr = MachineCentricReport.createReport(
                                     LPConstants.ORACLE_SessionsDataM,
                                     true,false,false,
                                     LPConstants.yyyyMMddFormat.format(date),
                                     "HourlyNewWay",
                                     "HourlySessions");
+//      The Machine Centric Prport pcr is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+
+        
+        
+///////////////////////////////////////////////////////////////////////////////
+//    Quarter Hourly Report, using the Assembly Design Pattern (Much easier)
+///////////////////////////////////////////////////////////////////////////////
         MachineCentricReport mcr2 = MachineCentricReport.createReport(
                                     LPConstants.ORACLE_SessionsDataM,
                                     true,false,false,
                                     LPConstants.yyyyMMddFormat.format(date), 
                                     "QuarterHourlyNewWay",
                                     "QuarterHourlySession");
-        System.out.println("after mach2"); 
-      PageCentricReport pcr = new PageCentricReport(sPageQueryObject,"PageData");
-//        MachineCentricReport mcr = new MachineCentricReport(sDataobject,"teststtt");
+//      The Machine Centric Prport pcr is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+
+        
         Stack ss = new Stack();
  
-        ss.add(mcr);
-       ss.add(mcr2);
-        ss.add(pcr);  
 //        for(int i=16;i<20;++i){
+        
+        
+        
+///////////////////////////////////////////////////////////////////////////////
+//  All pages Load Time Report  -  Page centric reports don't have the Assmbly design pattern yet.
+///////////////////////////////////////////////////////////////////////////////
             Stack sPageQuery2 = new Stack(); 
             Hashtable htPageData2 = new Hashtable();
             if(args != null && args.length==1){
@@ -154,14 +115,52 @@ public class Tester extends java.lang.Object {
             Stack sPageQueryObject2 = new Stack();
             sPageQueryObject2.add(qmPageQuery2.getDataObject()); 
             PageCentricReport pcr2 = new PageCentricReport(sPageQueryObject2,"AllPagesData");
+//      The Page Centric Prport pcr2 is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+
+            
+///////////////////////////////////////////////////////////////////////////////
+//  30 second load time report   -  Page centric reports don't have the Assmbly design pattern yet.
+///////////////////////////////////////////////////////////////////////////////
+            Stack sPageQuery3 = new Stack(); 
+            Hashtable htPageData3 = new Hashtable();
+            if(args != null && args.length==1){
+                System.out.println("Date: " +args[0]);
+                htPageData3.put(new Integer(1),args[0]);
+            }else{
+                System.out.println("date format: " + LPConstants.SimpleFileNameFormat.format(date));
+                htPageData3.put(new Integer(1),LPConstants.SimpleFileNameFormat.format(date));
+                
+                
+            }
+            sPageQuery3.add(new QueryObject(LPConstants.ORACLE_30SecondLoads,htPageData3));
+            QueryMacro qmPageQuery3 = new QueryMacro(sPageQuery3);
+            Stack sPageQueryObject3 = new Stack();
+            sPageQueryObject3.add(qmPageQuery3.getDataObject()); 
+            PageCentricReport pcr3 = new PageCentricReport(sPageQueryObject3,"30SecondLoad");
+//      The Page Centric Prport pcr2 is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+
+            
+            //Add all of the various reports to the Stack.
+            ss.add(mcr);
+            ss.add(mcr2);
+            ss.add(pcr);  
             ss.add(pcr2); 
-//        }
+            ss.add(pcr3); 
         
-        
-         ReportDirector rd = new ReportDirector();
-         rd.BuildCSVReports(ss.elements());
+
+            
+            
+            
+            
+            
+            
+            ReportDirector rd = new ReportDirector();
+//         rd.BuildCSVReports(ss.elements());
+           rd.BuildHTMLReports(ss.elements());
      
-         localCal.roll(GregorianCalendar.DAY_OF_MONTH,1);
+         localCal.add(GregorianCalendar.DAY_OF_MONTH,1);
         date=localCal.getTime();
 
         try{

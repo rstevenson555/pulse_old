@@ -76,15 +76,10 @@ public class MachineCentricReport implements ReportBuilder {
             ht.put(new Integer(1),"NAS1");
             ht.put(new Integer(2),Records);
             ht.put(new Integer(3),yyyymmdd);
-            System.out.println("Location 1");
             Stack sQueryObj = new Stack();
-            System.out.println("Location 2");
             sQueryObj.add(new QueryObject(Query,ht));
-            System.out.println("Location 3");
             QueryMacro qm = new QueryMacro(sQueryObj);
-            System.out.println("Location 4"); 
             sDataObject.add(qm.getDataObject());
-            System.out.println("Locaiton 4b");
             //hashData.add(sQueryObj);
             
 
@@ -92,32 +87,23 @@ public class MachineCentricReport implements ReportBuilder {
         
         if(bnas3){
             Hashtable ht = new Hashtable();
-            System.out.println("Location 5");
             ht.put(new Integer(1),"NAS3");
             ht.put(new Integer(2),Records);
             ht.put(new Integer(3),yyyymmdd);
-            System.out.println("Location 6");
             Stack sQueryObj = new Stack();
             sQueryObj.add(new QueryObject(Query,ht));
-            System.out.println("Location 7");
             QueryMacro qm = new QueryMacro(sQueryObj);
-            System.out.println("Location 8");
             sDataObject.add(qm.getDataObject());
         }
         
         if(bnas4){
-            System.out.println("Location 9");
             Hashtable ht = new Hashtable();
             ht.put(new Integer(1),"NAS4");
             ht.put(new Integer(2),Records);
             ht.put(new Integer(3),yyyymmdd);
-            System.out.println("Location 10");
             Stack sQueryObj = new Stack();
-            System.out.println("Location 11");
             sQueryObj.add(new QueryObject(Query,ht));
-            System.out.println("Location 12");
             QueryMacro qm = new QueryMacro(sQueryObj);
-            System.out.println("Location 13");
             sDataObject.add(qm.getDataObject());
         }
         
@@ -207,21 +193,16 @@ public class MachineCentricReport implements ReportBuilder {
         DataObject tldo = (DataObject)e.nextElement();
         if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE){
             _idoType= "Date";
-            System.out.println("Fond a Date type");
         }
         if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.TIMESTAMP){
-            System.out.println("Fond a Timestamp type");
             _idoType = "Timestamp";
             DataObject ldo;
             IndependentDataObject ido;
             Enumeration le = _sdataObj.elements();
             vido = new Vector();
             while(le.hasMoreElements()){
-                System.out.println("Location 1");
                 ldo = (DataObject)le.nextElement();
-                System.out.println("Location 2");
                 ido = ldo.getIDO();
-                System.out.println("This IDO has " + ido.getCount());
                 vido.add(ido);
             }
         }

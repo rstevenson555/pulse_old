@@ -53,6 +53,19 @@ public class FileTool extends Object {
         return currentDir.listFiles(new jsperrorFileFilter());
     }
     
+    
+    /**
+     *This returns an array of File objects which represent the orderpoint.jsp.*.xml files
+     *from the directory entered as a param.
+     *@param pathname is the machine dependent name to the path, as a string  in the 
+     *future this should be rewritten to reperesent a machine independent way of thinking about things.
+     *@return File[] of File objects which represent all of the objects that should be processed.
+     */ 
+    static File[] getOrderpointXMLFiles(String pathname){
+        File currentDir = new File(pathname);
+        return currentDir.listFiles(new orderpointJspLogFileFilter());
+    }
+    
     /**This static method takes an array of input files, and returns 
      *an array of output files with the same name but different extension.
      **/ 
