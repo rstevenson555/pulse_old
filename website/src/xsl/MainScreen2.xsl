@@ -7,7 +7,7 @@
 
 <xsl:output version="1.0" method="html" encoding="ISO-8859-1" indent="yes"/>
 
-  <xsl:template match="Body">
+  <xsl:template match="Body" mode="ARTBody">
 
 <head>
  <title>ART Client - Online statistical reporting for boiseoffice.com</title>

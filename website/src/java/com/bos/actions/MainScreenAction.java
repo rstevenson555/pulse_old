@@ -65,8 +65,17 @@ public class MainScreenAction extends BaseAction {
         }
 
         MainScreenDoc = doc;
-        Element element = MainScreenDoc.createElement("testElement");
-        MainScreenDoc.appendChild(element);
+        Element pageElement = MainScreenDoc.createElement("Page");
+        Element headerElement = MainScreenDoc.createElement("DashBoard");
+        Element leftPanelElement = MainScreenDoc.createElement("LeftPanel");
+        Element bodyElement = MainScreenDoc.createElement("Body");
+        Element footerElement = MainScreenDoc.createElement("Footer");
+        pageElement.appendChild(headerElement);
+        pageElement.appendChild(leftPanelElement);
+        pageElement.appendChild(bodyElement);
+        pageElement.appendChild(footerElement);
+        
+        MainScreenDoc.appendChild(pageElement);
         
         request.setAttribute(DOM, MainScreenDoc);
 

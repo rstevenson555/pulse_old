@@ -16,6 +16,13 @@ Struts Configuration 1.1//EN"
             <forward name="success" redirect="false" path="/servlets/XMLService"/>
             <forward name="error" redirect="false" path="/error.jsp"/>
         </action>
+        
+        <action path="/ViewMainScreen2"
+            type="com.bos.actions.MainScreenAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/MainScreen2.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
     
     </action-mappings>
 
