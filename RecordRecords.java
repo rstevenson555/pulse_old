@@ -29,29 +29,37 @@ public class RecordRecords extends java.lang.Object {
     /**
     * @param args the command line arguments
     */
-    public static void main (String args[]) {
-        String driverName;
-        String connectionURL;
+    public static void main (String args[])  {
+        String driverName = null;
+        String connectionURL = null;
         
-        if(type4Driver){
+        if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
 	    connectionURL = "jdbc:mysql://localhost.localdomain:3306/NasAccess";
 	    driverName = "org.gjt.mm.mysql.Driver";
-        }else{
+        }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
             driverName = "sun.jdbc.odbc.JdbcOdbcDriver";
             connectionURL = "jdbc:odbc:NasAccess";
+        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+            connectionURL = "jdbc:oracle:thin:Boise/boise@localhost.localdomain:1521:Dimok";
         }
+           
         
         
             
-        Connection con;
+        Connection con=null;
         String nextLine=null;
         jspErrorObject jeoObj = null;
     	try{
-        Class.forName(driverName).newInstance();
+            if(!LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+                Class.forName(driverName).newInstance();
+            }else{
+                DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+                
+            }
 
 	    //		Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
 	}catch (Exception e){
-		e.printStackTrace();
+            e.printStackTrace();
 	}
 
         EasyReader erin = new EasyReader(System.in);
@@ -91,11 +99,14 @@ public class RecordRecords extends java.lang.Object {
             ioe.printStackTrace();
         }
         try{
-            if(type4Driver){
-	        con = DriverManager.getConnection(connectionURL,"root","");
-            }else{
-	        con = DriverManager.getConnection("jdbc:odbc:NasAccess");
-            }
+        if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
+            con = DriverManager.getConnection(connectionURL,"root","");
+        }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
+            con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+            con = DriverManager.getConnection(connectionURL);
+            con.setAutoCommit(true);
+        }
             
             while(!er.isEOF()){
                 //System.out.println("Entering ForeignKeys");

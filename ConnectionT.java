@@ -34,26 +34,74 @@ class ConnectionT {
                          "NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
                          " AND NasAccess.Sessions.sessionTXT=?";
     */
-    private static final String sqlUsersAll = "SELECT * FROM NasAccess.Users Where userName=?";
-    //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
-    private static final String sqlAddUser = "INSERT INTO NasAccess.Users (userName) VALUES (?) ";
-    private static final String sqlPagesAll = "SELECT * FROM NasAccess.Pages Where PageName=?";
-    private static final String sqlAddPages = "INSERT INTO NasAccess.Pages (PageName) VALUES (?) ";
-    private static final String sqlSessionsAll = "SELECT * FROM NasAccess.Sessions Where sessionTXT=?";
-    private static final String sqlMachinesAll = "SELECT * FROM NasAccess.Machines Where MachineName=?";
-    private static final String sqlAddSession = "INSERT INTO NasAccess.Sessions (sessionTXT, IPAddress) "+
-                         " VALUES (?,?) ";
-    private static final String sqlAddMachine = "INSERT INTO NasAccess.Machines (MachineName) "+
-                         " VALUES (?) ";
-    private static final String sqlFullRecordInsert = "INSERT INTO NasAccess.AccessRecords "+
-                         "(Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (?,?,?,?,?,?)";
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
-    private static int flagSessions = 0;
-    private static final String sqlFullLookup = "SELECT Page_ID, User_ID, Session_ID FROM "+
-                         "NasAccess.Pages, NasAccess.Users, NasAccess.Sessions WHERE "+
-                         "NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
-                         " AND NasAccess.Sessions.sessionTXT=?";
+        private static final String sqlUsersAll;// = "SELECT * FROM NasAccess.Users Where userName=?";
+        //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
+        private static final String sqlAddUser;// = "INSERT INTO NasAccess.Users (userName) VALUES (?) ";
+        private static final String sqlPagesAll;// = "SELECT * FROM NasAccess.Pages Where PageName=?";
+        private static final String sqlAddPages;// = "INSERT INTO NasAccess.Pages (PageName) VALUES (?) ";
+        private static final String sqlSessionsAll;// = "SELECT * FROM NasAccess.Sessions Where sessionTXT=?";
+        private static final String sqlMachinesAll;// = "SELECT * FROM NasAccess.Machines Where MachineName=?";
+        private static final String sqlAddSession;// = "INSERT INTO NasAccess.Sessions (sessionTXT, IPAddress) "+
+                             //" VALUES (?,?) ";
+        private static final String sqlAddMachine;// = "INSERT INTO NasAccess.Machines (MachineName) "+
+                             //" VALUES (?) ";
+        private static final String sqlFullRecordInsert;// = "INSERT INTO NasAccess.AccessRecords "+
+                             //"(Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (?,?,?,?,?,?)";
+        private static final SimpleDateFormat sdf;// = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
+        private static int flagSessions = 0;
+        private static final String sqlFullLookup;// = "SELECT Page_ID, User_ID, Session_ID FROM "+
+                             //"NasAccess.Pages, NasAccess.Users, NasAccess.Sessions WHERE "+
+                             //"NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
+                             //" AND NasAccess.Sessions.sessionTXT=?";
 
+    
+    static{
+        if(LPConstants.Database.equalsIgnoreCase("MySQL")){
+
+            sqlUsersAll = "SELECT * FROM NasAccess.Users Where userName=?";
+            //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
+            sqlAddUser = "INSERT INTO NasAccess.Users (userName) VALUES (?) ";
+            sqlPagesAll = "SELECT * FROM NasAccess.Pages Where PageName=?";
+            sqlAddPages = "INSERT INTO NasAccess.Pages (PageName) VALUES (?) ";
+            sqlSessionsAll = "SELECT * FROM NasAccess.Sessions Where sessionTXT=?";
+            sqlMachinesAll = "SELECT * FROM NasAccess.Machines Where MachineName=?";
+            sqlAddSession = "INSERT INTO NasAccess.Sessions (sessionTXT, IPAddress) "+
+                                 " VALUES (?,?) ";
+            sqlAddMachine = "INSERT INTO NasAccess.Machines (MachineName) "+
+                                 " VALUES (?) ";
+            sqlFullRecordInsert = "INSERT INTO NasAccess.AccessRecords "+
+                                 "(Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (?,?,?,?,?,?)";
+            sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
+            flagSessions = 0;
+            sqlFullLookup = "SELECT Page_ID, User_ID, Session_ID FROM "+
+                                 "NasAccess.Pages, NasAccess.Users, NasAccess.Sessions WHERE "+
+                                 "NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
+                                 " AND NasAccess.Sessions.sessionTXT=?";
+        }else{
+            sqlUsersAll = "SELECT * FROM Users Where userName=?";
+            //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
+                                                                        
+            sqlAddUser = "INSERT INTO Users (User_ID, userName) VALUES (USERSSEQUENCE.NEXTVAL, ?) ";
+            sqlPagesAll = "SELECT * FROM Pages Where PageName=?";
+            sqlAddPages = "INSERT INTO Pages (Page_ID, PageName) VALUES (PAGESSEQUENCE.NEXTVAL, ?) ";
+            sqlSessionsAll = "SELECT * FROM Sessions Where sessionTXT=?";
+            sqlMachinesAll = "SELECT * FROM Machines Where MachineName=?";
+            sqlAddSession = "INSERT INTO Sessions (Session_ID, sessionTXT, IPAddress) "+
+                                 " VALUES (SESSIONSSEQUENCE.NEXTVAL, ?,?) ";
+            sqlAddMachine = "INSERT INTO Machines (Machine_ID, MachineName) "+
+                                 " VALUES (MACHINESSEQUENCE.NEXTVAL, ?) ";
+            sqlFullRecordInsert = "INSERT INTO AccessRecords "+
+                                 "(RecordPK, Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (ACCESSRECORDSSEQUENCE.NEXTVAL, ?,?,?,?,?,?)";
+            sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
+            flagSessions = 0;
+            sqlFullLookup = "SELECT Page_ID, User_ID, Session_ID FROM "+
+                                 "Pages, Users, Sessions WHERE "+
+                                 "Pages.pageName=? AND Users.userName=? "+
+                                 " AND Sessions.sessionTXT=?";
+
+        }
+    }
+        
 
 
 
@@ -392,9 +440,11 @@ public static void main(String args[]){
                     pstmt2 = con.prepareStatement(sqlAddUser);
 	fuser =12;
                     pstmt2.setString(1,uid.trim());
+//                    System.out.println("Before fuser = 13");
 	fuser =13;
                     if(pstmt2.executeUpdate() ==1)
                     {   
+//                        System.out.println("After Fuser = 13");
 	fuser =14;
                         pstmt2.close();
 	fuser =15;
@@ -668,9 +718,11 @@ public static void main(String args[]){
 	fuser =12;
                     pstmt2.setString(1,uid.trim());
 	fuser =13;
+//        System.out.println("Line 720 fuser set to 13");
+//        System.out.println(sqlAddUser + "   :   : " + uid.trim());
                     if(pstmt2.executeUpdate() ==1)
                     {   
-                        //System.out.println("User was added to the user table");
+//                        System.out.println("User was added to the user table");
 	fuser =14;
                         pstmt2.close();
 	fuser =15;
@@ -690,7 +742,7 @@ public static void main(String args[]){
                     }else
                         UserNo = "1";
                 }catch (SQLException se){
-                    System.out.println("Error Adding A User Setting To User 1 location: " + fuser);
+                    System.out.println("Error Adding A User Setting To User 1 location: BLA " + fuser);
                 }finally{
                     try{
                         if(rs2 != null)
