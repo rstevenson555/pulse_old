@@ -100,8 +100,8 @@ class ConnectionT {
                                  "Pages, Users, Sessions WHERE "+
                                  "Pages.pageName=? AND Users.userName=? "+
                                  " AND Sessions.sessionTXT=?";
-            sqlUptimeInsert = "INSERT INTO Uptimes (Uptime_ID, startTime,endTime,Machine_ID,Filename,Archive) " +
-                              "VALUES (UPTIMESSEQUENCE.NEXTVALUE,?,?,?,?,?) ";
+            sqlUptimeInsert = "INSERT INTO Uptimes (Uptime_ID, startTime, endTime, Machine_ID, Filename, Archive) " +
+                              "VALUES (UPTIMESSEQUENCE.NEXTVAL,?,?,?,?,?) ";
 
         }
     }
@@ -700,45 +700,45 @@ public static void main(String args[]){
         if(rs != null){
 	fuser =4;
             boolean gotFK=false;
-	fuser =5;
+            fuser =5;
             if(debug1)
                 System.out.println("The Result Set is not Null");
             while (rs.next()) {
-	fuser =6;
+                fuser =6;
                 UserNo = ""+rs.getInt("User_ID");
                 gotFK = true;
                 if(debug3)
                     System.out.println("While in Results Set" + UserNo/*+ rs.getInt("userID")*/);
             }
-	fuser =7;
+            fuser =7;
             rs.close();
-	fuser =8;
+            fuser =8;
             rs=null;
-	fuser =9;
+            fuser =9;
             if(!gotFK){
                 try{
-	fuser =11;
+                    fuser =11;
                     pstmt2 = con.prepareStatement(sqlAddUser);
-	fuser =12;
+                    fuser =12;
                     pstmt2.setString(1,uid.trim());
-	fuser =13;
+                    fuser =13;
 //        System.out.println("Line 720 fuser set to 13");
 //        System.out.println(sqlAddUser + "   :   : " + uid.trim());
                     if(pstmt2.executeUpdate() ==1)
                     {   
 //                        System.out.println("User was added to the user table");
-	fuser =14;
+                        fuser =14;
                         pstmt2.close();
-	fuser =15;
+                        fuser =15;
                         pstmt2=null;
-	fuser =16;
+                        fuser =16;
                         pstmt2 = con.prepareStatement(sqlUsersAll);
-	fuser =17;
+                        fuser =17;
                         pstmt2.setString(1,uid.trim());
-	fuser =18;
+                        fuser =18;
                         rs2 = pstmt.executeQuery();
 //                        rs2 = stmt2.executeQuery("SELECT userID FROM USERS WHERE userName='"+uid.trim()+"'");
-	fuser =19;
+                        fuser =19;
                         if(rs2.next())
                             UserNo = ""+rs2.getInt("User_ID");
                         else
@@ -1208,6 +1208,7 @@ public static void main(String args[]){
        System.out.println("Line 11");
             if(rows == 1)  success = true;
 	}catch(SQLException se){
+            se.printStackTrace();
 	    System.out.println("Inserting into the Uptimes table");
 	    throw new RecordRecordsException();
 	}

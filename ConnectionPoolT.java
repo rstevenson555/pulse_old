@@ -20,16 +20,37 @@ public class ConnectionPoolT {
    * Creates connections, 6 initially, and stores in a hashtable.
    */
   public ConnectionPoolT () throws ClassNotFoundException,SQLException  {
-        Connection con;
+        Connection con=null;
 
         
-        if(type4Driver){
+        if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
 	    connectionURL = "jdbc:mysql://localhost.localdomain:3306/NasAccess";
 	    driverName = "org.gjt.mm.mysql.Driver";
-        }else{
+        }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
             driverName = "sun.jdbc.odbc.JdbcOdbcDriver";
             connectionURL = "jdbc:odbc:NasAccess";
+        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+            connectionURL = "jdbc:oracle:thin:Boise/boise@localhost.localdomain:1521:Dimok";
+            driverName="oracle.jdbc.driver.OracleDriver";
+        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+            driverName="oracle.jdbc.driver.OracleDriver";
+            connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
         }
+
+        try{
+            Class.forName(driverName).newInstance();
+        }catch (InstantiationException ie){
+            ie.printStackTrace();
+        }catch (IllegalAccessException iae){
+            iae.printStackTrace();
+        }
+//        if(type4Driver){
+//	    connectionURL = "jdbc:mysql://localhost.localdomain:3306/NasAccess";
+//	    driverName = "org.gjt.mm.mysql.Driver";
+//      }else{
+//        driverName = "sun.jdbc.odbc.JdbcOdbcDriver";
+//      connectionURL = "jdbc:odbc:NasAccess";
+//}
         try{
         Class.forName(driverName).newInstance();
         }catch (Exception e){
@@ -42,10 +63,16 @@ public class ConnectionPoolT {
 	  //put initial connections into the hash table.
 	  // FALSE indicates the connections are available to use.
 	  for(int ni = 0;ni<CONNECTIONS;ni++) {
-            if(type4Driver){
-	        con = DriverManager.getConnection(connectionURL,"root","");
-            }else{
-	        con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+            if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
+                con = DriverManager.getConnection(connectionURL,"root","");
+            }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
+                con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+            }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+                con = DriverManager.getConnection(connectionURL);
+                con.setAutoCommit(true);
+            }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+                con = DriverManager.getConnection(connectionURL);
+                con.setAutoCommit(true);
             }
 		_hashConnections.put(con,Boolean.FALSE);
 	  }
@@ -76,11 +103,17 @@ public class ConnectionPoolT {
 	{
 	  try
 	  {
-	    Connection conn;
-            if(type4Driver){
-	        conn = DriverManager.getConnection(connectionURL,"root","");
-            }else{
-	        conn = DriverManager.getConnection("jdbc:odbc:NasAccess");
+	    Connection conn=null;
+            if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
+                con = DriverManager.getConnection(connectionURL,"root","");
+            }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
+                con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+            }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+                con = DriverManager.getConnection(connectionURL);
+                con.setAutoCommit(true);
+            }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+                con = DriverManager.getConnection(connectionURL);
+                con.setAutoCommit(true);
             }
             _hashConnections.put(conn, Boolean.FALSE);
 	  }
