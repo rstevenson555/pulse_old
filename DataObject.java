@@ -5,6 +5,7 @@
  */
 
 package logParser;
+import java.util.*;
 
 /**
  *
@@ -15,7 +16,9 @@ public class DataObject extends java.lang.Object {
 
     private logParser.IndependentDataObject _id;
     private logParser.DependentDataObject _dd;
+    private LinkedList _LLdd;
     private int _currentPair =0;
+    boolean containsMultipleDependentData = false;
     
     /** Creates new DataObject */
     public DataObject() {
@@ -26,6 +29,21 @@ public class DataObject extends java.lang.Object {
         _id = i;
     
         _dd = d;
+        _LLdd = new LinkedList();
+        _LLdd.addLast(d);
+    }
+    public DataObject(IndependentDataObject i, DependentDataObject[] d) {
+    
+        _id = i;
+        _LLdd = new LinkedList();
+    
+        _dd = d[0];
+        for (int j=0;j<d.length;++j){
+            _LLdd.addLast(d[j]);
+        }
+    }
+    int countDependentSets(){
+        return _LLdd.size();
     }
 
     IndependentDataObject getIDO(){
@@ -36,13 +54,20 @@ public class DataObject extends java.lang.Object {
         return _dd;
     }
     
+    public void AddDependentData(DependentDataObject dd){
+        _LLdd.addLast(dd);
+        containsMultipleDependentData = true;
+    }
+    public boolean hasMultipleDD(){
+        return containsMultipleDependentData;
+    }
+    
     public boolean isValidData() {
         if(_id.getCount() == _dd.getCount())  
             return true;
         else
             return false;
     }
-
     
     public int getDataSize() {
         if(isValidData())
@@ -67,6 +92,17 @@ public class DataObject extends java.lang.Object {
         ++_currentPair;
         return new String[] {id,dd};
     }
+    
+    public String[] getNextSet(){
+         String[] sa = new String[_LLdd.size() +1];
+         sa[0] = (String)_id.getObject(new Integer(_currentPair));
+         DependentDataObject[] dd = (DependentDataObject[])_LLdd.toArray();
+         for(int i = 0; i<dd.length;++i){
+             sa[i] = dd[i].getObject(new Integer(_currentPair));
+         }
+         return sa;
+
+    }
 
 
     public String getDependentType() {
@@ -89,5 +125,25 @@ public class DataObject extends java.lang.Object {
     protected String getDependent(int i){
         return (String)_dd.getObject(new Integer(i));
     }
+    
+    protected String[] getHeadings(){
+        String[] headings = new String[_LLdd.size()];
+        for(int i = 0;i<_LLdd.size();++i){
+           headings[i]= ((DependentDataObject)_LLdd.get(i)).getHeading();
+
+        }
+        return headings;
+        
+    }
+    protected String[] getDependentArray(int index) {
+        String[] results = new String[_LLdd.size()];
+        for(int i = 0;i<_LLdd.size();++i){
+            results[i] =(String)(((DependentDataObject)_LLdd.get(i)).getObject(new Integer(index)));
+        }
+        return results;
+        
+        
+    }
+    
 
 }

@@ -72,9 +72,9 @@ public class QueryMacro extends Object {
     
     public DataObject getDataObject(){
         IndependentDataObject ido = new IndependentDataObject();
-        DependentDataObject ddo = new DependentDataObject();
+        DependentDataObject ddo[] =null;
         try{
-            process(getRS(), ido,ddo);
+            ddo = process(getRS(), ido);
         }catch (SQLException se){
             se.printStackTrace();
         }
@@ -85,9 +85,9 @@ public class QueryMacro extends Object {
     
     public ReportObject getReportObject(String s){
         IndependentDataObject ido = new IndependentDataObject();
-        DependentDataObject ddo = new DependentDataObject();
+        DependentDataObject ddo[] = null;// = new DependentDataObject();
         try{
-            process(getRS(), ido,ddo);
+            ddo = process(getRS(), ido);
         }catch (SQLException se){
             se.printStackTrace();
         }
@@ -122,7 +122,41 @@ public class QueryMacro extends Object {
             row++;
         }
     }
+
     
+    DependentDataObject[] process(ResultSet rs,IndependentDataObject ido) throws SQLException {
+        System.out.println("Displaying the result set");
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int colcount = rsmd.getColumnCount();
+        DependentDataObject[] ddo = new DependentDataObject[colcount -1];
+        for(int i =0;i<colcount-1;++i){
+            ddo[i] = new DependentDataObject();
+        }
+        String[] colnames = new String[colcount+1];
+        int[] colTypes = new int[colcount+1];
+         
+        System.out.println("Starting to use the metadata");
+        for(int i = 1; i<=colcount;++i){
+            colnames[i] = rsmd.getColumnName(i);
+            colTypes[i] = rsmd.getColumnType(i);
+        }
+
+        for(int i = 1; i<=colcount;++i){
+            System.out.print(" " + colnames[i]);
+        }
+        
+        System.out.println();
+        int row = 1;
+        while(rs.next()){
+            ido.addObject(new Integer(row),getString(rs,1,colTypes[1]));
+            for(int i = 2;i<=colcount;++i){
+                ddo[i-2].addObject(new Integer(row),getString(rs,i,colTypes[i]));
+            }
+            row++;
+        }
+        return ddo;
+    }
+   
     String getString(ResultSet rs, int col, int colType) throws SQLException{
                  
                 if(colType == java.sql.Types.INTEGER){

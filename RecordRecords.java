@@ -20,7 +20,7 @@ import java.sql.*;
 public class RecordRecords extends java.lang.Object {
     public static final boolean debug1 = false;
     public static final boolean debug2 = true;
-    public static final boolean type4Driver = true;
+    public static final boolean type4Driver = false;
 
     /** Creates new RecordRecords */
     public RecordRecords() {
