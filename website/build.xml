@@ -12,6 +12,7 @@
   
   <property name="logparser-website.java.src"  value="${basedir}/src/java"/>
   <property name="logparser-website.html.src"  value="${basedir}/src/html"/>
+  <property name="logparser-website.xsl.src"  value="${basedir}/src/xsl"/>
   <property name="logparser-website.lib"  value="${basedir}/lib"/>
   <property name="logparser-website.bin"  value="${basedir}/bin"/>
   <property name="logparser-website.dist"  value="${basedir}/dist"/>
@@ -110,6 +111,8 @@
     <war destfile="logparser-website.war" webxml="logParser-website.xml">
       <webinf dir="${basedir}/WEB-INF" includes="*.xml"/>
       <fileset dir="${logparser-website.html.src}"/>
+      <zipfileset dir="${logparser-website.xsl.src}" prefix="WEB-INF/stylesheets" />
+      <fileset dir="${logparser-website.xsl.src}"/>
       <fileset dir="${logparser-website.applet.jars}"/>
       <!--
       <fileset dir="src/jsp/myapp"/>

@@ -152,10 +152,10 @@ public class XMLService extends HttpServlet {
                     strBuffer.append("request.getRequestURI(): ").append(request.getRequestURI()).append("\n");
                     strBuffer.append("request.getRequestedSessionId(): ").append(request.getRequestedSessionId()).append("\n");
                     strBuffer.append("request.getServletPath(): ").append(request.getServletPath()).append("\n");
-                    logger.debug(strBuffer);
+                    logger.info(strBuffer);
                 }
 
-                String wholeURL = Util.getRequestURL(request).toString();
+                //String wholeURL = Util.getRequestURL(request).toString();
 
                 if (logger.isDebugEnabled()) {
                     StringBuffer strBuffer = new StringBuffer();
@@ -251,7 +251,7 @@ public class XMLService extends HttpServlet {
             strBuffer.append("AGENTS in props: ").append(XSLUserAgentsSupported).append("\n");
             strBuffer.append("isXSLSupportedByUserAgent(request.getHeader(user-agent)): " +
                 isXSLSupportedByUserAgent(request.getHeader("user-agent")) + "\n");
-            logger.debug(strBuffer);
+            logger.info(strBuffer);
         }
 
         Templates t = getTemplates(stylesheet);
@@ -351,6 +351,7 @@ public class XMLService extends HttpServlet {
     private Templates reload(String isString) throws IOException {
         String stylesheetName = isString;
         isString = "/WEB-INF" + isString;
+        logger.info("@@@@@@@@@@@@@@@"+isString+"@@@@@@@@@@@@@@@");
         BufferedInputStream is = null;
 
         try {

@@ -14,7 +14,10 @@
 
     <servlet id="Servlet_1">
         <servlet-name>action</servlet-name>
+        <servlet-class>com.bos.servlets.controller.BosFrontController</servlet-class>
+        <!--
         <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+        -->
         <init-param>
             <param-name>config</param-name>
             <param-value>/WEB-INF/struts-config.xml</param-value>
@@ -26,6 +29,10 @@
         <init-param>
             <param-name>detail</param-name>
             <param-value>9</param-value>
+        </init-param>
+        <init-param>
+            <param-name>mapping</param-name>
+            <param-value>com.bos.config.struts.BoiseActionMapping</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
