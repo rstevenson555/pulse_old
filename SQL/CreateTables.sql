@@ -32,8 +32,16 @@ CREATE TABLE Machines(
       
 CREATE TABLE Queries(
       Query_ID INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
-      Query    VARCHAR(255),
-      User_ID INT
+      Query    TEXT,
+      OpUser_ID INT,
+      QueryName VARCHAR(20)
+      );
+      
+CREATE TABLE QueryParameters(
+      QP_ID INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+      Query_ID INT,
+      ParameterNumber INT,
+      ParameterType VARCHAR(20)
       );
       
 CREATE TABLE OPUser(

@@ -45,17 +45,30 @@ public class LPConstants extends java.lang.Object {
                         "GROUP BY MinSinceMidnight";
     
     */
-    public static final String MySQL_CreateQuarterHourlyResultSet ="SELECT CONCAT(DATE_FORMAT(Time,\"%H\"),DATE_FORMAT(DATE_ADD(Time,INTERVAL "+
-                               "(15-TRUNCATE(DATE_FORMAT(Time,\"%i\")%15,0)) MINUTE),\"%i\")) "+
-	                       "as timePeriod, "+ 
-	                       "count(distinct Session_ID) as distSessions,  "+
-	                       "TRUNCATE(DATE_FORMAT(Time,\"%i\")/15,0)*15 + DATE_FORMAT(TIME,\"%H\")*60 "+
-	                       "as MinSinceMidnight,   "+
-                               "FORMAT(TRUNCATE(DATE_FORMAT(Time,\"%i\")/15,0)*15,0) as yyz "+
-	                       "from AccessRecords  "+
-	                       "where DATE_FORMAT(Time,\"%d\")='29' "+ 
-                               "GROUP BY MinSinceMidnight ORDER BY timePeriod";
     
+    public static final String updateQueries = "UPDATE Queries SET Query=?, OpUser_ID=? "+
+                        " WHERE Query_ID=? ";
+    public static final String addQueries = "INSERT INTO Queries (Query, OpUser_ID, QueryName) "+
+                        " VALUES (?,?,?)";
+    public static final String MySQL_CreateQuarterHourlyResultSet ="SELECT "+  
+                          "DATE_FORMAT(DATE_SUB(Time,INTERVAL "+
+                               "(TRUNCATE(DATE_FORMAT(Time,\"%i\")%15,0)) "+
+                               "MINUTE),\"%Y%m%d%H%i\") "+
+                               "as timePeriod, "+
+                          "qt.Query_ID as qid, "+
+                          "count(distinct Session_ID) as distSessions, "+
+                          "count(Session_ID) as totalSessions, "+
+                          "ms.Machine_ID as Machine "+
+                          "from accessrecords ar,  "+
+                               "Machines ms, "+
+                               "Queries qt "+
+                          "where  "+
+                          "DATE_FORMAT(Time,\"%d\")=? and  "+
+                          "ar.Machine_ID=ms.Machine_ID and  "+
+                          "ms.MachineName=? and "+
+                          "qt.QueryName='QuarterHourlySession' "+
+                          "GROUP BY timePeriod order by timePeriod ASC";
+
     public static final String MySQL_CreatePageLoadTimeResultSet = "SELECT p.PageName, "+
                         "COUNT( ar.Page_ID) as cnt, FORMAT(AVG(ar.loadTime),0) as AVE_LT, "+
                         "SUM(ar.loadTime) as TOT_LT from AccessRecords ar, Pages p "+
