@@ -134,7 +134,7 @@ public class LPConstants extends java.lang.Object {
                    "TO_CHAR(Time,'YYYYMMDD')=? ";
     
     
-    public static final String ORACLE_HourlyReport = "SELECT rownum, to_char(hr.Time,'HH:MI AM') as Hour , m.MachineName as Machine, "+
+    public static final String ORACLE_HourlyReport = "SELECT rownum, to_char(hr.Time,'HH:MI AM') as Hour , m.shortName as Machine, "+
                    " hr.Distinct_Hits as Distinct_Hits, "+
                    "hr.Total_Hits as Total_Hits "+
                    "From HistoricalRecords hr, Queries q, Machines m "+
@@ -142,7 +142,7 @@ public class LPConstants extends java.lang.Object {
                    "hr.query_ID=q.query_ID AND "+
                    "q.queryName='HourlySessions' AND "+
                    "TO_CHAR(hr.Time,'MMDD')=? "+ 
-                   "order by m.machineName, hr.Time";
+                   "order by m.shortName, hr.Time";
 
     
     public static final String ORACLE_CreateDailyLoadTimesM = "SELECT p.PageName as PageName, "+
