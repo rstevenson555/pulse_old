@@ -40,13 +40,16 @@ class ConnectionT {
     private static final String sqlPagesAll = "SELECT * FROM NasAccess.Pages Where PageName=?";
     private static final String sqlAddPages = "INSERT INTO NasAccess.Pages (PageName) VALUES (?) ";
     private static final String sqlSessionsAll = "SELECT * FROM NasAccess.Sessions Where sessionTXT=?";
+    private static final String sqlMachinesAll = "SELECT * FROM NasAccess.Machines Where MachineName=?";
     private static final String sqlAddSession = "INSERT INTO NasAccess.Sessions (sessionTXT, IPAddress) "+
                          " VALUES (?,?) ";
+    private static final String sqlAddMachine = "INSERT INTO NasAccess.Machines (MachineName) "+
+                         " VALUES (?) ";
     private static final String sqlFullRecordInsert = "INSERT INTO NasAccess.AccessRecords "+
-                         "(PageNo, UserNo, Time, sessionPK, Machine ) VALUES (?,?,?,?,?)";
+                         "(Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (?,?,?,?,?,?)";
     private static final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
     private static int flagSessions = 0;
-    private static final String sqlFullLookup = "SELECT pageID, userID, sessionPK FROM "+
+    private static final String sqlFullLookup = "SELECT Page_ID, User_ID, Session_ID FROM "+
                          "NasAccess.Pages, NasAccess.Users, NasAccess.Sessions WHERE "+
                          "NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
                          " AND NasAccess.Sessions.sessionTXT=?";
@@ -63,6 +66,7 @@ class ConnectionT {
     private static int totalCashedPages = 0;
     private static int totalCashedUsers = 0;
     private static int totalCashedSessions = 0;
+    private static int totalCashedMachines = 0;
     private static int rehashSessions=0;
     private static int rehashUsers=0;
     private static int rehashPages=0;
@@ -98,7 +102,7 @@ public static void main(String args[]){
 	    rs = stmt.executeQuery("SELECT * FROM Users");
         if(rs != null){
 		    while (rs.next()) {
-	 	        System.out.println("UserId: " + rs.getInt("userID") + "  UserName: " + rs.getString("userName"));
+	 	        System.out.println("UserId: " + rs.getInt("User_ID") + "  UserName: " + rs.getString("userName"));
 		    }//if
 	    }
     }catch (Exception e){
@@ -113,8 +117,9 @@ public static void main(String args[]){
     String uid = jeo.getUserID().trim();
     String fullsession = jeo.getFullSessionID().trim();
     String sip = jeo.getIPAddress().trim();
-    String MachineNo = "NA";
-    String[] results = new String[6];
+    String machine = jeo.getMachine().trim();
+    int nLoadTime = Integer.parseInt(jeo.getLoadTime().trim());
+    String[] results = new String[7];
     boolean gotfullset = false;
 
 
@@ -123,9 +128,12 @@ public static void main(String args[]){
     PreparedStatement pstmt2 = null;
     ResultSet rs2 = null;
 
+    
+    //Foriegn Keys to be returned.
     String UserNo ="NA";
     String PageNo = "NA";
     String SessionNo ="NA";
+    String MachineNo = "NA";
 
     ////////////////////////////////////////////////////////////////////////////////
     //****************************************************************************//
@@ -136,7 +144,8 @@ public static void main(String args[]){
     UserNo = getCashedUser(uid);
     PageNo = getCashedPage(page);
     SessionNo = getCashedSession(fullsession);
-
+    MachineNo = getCashedMachine(machine);
+    //System.out.println("Checked the cashce");
     ////////////////////////////////////////////////////////////////////////////////
     //****************************************************************************//
     //   Confirm that we got what we needed.  If not perform a database query     //
@@ -148,29 +157,44 @@ public static void main(String args[]){
     else
 	if(++totalCashedUsers == 1000)
             System.out.println("Total Cashed Users: "+ totalCashedUsers);
+    
+    //System.out.println("Checked User No");
     if(PageNo == null)
 	PageNo = getPageNo(page,con);
     else
 	if(++totalCashedPages == 1000)
             System.out.println("Total Cashed Pages : "+ totalCashedPages);
+
+    
+    //System.out.println("Checked page No");
     if(SessionNo == null)
 	SessionNo = getSession(fullsession,sip,con);
     else 
 	if(++totalCashedSessions == 1000)
             System.out.println("Total Cashed Sessions: "+ totalCashedSessions);
+
+    if(MachineNo == null)
+	MachineNo = getMachine(machine,sip,con);
+    else 
+	if(++totalCashedMachines == 1000)
+            System.out.println("Total Cashed Machines: "+ totalCashedMachines);
     
+    //System.out.println("Checked Session NO");
     results[0] = "Not Used";
     results[1] = ""+PageNo;
     results[2] = ""+UserNo;
     results[3] = ""+jeo.getTimeStampFormatDate();
     results[4] = "" +SessionNo ;
     results[5] = ""+MachineNo;
+    results[6] = ""+nLoadTime;
+//    System.out.println("Build Arrary");
     if(debug2)
        displayFK(results);
     rs = null;
     rs2=null;
     pstmt=null;
     pstmt2=null;
+  //  System.out.println("Returning");
     return results;
     
    }
@@ -352,7 +376,7 @@ public static void main(String args[]){
                 System.out.println("The Result Set is not Null");
             while (rs.next()) {
 	fuser =6;
-                UserNo = ""+rs.getInt("userID");
+                UserNo = ""+rs.getInt("User_ID");
                 gotFK = true;
                 if(debug3)
                     System.out.println("While in Results Set" + UserNo/*+ rs.getInt("userID")*/);
@@ -384,7 +408,7 @@ public static void main(String args[]){
 //                        rs2 = stmt2.executeQuery("SELECT userID FROM USERS WHERE userName='"+uid.trim()+"'");
 	fuser =19;
                         if(rs2.next())
-                            UserNo = ""+rs2.getInt("userID");
+                            UserNo = ""+rs2.getInt("User_ID");
                         else
                             UserNo = "1";
                     }else
@@ -407,7 +431,7 @@ public static void main(String args[]){
             System.out.println("Not Found");
         }
     }catch (Exception e){
-        System.out.println("Vauge exception somewhere in the Updating Users Setting UserNo to 1");
+        System.out.println("Vauge exception somewhere in the Updating Users Setting UserNo to 1 : "+fuser);
         UserNo = "1";
     }finally{
         if(debug3)
@@ -441,7 +465,7 @@ public static void main(String args[]){
             if(debug1)
                 System.out.println("The Result Set is not Null");
 	    while (rs.next()) {
-                PageNo = ""+rs.getInt("PageID");
+                PageNo = ""+rs.getInt("Page_ID");
                 if(debug2)
                     System.out.println("Page Name : ID --  " + rs.getString("PageName") +
                                        "  :  " + PageNo +"   Desired Page: " + page.trim());
@@ -461,7 +485,7 @@ public static void main(String args[]){
                         pstmt2.setString(1,page.trim());
                         rs2 = pstmt2.executeQuery();
                         if(rs2.next())
-                            PageNo = ""+rs2.getInt("PageID");
+                            PageNo = ""+rs2.getInt("Page_ID");
                         else
                             PageNo = "1";
                     }else
@@ -627,7 +651,7 @@ public static void main(String args[]){
                 System.out.println("The Result Set is not Null");
             while (rs.next()) {
 	fuser =6;
-                UserNo = ""+rs.getInt("userID");
+                UserNo = ""+rs.getInt("User_ID");
                 gotFK = true;
                 if(debug3)
                     System.out.println("While in Results Set" + UserNo/*+ rs.getInt("userID")*/);
@@ -660,7 +684,7 @@ public static void main(String args[]){
 //                        rs2 = stmt2.executeQuery("SELECT userID FROM USERS WHERE userName='"+uid.trim()+"'");
 	fuser =19;
                         if(rs2.next())
-                            UserNo = ""+rs2.getInt("userID");
+                            UserNo = ""+rs2.getInt("User_ID");
                         else
                             UserNo = "1";
                     }else
@@ -683,7 +707,7 @@ public static void main(String args[]){
             System.out.println("Not Found");
         }
     }catch (Exception e){
-        System.out.println("Vauge exception somewhere in the Updating Users Setting UserNo to 1");
+        System.out.println("Vauge exception somewhere in the Updating Users Setting UserNo to 1 : " + fuser);
         UserNo = "1";
     }finally{
         if(debug3)
@@ -738,7 +762,7 @@ public static void main(String args[]){
             if(debug1)
                 System.out.println("The Result Set is not Null");
 	    while (rs.next()) {
-                PageNo = ""+rs.getInt("PageID");
+                PageNo = ""+rs.getInt("Page_ID");
                 if(debug2)
                     System.out.println("Page Name : ID --  " + rs.getString("PageName") +
                                        "  :  " + PageNo +"   Desired Page: " + page.trim());
@@ -758,7 +782,7 @@ public static void main(String args[]){
                         pstmt2.setString(1,page.trim());
                         rs2 = pstmt2.executeQuery();
                         if(rs2.next())
-                            PageNo = ""+rs2.getInt("PageID");
+                            PageNo = ""+rs2.getInt("Page_ID");
                         else
                             PageNo = "1";
                     }else
@@ -831,7 +855,7 @@ public static void main(String args[]){
             if(debug1)
                 System.out.println("The Result Set is not Null");
 	    while (rs.next()) {
-                SessionNo = ""+rs.getInt("sessionPK");
+                SessionNo = ""+rs.getInt("Session_ID");
                 gotFK = true;
             }
             if(!gotFK){
@@ -857,7 +881,7 @@ public static void main(String args[]){
                         rs2 = pstmt2.executeQuery();
                         flag1 = 5;
                         if(rs2.next())
-                            SessionNo = ""+rs2.getInt("sessionPK");
+                            SessionNo = ""+rs2.getInt("Session_ID");
                         else
                             SessionNo = "10";
                     }else
@@ -899,19 +923,119 @@ public static void main(String args[]){
 
     return SessionNo;
     }
+    
+    
+    
+    public static String getMachine(String machine, String sip, Connection con){
+    PreparedStatement pstmt=null;
+    ResultSet rs = null;
+    PreparedStatement pstmt2 = null;
+    ResultSet rs2 = null;
+
+    String UserNo ="NA";
+    String PageNo = "NA";
+    String SessionNo ="NA";
+    String MachineNo = "NA";
+    ////////////////////////////////////////////////////////////////////////
+    //Session Values
+    ////////////////////////////////////////////////////////////////////////
+
+    try{
+
+        pstmt = con.prepareStatement(sqlMachinesAll);
+        pstmt.setString(1,machine.trim());
+        rs = pstmt.executeQuery();
+        if(rs != null){
+            boolean gotFK=false;
+            if(debug1)
+                System.out.println("The Result Set is not Null");
+	    while (rs.next()) {
+                MachineNo = ""+rs.getInt("Machine_ID");
+                gotFK = true;
+            }
+            if(!gotFK){
+//            private static final String sqlAddSesion = "INSERT INTO Sessions (sessionTXT, sessionNo, IPAddress) "+
+//                         " VALUES (?,?,?) ";
+                pstmt2 = con.prepareStatement(sqlAddMachine);
+                pstmt2.setString(1,machine.trim());
+                
+                int flag1=0;
+                try{
+                    ++flagSessions;
+                    System.out.println("Just before executeUpdate for the addMachines");
+
+                    if(pstmt2.executeUpdate() ==1)
+                    {
+                        System.out.println("Machine Presumably added correctly");
+                        flag1 = 1;
+                        pstmt2.close();
+                        flag1 = 2;
+                        pstmt2 = null;
+                        flag1 = 3;
+                        pstmt2 = con.prepareStatement(sqlMachinesAll);
+                        pstmt2.setString(1,machine.trim());
+                        flag1 = 4;
+                        rs2 = pstmt2.executeQuery();
+                        flag1 = 5;
+                        if(rs2.next()){
+                            flag1=51;
+                            MachineNo = ""+rs2.getInt("Machine_ID");
+                            flag1=52;
+                        }else
+                            MachineNo = "10";
+                    }else
+                        MachineNo = "10";
+                        flag1 = 6;
+                }catch (SQLException se){
+                    System.out.println("Error Updating the Machine so Setting the Value to 10");
+                    System.out.println(sqlAddMachine + ", " + machine.trim() + 
+                              ", " + sip.trim() +" at: "+flag1 + " For machine: " + flagSessions);
+                    MachineNo = "10";
+                }finally{
+                    try{
+                        if(rs2 != null)
+                            rs2.close();
+                        if(pstmt2 != null)
+                            pstmt2.close();
+                    }catch(SQLException sqe){
+                    }
+                }
+            }
+        }else{
+            if(debug1)
+                System.out.println("Machine ID Not Found");
+        }
+    }catch (Exception e){
+        System.out.println("Vauge exception somewhere in the machine Setting Machine to 10");
+        MachineNo="10";
+    }finally{
+        try{
+            if(rs != null)
+                rs.close();
+            if(pstmt != null)
+                pstmt.close();
+        }catch(SQLException sqe){
+        }
+    }
+
+    addCashedMachine(machine.trim(),MachineNo);
+
+    return MachineNo;
+    }
 
    
 
 
 
    public static boolean addRecord(String[] cols, Connection con) throws SQLException, RecordRecordsException{
+//       System.out.println("Starting addRecord");
        ParsePosition pos = new ParsePosition(0);
        int i;
        int recordPK=0;
-       //System.out.println("Time Stamp: " + cols[3].trim());
+  //     System.out.println("Time Stamp: " + cols[3].trim());
        Timestamp ts = Timestamp.valueOf(cols[3].trim());
-       //System.out.println("After construction of timestamp");
-
+    //   System.out.println("After construction of timestamp");
+ 
        if(cols[5].equalsIgnoreCase("NA"))
            cols[5]="1";
        PreparedStatement pstmp = con.prepareStatement(sqlFullRecordInsert);
@@ -920,9 +1044,15 @@ public static void main(String args[]){
        pstmp.setTimestamp(3,ts);
        pstmp.setInt(4,Integer.parseInt(cols[4]));
        pstmp.setInt(5,Integer.parseInt(cols[5]));
+       pstmp.setInt(6,Integer.parseInt(cols[6]));
+       boolean success = false;
+       
 	try{
+      //          System.out.println("Just Before executeUpdate");
 	        int rows = pstmp.executeUpdate();
+        //        System.out.println("Just After executeUpdate");
 		pstmp.close();
+                if(rows == 1)  success = true;
                 recordsAdded = recordsAdded+rows;
 	}catch(SQLException se){
 	    System.out.println("Error Adding Cashed Blocked Records");
@@ -942,7 +1072,7 @@ public static void main(String args[]){
 	 //  	ret =   emptyAccessRecords();
        //}
 
-       return true;
+       return success;
 
        /*       
        try{

@@ -74,16 +74,24 @@ public class RecordRecords extends java.lang.Object {
         
         EasyReader er = new EasyReader(sfile);
         String[] ForeignKeys;
+        PrintWriter pw = null;
+        try{
+            pw = getPrintWriter();
+        }catch(IOException ioe){
+            ioe.printStackTrace();
+        }
         try{
             if(type4Driver){
 	        con = DriverManager.getConnection(connectionURL,"root","");
             }else{
 	        con = DriverManager.getConnection("jdbc:odbc:NasAccess");
             }
+            
             while(!er.isEOF()){
                 //System.out.println("Entering ForeignKeys");
                  startReadTime = System.currentTimeMillis();
                  nextLine = er.stringInputLine();
+   //              System.out.println("Next Line: " + nextLine);
                  ReadTime += System.currentTimeMillis() - startReadTime;
                 //System.out.println("Retruning From Foreign Keys");
 
@@ -93,10 +101,21 @@ public class RecordRecords extends java.lang.Object {
                 try{
                    //System.out.print("~");
                     startJEOTime = System.currentTimeMillis();
-                    
+     //               System.out.println("getting the jeoObj");
                     jeoObj = new jspErrorObject(nextLine);
+                    //System.out.println("jeoObj.isValid(): " + jeoObj.isValid());
+                    if(!jeoObj.isValid()){
+                        //A poorly formed log entry has been encountered.
+                        //record to the log file and exit.
+       //                 System.out.println("I should be performing a continue");
+                        pw.println(nextLine);
+                        continue;
+                    }
                     JEOTime += System.currentTimeMillis() - startJEOTime; 
+         //           System.out.println("getting the foriegn Keys");
                     ForeignKeys = ConnectionT.getForiegnKeys2(new jspErrorObject(nextLine),con);
+           //         System.out.println("Returning from the foreign Keys");
+
                 }catch (SQLException se){
                     System.out.println("Some SQL ERROR Getting Foreign Keys: " + nextLine);
                     throw new Exception();
@@ -116,7 +135,7 @@ public class RecordRecords extends java.lang.Object {
                     //System.out.print(".");
                     //stemp = erin.stringQuery("Add another Recod ->");
                     if(ConnectionT.addRecord(ForeignKeys,con))
-                        ;//                    System.out.println("Record Added");
+                       ;// System.out.println("Adding the Record");//                    System.out.println("Record Added");
                     else
                         System.out.println("Error Adding Record");
                     if(++totalRecords%10000 == 0){
@@ -154,6 +173,21 @@ public class RecordRecords extends java.lang.Object {
         }catch (Exception e){
             e.printStackTrace();
         }
+        try{
+            pw.flush();
+            pw.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    static PrintWriter getPrintWriter() throws IOException {
+        java.util.Date d = new java.util.Date(System.currentTimeMillis());
+        String fname = "jeoError"+LPConstants.FileNameFormat.format(d) + ".log";
+        FileOutputStream fsoError = new FileOutputStream(fname);
+        OutputStreamWriter oswError = new OutputStreamWriter(fsoError);
+        PrintWriter pwError = new PrintWriter(oswError);
+        return pwError;
     }
 
 }
