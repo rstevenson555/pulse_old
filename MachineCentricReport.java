@@ -40,7 +40,29 @@ public class MachineCentricReport implements ReportBuilder {
         _sdataObj = s;
         _fsn = st;
     }
-    
+    /**
+     *This static method is the intended way to create one of these reports for the 
+     *standard Machine Centric Reports.  However, it can be extended for any of the
+     *Machine Centric type of reports where the only two parameters are the yyyymmdd,
+     *and Records where Records can be any string which represents the seconds Parameter.
+     *@param Query This is the Query you wich to run it must take three parameters, where
+     *the first parameter is MachineName from the Machines.MachineName table.column, a data
+     *in the form of yyyymmdd as a char.  (ie. TO_CHAR(Date, 'yyyymmdd')=?). and the third
+     *param can be any string you want, typically something to thin down the records
+     *(i.e. Queries.QueryName=?).
+     *@param bnas1 boolean run this for NAS1.
+     *@param bnas3 boolean run this for NAS3.
+     *@param bnas4 boolean run this for NAS4.
+     *@param yyyymmdd, this is the day for which the query will be run.
+     *@title this turns out to be the title heading of the report you generate.
+     *(e.g. if you are generating a CSV report on 12/04/2002, and this parameter
+     *is "BLA" then your filename will be BLA1204.csv
+     *@param Records this is the last string used in the parameters passed to the
+     *query.
+     *<DD><B>NOTE:</b><dt>  This query is intended to be used to create a file, or
+     *at least a result set.  you can do substatial damage to a production database with
+     *a malformed query so if you don't know what you are doing, ask.
+     */
     public static MachineCentricReport createReport(String Query,
                                                     boolean bnas1, 
                                                     boolean bnas3, 
@@ -155,7 +177,11 @@ public class MachineCentricReport implements ReportBuilder {
     }
 
 
-    
+    /**
+     *This method gets a linked list of all the dependent dataobjects in this specific
+     *ReportBuilder (MachineCentricReport).
+     *@return LinkedList of DependentDataObjects in the MachineCentricReport. 
+     */
     private LinkedList getDependentDataObjectList(){
         Iterator li = _sdataObj.iterator();
         DataObject ldo ;
@@ -168,7 +194,13 @@ public class MachineCentricReport implements ReportBuilder {
         }
         return lLinkedList;
     }
-    
+    /**
+     *This gets a vector list of all the IDO objects in the machine centric Report Object.
+     *if the machineCentricReport is composed of multible DataObjects it will 
+     *put these together.
+     *@return Vector
+     *This returns a vector of IndependentDataObjects.
+     */
     private Vector getVectorIDO(){
         Vector vido = null;
         Enumeration e = _sdataObj.elements();
@@ -199,7 +231,17 @@ public class MachineCentricReport implements ReportBuilder {
     
 
     
-    
+    /**
+     *This takes a Vector of IndependentDataObjects, and merges them into one
+     *independent data object. which represents all the values in the original
+     *independent data object.
+     *@param Vector is a vector of independent dataobjects it is assumed for the 
+     *purpose of this method that the IDO is a type Date or Timestamp.  If it
+     *is anything else you will have to add handling for the specific type of 
+     *interest to you.
+     *@return Hashtable where the objects are ordered with the earliest mapped to
+     *the key new Integer(1) and the latest mapped to the key new Integer(ht.size()). 
+     */ 
     private Hashtable getMergedIDO(Vector v){
         Hashtable ht = new Hashtable();
         for (int i = 0; i<v.size(); ++i){
@@ -216,7 +258,15 @@ public class MachineCentricReport implements ReportBuilder {
         return sortVectorOfStringIntsIntoHashtable(svec);
     }
     
-
+    /**
+     *This method should be removed in the future when we implement
+     *compare for most of these objects.  Then the data structures will
+     *just use the specified sort.
+     *@param Vector V this is the vector which represents the values which
+     *are ints stored as strings to be sorted.
+     *@return Hashtable where the objects are ordered with the earliest mapped to
+     *the key new Integer(1) and the latest mapped to the key new Integer(ht.size()). 
+     **/
     private Hashtable sortVectorOfStringIntsIntoHashtable( Vector v){
         int i=1;
         Hashtable ht = new Hashtable();
@@ -231,7 +281,16 @@ public class MachineCentricReport implements ReportBuilder {
         
         return ht;
     }
-
+    /**
+     *This method gets the smallest integer from a vector of strings
+     *which represent integers, and returns the value as a string, and 
+     *also mutates the vector by removing the returned value from the vector.
+     *@param v is a vector of strings which represent ints.
+     *@return String is the string representation of the smallest string int in
+     *the Vector.
+     *<DD><b>Postcondition</B><DT> whatever value was returned is also removed from the
+     *vector V 
+     */
     private String getSmallest(Vector v) throws ParseException{
      int indexOfSmallest = 0;
      Date svalue=null;
@@ -299,7 +358,11 @@ public class MachineCentricReport implements ReportBuilder {
         }
    }
     
-    
+    /**
+     *This returns the number of dependent data sets in the MachineCentricReport Object.
+     *@return int is the number of dependent data objects total in this MachineCentricReport
+     *Object.
+     */
     private int countCols(){
         Enumeration e = _sdataObj.elements();
         int i = 0;
@@ -394,9 +457,11 @@ public class MachineCentricReport implements ReportBuilder {
     
     /**
      *This method returns the next row of data from the Dataobjects as a String[].
+     *<B>DEPRICATED!!</B>     
      *@param int i this int is the row of data to return.
      *@return String[] this is the array of strings which represents the specified
      *row of data.
+     *<DD><B>DEPRICATED!!</B><DT>
      */
     private String[] getNextRow(int i){
         String[] rsa = new String[countCols()];
@@ -414,7 +479,9 @@ public class MachineCentricReport implements ReportBuilder {
         return rsa;
     }
 
-    
+        /**
+        *<DD><B>DEPRICATED!!</B><DT>
+       */ 
         boolean repair(){
         Enumeration e = _sdataObj.elements();
         DataObject tldo = (DataObject)e.nextElement();
@@ -458,13 +525,14 @@ public class MachineCentricReport implements ReportBuilder {
      *This produces a linked list of String[] which represent the
      *header information as the first element, then the rows of data
      *where it will contain a number of rows equal to getSiz().  Assuming 
-     *that the data is valid.
+     *that the data is valid.<B>DEPRICATED!!</B>
      *@return a LinkedList of String[] objects is returned.  The first String[]
      *represents the header information, and the the subsequent values represent
      *various rows of the data.  The String[]s will represent all of the _LLdd data
      *from all of the elements in the DataObject stack, not just the first dependent 
      *data Object.  If you want the first DependentDataObject you will have to write your
      *own method to do that.
+     *<DD><B>DEPRICATED!!</B><DT>
      */
     private LinkedList getDataQueue(){
         LinkedList rowQueue = null;
@@ -481,15 +549,5 @@ public class MachineCentricReport implements ReportBuilder {
 //        }
         return rowQueue;
     }
-
-
-    
-    
-    
-    
-    
-    
-    
-    
     
 }
