@@ -69,11 +69,9 @@ public class MainScreenAction extends BaseAction {
         Element headerElement = MainScreenDoc.createElement("DashBoard");
         Element leftPanelElement = MainScreenDoc.createElement("LeftPanel");
         Element bodyElement = MainScreenDoc.createElement("Body");
-        Element footerElement = MainScreenDoc.createElement("Footer");
         pageElement.appendChild(headerElement);
         pageElement.appendChild(leftPanelElement);
         pageElement.appendChild(bodyElement);
-        pageElement.appendChild(footerElement);
         
         MainScreenDoc.appendChild(pageElement);
         
