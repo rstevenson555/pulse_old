@@ -21,7 +21,7 @@ import java.sql.*;
 public class RecordRecords extends java.lang.Object {
     public static final boolean debug1 = false;
     public static final boolean debug2 = true;
-    public static final boolean type4Driver = false;
+    public static final boolean type4Driver = true;
     private static String driverName = null;
     private static String connectionURL = null;
 
@@ -42,7 +42,7 @@ public class RecordRecords extends java.lang.Object {
             connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
         }
    
-        
+         
         
         
         
@@ -128,8 +128,8 @@ public class RecordRecords extends java.lang.Object {
         LinkedList UpTimesLL = FileTool.getUpTimes(filearray);
         for (int jj = 0; jj< filearray.length; ++jj){
             er = new EasyReader(filearray[jj].toString());
-            Record(er,con);
-            try{
+           Record(er,con);
+            try{ 
                 er.close();
                 ConnectionT.PopulateUptimes((java.util.Date[])UpTimesLL.removeFirst(),filearray[jj].toString(),con);
             }catch (IOException ioe){
@@ -398,7 +398,7 @@ public class RecordRecords extends java.lang.Object {
             }
         }catch (SQLException sqle){
             sqle.printStackTrace();
-        }catch (NullPointerException ne){
+        }catch (NullPointerException ne){ 
             ne.printStackTrace();
         }catch (Exception e){
             e.printStackTrace();

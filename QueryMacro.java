@@ -9,7 +9,7 @@ import java.util.*;
 import java.sql.*;
 /**
  *
- * @author  i0360d3
+ * @author  Bryce L. Alcock
  * @version 
  */
 public class QueryMacro extends Object {
@@ -27,9 +27,36 @@ public class QueryMacro extends Object {
     /** Creates new QueryMacro */
     public QueryMacro() {
     }
+    
+    /**
+     *This constructor takes a Stack of QueryObjects.
+     *The bottom QueryObject is a QueryObject that returns a ResultSet. Presumably
+     *some type of a SELECT Query.
+     *all of the top stacks are intendend for intermediate steps such as 
+     *createing temporary tables.  This was important during the MySQL days of 
+     *development because MySQL did not have support for subselects.  However
+     *with the conversion to oracle it is not so important, and the methods could be 
+     *changed.
+     *@param s a Stack of QueryObjects.
+     */
     public QueryMacro(Stack s) {
         _qStack = s;
-        
+    }
+    
+    /**
+     *This constructor builds a QueryMacro for the situation where only one
+     *query is needed to generate the resultset.  The underlying structure 
+     *of this class has not changed, but can now be changed in the future 
+     *to remove the use of stacks, RSqueries and NRS queries.  The NRS queries
+     *came from the MySQL days before it had suport for subqueries.
+     *@param qo is a QueryObject which should return a result set.
+     *<dt><b>Postcondition</b><dd>
+     *A new QueryMacro will be constructed with the QueryObject as the only member
+     *query that will be executed.
+     */
+    public QueryMacro(QueryObject qo){
+        _qStack= new Stack();
+        _qStack.add(qo);
     }
 
     //This runs all the non-result set quiries in the stack

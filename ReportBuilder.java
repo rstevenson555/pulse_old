@@ -7,8 +7,11 @@
 package logParser;
 
 /**
+ *This Interface contains method signatures and void returns for each of the 
+ *various types of reports that can be built.  If the method is called without
+ *a PrintWriter, a default PrintWriter is generated.
  *
- * @author  root
+ * @author  Bryce L. Alcock
  * @version 
  */
 public interface ReportBuilder {
