@@ -27,8 +27,9 @@ public class QueryService extends Object {
             Integer inv = ((Integer)ekeys.nextElement());
             buildPS(pstmp,inv.intValue(), hs.get(inv));
         }
-            int rows = pstmp.executeUpdate();
-            return true;
+        int rows = pstmp.executeUpdate();
+        pstmp.close();
+        return true;
     }
     
     public static ResultSet executeRSQuery(String Query, java.util.Hashtable hs, Connection con) throws SQLException{
@@ -37,7 +38,7 @@ public class QueryService extends Object {
         //System.out.println("Location 2");
         Enumeration ekeys = hs.keys();
         //System.out.println("Location 3");
-        if(ekeys != null){
+        if(ekeys != null){ 
         //System.out.println("Location 4");
             while(ekeys.hasMoreElements()){
         //System.out.println("Location 5");
@@ -47,6 +48,7 @@ public class QueryService extends Object {
         }
         //System.out.println("Location 6");
             ResultSet rs = pstmp.executeQuery();
+            
             return rs;
         
     }
