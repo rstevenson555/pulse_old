@@ -7,6 +7,7 @@
 package logParser;
 import java.util.*;
 import java.io.*;
+import java.text.*;
 
 /**
  *
@@ -17,6 +18,7 @@ public class PageCentricReport implements ReportBuilder {
     Stack _sdataObj;
     String _fsn;
     String _title;
+    String _idoType;
     
 
     /** Creates new PageCentricReport */
@@ -28,6 +30,87 @@ public class PageCentricReport implements ReportBuilder {
         _fsn = st;
     }
 
+    private LinkedList getDependentDataObjectList(){
+        Iterator li = _sdataObj.iterator();
+        DataObject ldo ;
+        LinkedList lLinkedList = new LinkedList();
+        while(li.hasNext()){
+            Iterator i = ((DataObject)li.next()).getIteratorDependentData();
+            while(i.hasNext()){
+                lLinkedList.addLast((DependentDataObject)i.next());
+            }
+        }
+        return lLinkedList;
+    }
+    
+    private Vector getVectorIDO(){
+        Vector vido = null;
+        Enumeration e = _sdataObj.elements();
+        DataObject tldo = (DataObject)e.nextElement();
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE){
+            _idoType= "Date";
+            System.out.println("Fond a Date type");
+        }
+        System.out.println("*********************independent type =" + tldo.getIndependentType());
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.VARCHAR){
+            System.out.println("Fond a VARCHAR type");
+            _idoType = "VARCHAR";
+            DataObject ldo;
+            IndependentDataObject ido;
+            Enumeration le = _sdataObj.elements();
+            vido = new Vector();
+            while(le.hasMoreElements()){
+                System.out.println("Location 1");
+                ldo = (DataObject)le.nextElement();
+                System.out.println("Location 2");
+                ido = ldo.getIDO();
+                System.out.println("This IDO has " + ido.getCount());
+                vido.add(ido);
+            } 
+        }
+        return vido;
+    }
+    
+    private Hashtable getMergedIDO(Vector v){
+        System.out.println("Test Location 1");
+        Hashtable ht = new Hashtable();
+        System.out.println("Test Location 2");
+        for (int i = 0; i<v.size(); ++i){
+        System.out.println("Test Location 3");
+            IndependentDataObject lido=(IndependentDataObject)v.elementAt(i);
+        System.out.println("Test Location 4");
+            for(int j=0;j<lido.getCount(); ++j){
+        System.out.println("Test Location 5");
+                ht.put(lido.getObject(new Integer(j+1)),"na");
+            }
+        }
+        System.out.println("Test Location 6");
+        Enumeration e = ht.keys();
+        System.out.println("Test Location 7");
+        Vector svec = new Vector();
+        System.out.println("Test Location 8");
+        while(e.hasMoreElements()){
+        System.out.println("Test Location 9");
+            svec.add(e.nextElement());
+        }
+        System.out.println("Test Location 10");
+        return sortVectorOfStringsIntoHashtable(svec);
+    }
+
+    
+    private Hashtable sortVectorOfStringsIntoHashtable( Vector v){
+        int i=1;
+        Hashtable ht = new Hashtable();
+        Iterator iter = v.iterator();
+        while(iter.hasNext()){
+            ht.put(new Integer(i),iter.next());
+            ++i;
+        }
+        
+        return ht;
+    }
+   
+    
     
     private boolean isValid(){
         boolean valid = true;
@@ -135,6 +218,30 @@ public class PageCentricReport implements ReportBuilder {
     
     
     public void BuildCSVFile(java.io.PrintWriter pw) {
+        LinkedList dq = getDependentDataObjectList();
+        Hashtable htIDO = getMergedIDO(getVectorIDO());
+        String[] headings = getHeader();
+        pw.print(_idoType);
+        for(int i=0;i<headings.length;++i){
+            pw.print(", "+headings[i]);
+        }
+        pw.println();
+        for(int i=1;i<=htIDO.size();++i){
+            System.out.println((String)htIDO.get(new Integer(i)));
+            Iterator iter = dq.iterator();
+            pw.print((String) htIDO.get(new Integer(i)));
+            while(iter.hasNext()){
+                DependentDataObject ddo = (DependentDataObject)iter.next();
+                pw.print(", "+ddo.getHMV((String) htIDO.get(new Integer(i))));
+            }
+            pw.println();
+        }
+
+        
+        
+        
+        
+/*        
         System.out.println("Starting BuildCSVfile from MachineCentric...");
         String[] rsa = null;
         System.out.println("Location 2");
@@ -157,6 +264,7 @@ public class PageCentricReport implements ReportBuilder {
             }
             pw.println();
         }
+ */
     }
     
     public void BuildFormattedFile(java.io.PrintWriter pw) {

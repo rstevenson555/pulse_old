@@ -116,11 +116,17 @@ public class LPConstants extends java.lang.Object {
                    "q.queryName=? AND "+
                    "TO_CHAR(Time,'yyyymmdd')=? ";
     
-    
+    public static final String ORACLE_CreateDailyLoadTimesM = "SELECT p.PageName as PageName, "+
+                   "dlt.AverageLoadTime as AVELT, "+
+                   "dlt.maxloadtime as maxlt, dlt.minloadtime as minlt, "+ 
+                   "dlt.totalloads as TotalHits  "+
+                   "from pages p, dailyloadtimes dlt, machines m "+
+                   "Where m.MachineName=? AND dlt.Machine_ID=m.Machine_ID AND "+
+                   " TO_CHAR(DAY,'yyyyMMdd')=? AND p.Page_ID=dlt.Page_ID order by maxlt";
     
     /*
  
-     INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) 
+                INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) 
                          VALUES (QUERIESSEQUENCE.NEXTVAL,'TEST',1,'Test')
      
      */

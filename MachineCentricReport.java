@@ -41,6 +41,68 @@ public class MachineCentricReport implements ReportBuilder {
         _fsn = st;
     }
     
+    public static MachineCentricReport createReport(String Query,
+                                                    boolean bnas1, 
+                                                    boolean bnas3, 
+                                                    boolean bnas4, 
+                                                    String yyyymmdd, 
+                                                    String title,
+                                                    String Records){
+        Stack sDataObject = new Stack();
+        if(bnas1){
+            Hashtable ht = new Hashtable();
+            ht.put(new Integer(1),"NAS1");
+            ht.put(new Integer(2),Records);
+            ht.put(new Integer(3),yyyymmdd);
+            System.out.println("Location 1");
+            Stack sQueryObj = new Stack();
+            System.out.println("Location 2");
+            sQueryObj.add(new QueryObject(Query,ht));
+            System.out.println("Location 3");
+            QueryMacro qm = new QueryMacro(sQueryObj);
+            System.out.println("Location 4"); 
+            sDataObject.add(qm.getDataObject());
+            System.out.println("Locaiton 4b");
+            //hashData.add(sQueryObj);
+            
+
+        }
+        
+        if(bnas3){
+            Hashtable ht = new Hashtable();
+            System.out.println("Location 5");
+            ht.put(new Integer(1),"NAS3");
+            ht.put(new Integer(2),Records);
+            ht.put(new Integer(3),yyyymmdd);
+            System.out.println("Location 6");
+            Stack sQueryObj = new Stack();
+            sQueryObj.add(new QueryObject(Query,ht));
+            System.out.println("Location 7");
+            QueryMacro qm = new QueryMacro(sQueryObj);
+            System.out.println("Location 8");
+            sDataObject.add(qm.getDataObject());
+        }
+        
+        if(bnas4){
+            System.out.println("Location 9");
+            Hashtable ht = new Hashtable();
+            ht.put(new Integer(1),"NAS4");
+            ht.put(new Integer(2),Records);
+            ht.put(new Integer(3),yyyymmdd);
+            System.out.println("Location 10");
+            Stack sQueryObj = new Stack();
+            System.out.println("Location 11");
+            sQueryObj.add(new QueryObject(Query,ht));
+            System.out.println("Location 12");
+            QueryMacro qm = new QueryMacro(sQueryObj);
+            System.out.println("Location 13");
+            sDataObject.add(qm.getDataObject());
+        }
+        
+        return new MachineCentricReport(sDataObject, title);
+        
+    }
+    
     /**
      *This method determines if the Stack of DataObjects represents a valid 
      *stack.  If the Stack is not a valid stack, then the objects can either be 
