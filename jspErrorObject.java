@@ -80,6 +80,38 @@ public class jspErrorObject extends java.lang.Object {
         
         
      }
+     
+     public jspErrorObject(String s, String queueName, Hashtable ht){
+         /*
+         <EVENT  type="log"  id="jsptiming"  appname="orderpoint"  servername="op-099/10.3.12.75"><PAGE  name
+="preferences/p_shopping"  begin="true"><DATE>07/30/2001</DATE><TIME> 02:07:01 PM</TIME><USERINFO  s
+essionid="50vp5ieh21127.0.0.1"><IP>op-ias.bcop.com</IP><USERKEY>014260uuser3501</USERKEY></USERINFO>
+</PAGE></EVENT>
+         */
+         //Hashkeys should includ the following:
+         //EVENT_type
+         //EVENT_id
+         //EVENT_appname
+         //EVENT_servername
+         //PAGE_name
+         //PAGE_begin
+         //DATE_chars
+         //TIME_chars
+         //USERINFO_sessionid
+         //IP_chars
+         //USERKEY_chars
+         
+         
+         
+        
+         
+         
+         
+         
+         
+         
+     }
+     
 
      
      public java.util.Date getDate(){

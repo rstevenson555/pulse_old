@@ -23,9 +23,10 @@ public class StandardQueryTools extends java.lang.Object {
 
     /**
     * @param args the command line arguments
-    */
+    */ 
     public static void main (String args[]) {
-        if(args != null){
+        System.out.println("Starting StandardQueryTools");
+        if(args != null && args.length>0){
             for(int i =0;i<args.length;++i){
                 try{
                     System.out.println("Location 1");
@@ -47,7 +48,34 @@ public class StandardQueryTools extends java.lang.Object {
                     cnfe.printStackTrace();
                 }
             }
+        }else{
+           // Do it for yesterday.
+            try{
+                java.util.Date date = new java.util.Date(System.currentTimeMillis());
+                GregorianCalendar localCal = new GregorianCalendar();
+                localCal.setTime(date);
+                localCal.roll(GregorianCalendar.DAY_OF_MONTH,-1);
+                date=localCal.getTime();
+//                SimpleDateFormat sdf = new SimpleDateFormat();
+                
+                System.out.println(LPConstants.yyyyMMddFormat.format(date));
+                ConnectionPoolT cpt = new ConnectionPoolT();
+                Connection con = cpt.getConnection();
+                con.setAutoCommit(true);
+                StandardQueryTools sqt = new StandardQueryTools();
+                sqt.UpdateStandardQueriesToDB(con);
+                sqt.UpdateQuarterHourlyHistoricalRecords(LPConstants.yyyyMMddFormat.format(date),con);
+                sqt.UpdateDailyLoadTimes(LPConstants.yyyyMMddFormat.format(date), con);
+                sqt.UpdateHourlyHistoricalRecords(LPConstants.yyyyMMddFormat.format(date),con);
+            }catch (SQLException se){
+                se.printStackTrace();
+            }catch (ClassNotFoundException cnfe){
+                cnfe.printStackTrace();
+            }
+            
+            
         }
+        
     } 
      
     

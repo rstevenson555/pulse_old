@@ -19,7 +19,7 @@ public class Tester extends java.lang.Object {
 
     /** Creates new Tester */ 
     public Tester() {
-    }
+    } 
 
     /**
     * @param args the command line arguments
@@ -80,32 +80,37 @@ public class Tester extends java.lang.Object {
         sDataobject2.add(qm2.getDataObject());
         */
         
+        java.util.Date date = new java.util.Date(System.currentTimeMillis());
+        GregorianCalendar localCal = new GregorianCalendar();
+        localCal.setTime(date);
+        localCal.add(GregorianCalendar.DAY_OF_MONTH,-1);
+        date=localCal.getTime();
+
+        System.out.println(LPConstants.yyyyMMddFormat.format(date));
+        
+
+        
         
         Stack sPageQuery = new Stack(); 
 
-        Stack sPageQuery2 = new Stack(); 
 
         
         //Making a new page centric report
-        Hashtable htPageData2 = new Hashtable();
-        //htPageData2.put(new Integer(1),"0713");
-        //htPageData2.put(new Integer(2),"0713");
         
         
         Hashtable htPageData = new Hashtable();
         htPageData.put(new Integer(1),"NAS1");
-        htPageData.put(new Integer(2),"20010713");
+        if(args != null && args.length==1)
+            htPageData.put(new Integer(2),args[0]);
+        else
+            htPageData.put(new Integer(2),LPConstants.yyyyMMddFormat.format(date));
 
         
         sPageQuery.add(new QueryObject(LPConstants.ORACLE_CreateDailyLoadTimesM,htPageData));
-        sPageQuery2.add(new QueryObject(LPConstants.ORACLE_NasPageReport,htPageData2));
         QueryMacro qmPageQuery = new QueryMacro(sPageQuery);
-        QueryMacro qmPageQuery2 = new QueryMacro(sPageQuery2);
         System.out.println("after qmPageQuery2");
         Stack sPageQueryObject = new Stack();
-        Stack sPageQueryObject2 = new Stack();
         sPageQueryObject.add(qmPageQuery.getDataObject()); 
-        sPageQueryObject2.add(qmPageQuery2.getDataObject()); 
   
         System.out.println("after sPageQueryObject2");
         
@@ -114,28 +119,62 @@ public class Tester extends java.lang.Object {
         MachineCentricReport mcr = MachineCentricReport.createReport(
                                     LPConstants.ORACLE_SessionsDataM,
                                     true,false,false,
-                                    "20010713",
+                                    LPConstants.yyyyMMddFormat.format(date),
                                     "HourlyNewWay",
                                     "HourlySessions");
         MachineCentricReport mcr2 = MachineCentricReport.createReport(
                                     LPConstants.ORACLE_SessionsDataM,
                                     true,false,false,
-                                    "20010713", 
+                                    LPConstants.yyyyMMddFormat.format(date), 
                                     "QuarterHourlyNewWay",
                                     "QuarterHourlySession");
         System.out.println("after mach2"); 
       PageCentricReport pcr = new PageCentricReport(sPageQueryObject,"PageData");
-      PageCentricReport pcr2 = new PageCentricReport(sPageQueryObject2,"AllPagesData");
 //        MachineCentricReport mcr = new MachineCentricReport(sDataobject,"teststtt");
         Stack ss = new Stack();
-
+ 
         ss.add(mcr);
        ss.add(mcr2);
         ss.add(pcr);  
-        ss.add(pcr2);
+//        for(int i=16;i<20;++i){
+            Stack sPageQuery2 = new Stack(); 
+            Hashtable htPageData2 = new Hashtable();
+            if(args != null && args.length==1){
+                htPageData2.put(new Integer(1),args[0]);
+                htPageData2.put(new Integer(2),args[0]);
+            }else{
+                System.out.println("date format: " + LPConstants.SimpleFileNameFormat.format(date));
+                htPageData2.put(new Integer(1),LPConstants.SimpleFileNameFormat.format(date));
+                htPageData2.put(new Integer(2),LPConstants.SimpleFileNameFormat.format(date));
+                
+                
+            }
+            sPageQuery2.add(new QueryObject(LPConstants.ORACLE_NasPageReport,htPageData2));
+            QueryMacro qmPageQuery2 = new QueryMacro(sPageQuery2);
+            Stack sPageQueryObject2 = new Stack();
+            sPageQueryObject2.add(qmPageQuery2.getDataObject()); 
+            PageCentricReport pcr2 = new PageCentricReport(sPageQueryObject2,"AllPagesData");
+            ss.add(pcr2); 
+//        }
+        
+        
          ReportDirector rd = new ReportDirector();
          rd.BuildCSVReports(ss.elements());
      
+         localCal.roll(GregorianCalendar.DAY_OF_MONTH,1);
+        date=localCal.getTime();
+
+        try{
+         PrintWriter mailpw = new PrintWriter(new FileOutputStream("mailBatch.sh",false));
+         mailpw.println("mail bryce.alcock@mail.bcop.com < AllPagesData" + 
+             LPConstants.SimpleFileNameFormat.format(date)+".csv");
+         mailpw.println("mail bob.stevenson@mail.bcop.com < AllPagesData" + 
+             LPConstants.SimpleFileNameFormat.format(date)+".csv");
+         mailpw.flush();
+        }catch (IOException ioe){
+            ioe.printStackTrace();
+        }
+         
       
     }   
     

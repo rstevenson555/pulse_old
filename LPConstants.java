@@ -147,9 +147,9 @@ public class LPConstants extends java.lang.Object {
                     "      machines mach_nas1, machines mach_nas3, machines mach_nas4, pages pg "+
                     "           WHERE a.page_id   IN  "+
                     "                (SELECT DISTINCT(page_ID)  "+
-                    "                 from dailyloadtimes WHERE TO_CHAR(Day,'MMDD')='0713' "+
+                    "                 from dailyloadtimes WHERE TO_CHAR(Day,'MMDD')=? "+
                     "                )  "+
-                    " AND TO_CHAR(a.Day,'MMDD')='0713'   "+
+                    " AND TO_CHAR(a.Day,'MMDD')=?   "+
                     " AND TO_CHAR(nas1.Day,'MMDD')=TO_CHAR(a.Day,'MMDD')  "+
                     " AND TO_CHAR(nas3.Day,'MMDD')=TO_CHAR(a.Day,'MMDD') "+
                     " AND TO_CHAR(nas4.Day,'MMDD')=TO_CHAR(a.Day,'MMDD') "+

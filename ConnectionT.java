@@ -90,7 +90,7 @@ class ConnectionT {
             sqlAddUser = "INSERT INTO Users (User_ID, userName) VALUES (USER_ID_SEQ.NEXTVAL, ?) ";
             sqlPagesAll = "SELECT * FROM Pages Where PageName=?";
             sqlAddPages = "INSERT INTO Pages (Page_ID, PageName) VALUES (PAGE_ID_SEQ.NEXTVAL, ?) ";
-            sqlSessionsAll = "SELECT * FROM Sessions Where sessionTXT=?";
+            sqlSessionsAll = "SELECT * FROM Sessions Where sessionTXT=? AND ipaddress=?";
             sqlMachinesAll = "SELECT * FROM Machines Where MachineName=?";
             sqlAddSession = "INSERT INTO Sessions (Session_ID, sessionTXT, IPAddress) "+
                                  " VALUES (SESSION_ID_SEQ.NEXTVAL, ?,?) ";
@@ -953,6 +953,7 @@ public static void main(String args[]){
 
         pstmt = con.prepareStatement(sqlSessionsAll);
         pstmt.setString(1,fullsession.trim());
+        pstmt.setString(2,sip.trim());
         rs = pstmt.executeQuery();
         if(rs != null){
             boolean gotFK=false;
