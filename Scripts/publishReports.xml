@@ -26,5 +26,6 @@
 
     <target name="help">
       <echo message="ant [default]        : Publish todays report to the Jupiter Zone"/>
+      <echo message="The Location of the reports is http://jupiterzone.int.bcop.com:81/Art/Reports/"/>
     </target>
 </project>

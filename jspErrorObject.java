@@ -120,7 +120,7 @@ public class jspErrorObject extends java.lang.Object {
     _IPaddress=  (String)ht.get("IP_CHARS");
     _machine=  (String)ht.get("EVENT_servername");
     _loadTime=  (String)ht.get("ELAPSED_CHARS");
-    _browser=  (String)ht.get("Not working");
+    _browser=  (String)ht.get("BROWSER_CHARS");
     _sdate=_sdate +", "+_stime;
     
     

@@ -200,7 +200,7 @@ public class LPConstants extends java.lang.Object {
                     "where a.page_id=p.page_id and m.machine_id=a.machine_id      "+   
                     "AND a.user_id=u.user_id And "+ 
                     "to_char(a.time,'mmdd')=? and a.loadtime>30000      "+
-                    ") order by MACHINE_NAME, PAGE_NAME";
+                    ") order by PAGE_NAME, LOAD_TIME DESC, MACHINE_NAME";
 
     public static final String ORACLE_MachineUtilization =  "select m.shortName as Machine_Name,  "+                                    
                                    "sum(TOTALLOADS) as Total_Pages_Loaded, "+

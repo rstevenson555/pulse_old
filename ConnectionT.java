@@ -12,6 +12,17 @@ class ConnectionT {
     public static final boolean debug2 = false;
     public static final boolean debug3 = false;
     private static int recordsAdded = 0;
+    private static int iBrowserUpdate = 0;
+    private static int iBrowserNotUpdate=0;
+    private static int icashedPages=0;
+    private static int icashedSessions=0;
+    private static int icashedUsers=0;
+    private static int icashedMachines=0;
+    private static int idblookupPages=0;
+    private static int idblookupSessions=0;
+    private static int idblookupUsers=0;
+    private static int idblookupMachines=0;
+    
     
     //////////////////////////////////////////////////////////////////////////////
     // SQL STATEMENTS
@@ -40,6 +51,7 @@ class ConnectionT {
         private static final String sqlPagesAll;// = "SELECT * FROM NasAccess.Pages Where PageName=?";
         private static final String sqlAddPages;// = "INSERT INTO NasAccess.Pages (PageName) VALUES (?) ";
         private static final String sqlSessionsAll;// = "SELECT * FROM NasAccess.Sessions Where sessionTXT=?";
+        private static final String sqlUpdateSessions;
         private static final String sqlMachinesAll;// = "SELECT * FROM NasAccess.Machines Where MachineName=?";
         private static final String sqlAddSession;// = "INSERT INTO NasAccess.Sessions (sessionTXT, IPAddress) "+
                              //" VALUES (?,?) ";
@@ -82,7 +94,7 @@ class ConnectionT {
                               "VALUES (?,?,?,?,?) ";
             sqlGetLineCountByFile = "SELECT LINECOUNT FROM UPTIMES, MACHINES WHERE UPTIMES.FILENAME=? AND "+
                         "UPTIMES.MACHINE_ID=MACHINES.MACHINE_ID AND MACHINES.MACHINENAME=?";
-
+            sqlUpdateSessions = "Not Implemented for MYSQL ";
         }else{
             sqlUsersAll = "SELECT * FROM Users Where userName=?";
             //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
@@ -108,25 +120,36 @@ class ConnectionT {
                               "VALUES (UPTIME_ID_SEQ.NEXTVAL,?,?,?,?,?,?) ";
             sqlGetLineCountByFile = "SELECT LINECOUNT FROM UPTIMES, MACHINES WHERE UPTIMES.FILENAME=? AND "+
                                     "UPTIMES.MACHINE_ID=MACHINES.MACHINE_ID AND MACHINES.MACHINENAME=?";
+            sqlUpdateSessions = "UPDATE sessions SET browsertype=? where Session_id=?";
         }
     }
         
 
 
-
+/**  Inner class which is used to relate one or two key pair to a Value.
+ *   this class contains three public attributes the key, key2, and value.
+ *   The value is used to store a database primary key for the specified field.
+ */
     static class Mapper {
         public int key;
         public int value;
+        public int key2;
         Mapper(int k,int v)
         {
                 key = k; value= v;
         }
+        Mapper(int k,int v, int k2)
+        {
+                key = k; value= v; key2 = k2;
+        }
     };
+    
+    
     public static long fkTimer =0;
     private static int fullLookup=0;
     private static Hashtable hashSessions = new Hashtable();
     //private static String[] hashCount = new String[2000];
-    private static Mapper hashCount[] = new Mapper[2000];
+    private static Mapper hashCount[] = new Mapper[4000];
         
     private static Hashtable hashUsers = new Hashtable();
     private static Hashtable hashPages = new Hashtable();
@@ -145,7 +168,8 @@ class ConnectionT {
 
 
 
-
+/** main is used for debugging only
+ */
 public static void main(String args[]){
     String s1 = "order/index,03/21/2001, 09:33:16 "+
                 "AM,019327ltest1223,GXLiteSessionID--4534014804865994530,10.3.10.45";
@@ -182,81 +206,96 @@ public static void main(String args[]){
 
 
 
+   /**  This method takes a jspErrorObject and returns a String[] containing the foreign key values
+    *   associated with that jspErrorObject from the database.
+    *   @param jeo  - This is the jsperror object which you want to get the foreign keys for.
+    *   @param con  - This is the Connection to the database.
+    *   @return String[]  is an array of size 7 containing the fields for an accessrecord in the database.
+    *   @throws SQLException  This code can throw an SQLException.
+    **/
    public static String[] getForiegnKeys2(jspErrorObject jeo, Connection con) throws SQLException {
-    String page = jeo.getPage().trim();
-    String uid = jeo.getUserID().trim();
-    String fullsession = jeo.getFullSessionID().trim();
-    String sip = jeo.getIPAddress().trim();
-    String machine = jeo.getMachine().trim();
-    int nLoadTime = Integer.parseInt(jeo.getLoadTime().trim());
-    String[] results = new String[7];
-    boolean gotfullset = false;
-
-
-    //Foriegn Keys to be returned.
-    Integer UserNo =null;//"NA";
-    Integer PageNo = null;//"NA";
-    Integer SessionNo =null;//"NA";
-    Integer MachineNo = null;//"NA";
-
-    ////////////////////////////////////////////////////////////////////////////////
-    //****************************************************************************//
-    //   Check All the Cashed Memory to Prevent an unneeded database access       //
-    //****************************************************************************//
-    ////////////////////////////////////////////////////////////////////////////////
     
-    UserNo = getCashedUser(uid);
-    PageNo = getCashedPage(page);
-    SessionNo = getCashedSession(fullsession);
-    MachineNo = getCashedMachine(machine);
-    //System.out.println("Checked the cashce");
-    ////////////////////////////////////////////////////////////////////////////////
-    //****************************************************************************//
-    //   Confirm that we got what we needed.  If not perform a database query     //
-    //****************************************************************************//
-    ////////////////////////////////////////////////////////////////////////////////
+        String page = jeo.getPage().trim();
+        String uid = jeo.getUserID().trim();
+        String fullsession = jeo.getFullSessionID().trim();
+        String sip = jeo.getIPAddress().trim();
+        String machine = jeo.getMachine().trim();
+        int nLoadTime = Integer.parseInt(jeo.getLoadTime().trim());
+        String browser=null;
 
-    if(UserNo == null)
-	UserNo = getUserNo(uid,con);
-    else
-	if(++totalCashedUsers == 1000)
-            System.out.println("Total Cashed Users: "+ totalCashedUsers);
-    
-    //System.out.println("Checked User No");
-    if(PageNo == null)
-	PageNo = getPageNo(page,con);
-    else
-	if(++totalCashedPages == 1000)
-            System.out.println("Total Cashed Pages : "+ totalCashedPages);
+        //  Only the docs/index page should contain the Browser Information.
+        //  This will need to be changed in the future if we change how the 
+        //  PagesNames are recorded.  it will most likely be changed to com.bcop.docs.index or
+        //  something like that.
+        if(page.equalsIgnoreCase("docs/index"))
+            browser=jeo.getBrowser();
+        String[] results = new String[7];
+        boolean gotfullset = false;
 
-    
-    //System.out.println("Checked page No");
-    if(SessionNo == null)
-	SessionNo = getSession(fullsession,sip,con);
-    else 
-	if(++totalCashedSessions == 1000)
-            System.out.println("Total Cashed Sessions: "+ totalCashedSessions);
 
-    if(MachineNo == null)
-	MachineNo = getMachine(machine,con);
-    else 
-	if(++totalCashedMachines == 1000)
-            System.out.println("Total Cashed Machines: "+ totalCashedMachines);
-    
-    //System.out.println("Checked Session NO");
-    results[0] = "Not Used";
-    results[1] = ""+PageNo;
-    results[2] = ""+UserNo;
-    results[3] = ""+jeo.getTimeStampFormatDate();
-    results[4] = "" +SessionNo ;
-    results[5] = ""+MachineNo;
-    results[6] = ""+nLoadTime;
-//    System.out.println("Build Arrary");
-    if(debug2)
-       displayFK(results);
-  //  System.out.println("Returning");
-    return results;
-    
+        //Foriegn Keys to be returned.
+        Integer UserNo =null;
+        Integer PageNo = null;
+        Integer SessionNo =null;
+        Integer MachineNo = null;
+
+        
+        ////////////////////////////////////////////////////////////////////////////////
+        //   Check All the Cashed Memory to Prevent an unneeded database access       //
+        ////////////////////////////////////////////////////////////////////////////////
+
+        UserNo = getCashedUser(uid);
+        PageNo = getCashedPage(page);
+        if(!page.equalsIgnoreCase("docs/index"))
+            SessionNo = getCashedSession(fullsession, sip);
+        else
+            SessionNo=null;
+
+        MachineNo = getCashedMachine(machine);
+
+        ////////////////////////////////////////////////////////////////////////////////
+        //   Confirm that we got what we needed.  If not perform a database query     //
+        ////////////////////////////////////////////////////////////////////////////////
+
+        if(UserNo == null)
+            UserNo = getUserNo(uid,con);
+        else
+            if(++totalCashedUsers == 10000)
+                System.out.println("Total Cashed Users: "+ totalCashedUsers);
+
+        if(PageNo == null)
+            PageNo = getPageNo(page,con);
+        else
+            if(++totalCashedPages == 10000)
+                System.out.println("Total Cashed Pages : "+ totalCashedPages);
+
+
+        if(SessionNo == null)
+        {
+
+            SessionNo = getSession(fullsession,sip, browser, con);
+        }
+        else 
+            if(++totalCashedSessions == 10000)
+                System.out.println("Total Cashed Sessions: "+ totalCashedSessions);
+
+        if(MachineNo == null)
+            MachineNo = getMachine(machine,con);
+        else 
+            if(++totalCashedMachines == 1000)
+                System.out.println("Total Cashed Machines: "+ totalCashedMachines);
+
+        
+        results[0] = "Not Used";
+        results[1] = ""+PageNo;
+        results[2] = ""+UserNo;
+        results[3] = ""+jeo.getTimeStampFormatDate();
+        results[4] = "" +SessionNo ;
+        results[5] = ""+MachineNo;
+        results[6] = ""+nLoadTime;
+
+        return results;
+
    }
 
 
@@ -268,44 +307,59 @@ public static void main(String args[]){
 
 
 
-    public static Integer getCashedSession(String session){
-       /*hcObject = new Integer(session.hashCode());
-        Object ohu = hashSessions.get(hcObject);
-	if(ohu != null)
-	    return (Integer)ohu;
-        else
-            return null;
-         */
-        
-        Mapper map = hashCount[Math.abs(session.hashCode())%1999];
-        if ( map != null  && map.key == session.hashCode() )
+    public static Integer getCashedSession(String session, String sip){
+        Mapper map = hashCount[Math.abs(session.hashCode())%3997];
+        if ( map != null  && map.key == session.hashCode() && map.key2==sip.hashCode() ){
+            ++icashedSessions;
             return new Integer(map.value);
+        }
         return null;
-
     }
+
+    
+    
+    
     public static Integer getCashedUser(String user){
        hcObject = new Integer(user.hashCode());
         Object ohu = hashUsers.get(hcObject);
-	if(ohu != null)
+	if(ohu != null){
+           ++icashedUsers;
 	    return (Integer)ohu;
+        }
         else
             return null;
-
     }
+
+    
+
     public static Integer getCashedPage(String page){
+        
        hcObject = new Integer(page.hashCode());
         Object ohu = hashPages.get(hcObject);
-	if(ohu != null)
+	if(ohu != null){
+            ++icashedPages;
 	    return (Integer)ohu;
+        }
         else
             return null;
 
     }
+    
+
+
     public static Integer getCashedMachine(String machine){
+        if(icashedMachines%10000==0){
+            System.out.println("used Cashed Machines: " + icashedMachines);
+            System.out.println("used Cashed Pages: " + icashedPages);
+            System.out.println("used Cashed User: " + icashedUsers);
+            System.out.println("used Cashed Sessions: " + icashedSessions);
+        }
        hcObject = new Integer(machine.hashCode());
         Object ohu = hashMachines.get(hcObject);
-	if(ohu != null)
+	if(ohu != null){
+            ++icashedMachines;
 	    return (Integer)ohu;
+        }
         else
             return null;
 
@@ -313,27 +367,21 @@ public static void main(String args[]){
 
    
     
-    public static void addCashedSession(String sessionTXT, String sessionNo){
-	/*if(hashSessions.size() > 2000){
-	    hashSessions = new Hashtable();
-	    System.out.println("Ran out of cashe room for session you may want to increase cashe size");
-	}*/
-
-        /*hcObject = new Integer(sessionTXT.hashCode());
-        Object o =  hashSessions.put(hcObject,new Integer(sessionNo));
-        if(o !=null)
-	    if(++rehashSessions == 1000)
-                System.out.println("Rehashing of Sessions : =" +rehashSessions);*/
-        //Object o = null;
-        hashCount[Math.abs(sessionTXT.hashCode())%1999] = new Mapper(sessionTXT.hashCode() , Integer.parseInt( sessionNo ));
+    public static void addCashedSession(String sessionTXT, String sessionNo, String IPAddress){
+        hashCount[Math.abs(sessionTXT.hashCode())%3997] = new Mapper(sessionTXT.hashCode() , Integer.parseInt( sessionNo ),IPAddress.hashCode());
     }
+
+    
     public static void addCashedUser(String userName , String userNo ){
         hcObject = new Integer(userName.hashCode());
         Object o =  hashUsers.put(hcObject,new Integer(userNo));
         if(o !=null)
 	    if(++rehashUsers == 1000)
-                System.out.println("Rehashing of Users : =" +rehashUsers);
+            System.out.println("Rehashing of Users : =" +rehashUsers);
     }
+
+    
+
     public static void addCashedPage(String pageName, String pageNo ){
         hcObject = new Integer(pageName.hashCode());
         Object o =  hashPages.put(hcObject,new Integer(pageNo));
@@ -341,6 +389,9 @@ public static void main(String args[]){
 	    if(++rehashPages == 1000)
                 System.out.println("Rehashing of Pages : =" +rehashPages);
     }
+    
+
+
     public static void addCashedMachine(String machineName, String machineNo){
         hcObject = new Integer(machineName.hashCode());
 	    Object o =  hashMachines.put(hcObject, new Integer(machineNo));
@@ -354,6 +405,7 @@ public static void main(String args[]){
 
 
     public static Integer getUserNo(String uid, Connection con){
+        ++idblookupUsers;
     long topTime = System.currentTimeMillis();
 
     PreparedStatement pstmt=null;
@@ -491,6 +543,7 @@ public static void main(String args[]){
 
 
    public static Integer getPageNo(String page, Connection con){
+       ++idblookupPages;
        long topTime = System.currentTimeMillis();
     PreparedStatement pstmt=null;
     ResultSet rs = null;
@@ -587,7 +640,14 @@ public static void main(String args[]){
 
 
 
-    public static Integer getSession(String fullsession, String sip, Connection con){
+    public static Integer getSession(String fullsession, String sip, String browsertype, Connection con){
+        ++idblookupSessions;
+        if(idblookupSessions%500 == 0){
+            System.out.println("DBLOOKUPS Sessions: " + idblookupSessions);
+            System.out.println("DBLOOKUPS Pages: " + idblookupPages);
+            System.out.println("DBLOOKUPS Users: " + idblookupUsers);
+            System.out.println("DBLOOKUPS Machines: " + idblookupMachines);
+        }
         long topTime = System.currentTimeMillis();
     PreparedStatement pstmt=null;
     ResultSet rs = null;
@@ -668,6 +728,17 @@ public static void main(String args[]){
             if(debug1)
                 System.out.println("Session ID Not Found");
         }
+        
+        if(browsertype!=null && SessionNo !=null){
+            ++iBrowserUpdate;
+            updateBrowserInfo(SessionNo, browsertype, con);
+        }else{
+            ++iBrowserNotUpdate;
+        }
+        if(iBrowserUpdate%100 ==0 ){
+            //System.out.println("iBrowserUpdate: " + iBrowserUpdate );
+            //System.out.println("iBrowserNotUpdate: " + iBrowserNotUpdate );
+        }
     }catch (Exception e){
         System.out.println("Vauge exception somewhere in the session Setting Session to 10");
         SessionNo="10";
@@ -682,12 +753,36 @@ public static void main(String args[]){
     }
     fkTimer += System.currentTimeMillis() - topTime;
 
-    addCashedSession(fullsession.trim(),SessionNo);
+    addCashedSession(fullsession.trim(),SessionNo,sip);
 
     return new Integer(SessionNo);
+    
     }
     
     
+    
+    
+    public static void updateBrowserInfo(String SessionNo, String browsertype, Connection con) throws SQLException{
+        long topTime = System.currentTimeMillis();
+        PreparedStatement pstmt=null;
+
+        pstmt = con.prepareStatement(sqlUpdateSessions);
+        if(browsertype.length() > 125)
+            pstmt.setString(1,browsertype.substring(0,124));
+        else
+            pstmt.setString(1,browsertype.trim());
+
+        pstmt.setInt(2,Integer.parseInt(SessionNo));
+
+        
+        int i = pstmt.executeUpdate();
+        
+        pstmt.close();
+        pstmt = null;
+        fkTimer += System.currentTimeMillis() - topTime;
+    }
+    
+
     
     public static int getLinesInDatabase(String fname, Connection con) throws SQLException {
         System.out.println("getLinesInDB 1");
@@ -728,6 +823,7 @@ public static void main(String args[]){
     }
     
     public static Integer getMachine(String machine, Connection con){
+        ++idblookupMachines;
         long topTime = System.currentTimeMillis();
     PreparedStatement pstmt=null;
     ResultSet rs = null;

@@ -9,10 +9,12 @@
   <property name="version" value="1.0-rc1"/>
 
   <property name="remote.logparser" value="/apps/artadmin/jars"/>
+  <property name="remote.logparser.scripts" value="/apps/artadmin/art/scripts/"/>
   <property name="logparser.src" value="${basedir}"/>
   <property name="logparser.bin" value="${basedir}/bin"/>
   <property name="logparser.jars" value="${basedir}/jars"/>
   <property name="logparser.colorado" value="${basedir}/../colorado/"/>
+  <property name="logparser.scripts" value="${basedir}/scripts/"/>
  
   <property name="packages" value="org.apache.tools.*"/> 
   <property name="manifest" value="src\etc\manifest"/>
@@ -89,6 +91,15 @@
      </ftp>
   </target>
  
+  <target name="dist.scripts" >
+     <echo message=""/>
+     <echo message="[ Copying logParser scritps to prod, ${remote.logparser}/bin ]"/>   
+
+     <ftp server="beta-db1.int.bcop.com" userid="artadmin" password="abc123" remotedir="${remote.logparser.scripts}" >
+       <fileset dir="${logparser.scripts}" includes="*.xml *.sh" />
+     </ftp>
+  </target>
+  
   <!-- =================================================================== -->
   <!-- Cleans up generated stuff                                           -->
   <!-- =================================================================== -->
@@ -106,6 +117,7 @@
     <echo message="ant                    - builds default projects"/>
     <echo message="ant dist.beta   		  - distributes app to beta"/>
     <echo message="ant dist.prod   		  - distributes app to prod"/>
+    <echo message="ant dist.scripts   		  - distributes scripts to prod"/>
     <echo message="ant compile_optimize   - builds java optimized"/>
     <echo message="ant docs               - builds javadocs"/>
     <echo message="ant all                - build everything"/>
