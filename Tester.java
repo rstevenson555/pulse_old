@@ -115,9 +115,54 @@ public class Tester extends java.lang.Object {
             Stack sPageQueryObject2 = new Stack();
             sPageQueryObject2.add(qmPageQuery2.getDataObject()); 
             PageCentricReport pcr2 = new PageCentricReport(sPageQueryObject2,"AllPagesData");
+            
+            
+            System.out.println("Query: "+ LPConstants.ORACLE_NasPageReport);
+            System.out.println("Parameters: "+ (String)htPageData2.get(new Integer(1)));
+            System.out.println("Parameters: "+ (String)htPageData2.get(new Integer(2)));
 //      The Page Centric Prport pcr2 is ready to be added to the Stack.
 ////////////////////////////////////////////////////////////////////////////////
 
+            
+///////////////////////////////////////////////////////////////////////////////
+//  All pages Load Time Report  -  Ordered Report.
+///////////////////////////////////////////////////////////////////////////////
+            Stack sPageQuery4 = new Stack(); 
+            Hashtable htPageData4 = new Hashtable();
+            if(args != null && args.length==1){
+                htPageData4.put(new Integer(1),args[0]);
+                htPageData4.put(new Integer(2),args[0]);
+            }else{
+                System.out.println("date format: " + LPConstants.SimpleFileNameFormat.format(date));
+                htPageData4.put(new Integer(1),LPConstants.SimpleFileNameFormat.format(date));
+                htPageData4.put(new Integer(2),LPConstants.SimpleFileNameFormat.format(date));
+                
+                
+            }
+            sPageQuery4.add(new QueryObject(LPConstants.ORACLE_NasPageReport,htPageData4));
+            QueryMacro qmPageQuery4 = new QueryMacro(sPageQuery4);
+            Stack sPageQueryObject4 = new Stack();
+            sPageQueryObject4.add(qmPageQuery4.getDataObject()); 
+            StringBuffer sbTitleBlock = new StringBuffer();
+
+            sbTitleBlock.append("This report represents: Max Load Time, Min Load Time, Average Load Time, and Total Loads <BR>").
+                append(" For each page, shown by machine.<BR>").
+                append("The report is sorted by the Sum of the product of Average Load time and total loads for all machines.<BR>").
+                append("<BR>").
+                append("Ad-Hoc Report Tool (ART Report 002)<BR>").
+                append("<BR>").
+                append("All times are in milliseconds.<BR>").
+                append("<BR>");
+
+           OrderedReport or4 = new OrderedReport(sPageQueryObject4,"AllPagesDataOrdered",sbTitleBlock.toString());
+            
+            
+            System.out.println("Query: "+ LPConstants.ORACLE_NasPageReport);
+            System.out.println("Parameters: "+ (String)htPageData4.get(new Integer(1)));
+            System.out.println("Parameters: "+ (String)htPageData4.get(new Integer(2)));
+//      The Page Centric Prport pcr2 is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+            
             
 ///////////////////////////////////////////////////////////////////////////////
 //  30 second load time report   -  Page centric reports don't have the Assmbly design pattern yet.
@@ -137,10 +182,50 @@ public class Tester extends java.lang.Object {
             QueryMacro qmPageQuery3 = new QueryMacro(sPageQuery3);
             Stack sPageQueryObject3 = new Stack();
             sPageQueryObject3.add(qmPageQuery3.getDataObject()); 
-            PageCentricReport pcr3 = new PageCentricReport(sPageQueryObject3,"30SecondLoad");
+            sbTitleBlock = new StringBuffer();
+            sbTitleBlock.append("This report represents all pages which took longer than 30 seconds to load. <BR>").
+                            append("The report is sorted by machine, page, user <BR>").
+                            append("<BR>").
+                            append("Ad-Hoc Report Tool (ART Report 002)<BR>").
+                            append("<BR>").
+                            append("All times are in seconds.<BR>").
+                            append("<BR>");
+            OrderedReport pcr3 = new OrderedReport(sPageQueryObject3,"30SecondLoad", sbTitleBlock.toString());
 //      The Page Centric Prport pcr2 is ready to be added to the Stack.
 ////////////////////////////////////////////////////////////////////////////////
 
+
+///////////////////////////////////////////////////////////////////////////////
+//  30 second load time report   -  Page centric reports don't have the Assmbly design pattern yet.
+///////////////////////////////////////////////////////////////////////////////
+            Stack sPageQuery5 = new Stack(); 
+            Hashtable htPageData5 = new Hashtable();
+            if(args != null && args.length==1){
+                System.out.println("Date: " +args[0]);
+                htPageData5.put(new Integer(1),args[0]);
+            }else{
+                System.out.println("date format: " + LPConstants.SimpleFileNameFormat.format(date));
+                htPageData5.put(new Integer(1),LPConstants.SimpleFileNameFormat.format(date));
+                
+                
+            }
+            sPageQuery5.add(new QueryObject(LPConstants.ORACLE_HourlyReport,htPageData5));
+            QueryMacro qmPageQuery5 = new QueryMacro(sPageQuery5);
+            Stack sPageQueryObject5 = new Stack();
+            sPageQueryObject5.add(qmPageQuery5.getDataObject()); 
+            sbTitleBlock = new StringBuffer();
+            sbTitleBlock.append("This Hourly Usage report represents the number of users, and total pages served, by hour <BR>").
+                            append("The report is sorted by machine, hour <BR>").
+                            append("<BR>").
+                            append("Ad-Hoc Report Tool (ART Report 003)<BR>").
+                            append("<BR>").
+                            append("Values represent number of distinct users, and total pages served up.<BR>").
+                            append("<BR>");
+            OrderedReport or5 = new OrderedReport(sPageQueryObject5,"HourlyUsage", sbTitleBlock.toString());
+//      The Page Centric Prport pcr2 is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
+
+               
             
             //Add all of the various reports to the Stack.
             ss.add(mcr);
@@ -148,6 +233,8 @@ public class Tester extends java.lang.Object {
             ss.add(pcr);  
             ss.add(pcr2); 
             ss.add(pcr3); 
+            ss.add(or4); 
+            ss.add(or5);
         
 
             

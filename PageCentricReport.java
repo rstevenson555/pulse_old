@@ -269,6 +269,7 @@ public class PageCentricReport implements ReportBuilder {
     }
     
     public void BuildHTMLFile(java.io.PrintWriter pw) {
+        String rowBGColor="lightblue";
         LinkedList dq = getDependentDataObjectList();
         System.out.println("calling getMergedIDOj");
         Hashtable htIDO = getMergedIDO(getVectorIDO());
@@ -278,7 +279,7 @@ public class PageCentricReport implements ReportBuilder {
         pw.println("<HEAD><TITLE>PAGE CENTRIC REPORT STYLE  HTML</TITLE></HEAD>");
         pw.println("<TABLE border=2><TR><TD><TABLE>");
 
-        pw.println("<TR>");
+        pw.println("<TR BGCOLOR=\"lightgreen\">");
 
         pw.println("<TH>");
         
@@ -291,7 +292,12 @@ public class PageCentricReport implements ReportBuilder {
         }
         pw.println("</TR>");
         for(int i=1;i<=htIDO.size();++i){
-            pw.println("<TR>");
+            if(i%2==0)
+                rowBGColor="lightblue";
+            else
+                rowBGColor="lightyellow";
+            
+            pw.println("<TR BGCOLOR=\""+rowBGColor+"\">");
 //            System.out.println((String)htIDO.get(new Integer(i)));
             Iterator iter = dq.iterator();
             pw.print("<TD ALIGN=RIGHT>"+(String) htIDO.get(new Integer(i))+"</TD>");

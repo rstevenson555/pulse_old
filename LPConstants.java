@@ -13,6 +13,16 @@ import java.text.*;
  */
 public class LPConstants extends java.lang.Object {
 
+    
+    ////////////////////////////////////////////////////////////////////////////
+    //  Constants used elsewhere in this file.  (can't make forward reference)
+    ////////////////////////////////////////////////////////////////////////////
+    public static String Nas1Name="inet-nas1/10.7.209.201";
+    public static String Nas3Name="inet-nas3/10.7.209.213";
+    public static String Nas4Name="inet-nas4/10.7.209.214";
+    
+
+
     //**********************************************************************************
     //Various date formatters used throughout the project.
     //**********************************************************************************
@@ -124,6 +134,18 @@ public class LPConstants extends java.lang.Object {
                    "q.queryName=? AND "+
                    "TO_CHAR(Time,'YYYYMMDD')=? ";
     
+    
+    public static final String ORACLE_HourlyReport = "SELECT rownum, to_char(hr.Time,'HH:MI AM') as Hour , m.MachineName as Machine, "+
+                   " hr.Distinct_Hits as Distinct_Hits, "+
+                   "hr.Total_Hits as Total_Hits "+
+                   "From HistoricalRecords hr, Queries q, Machines m "+
+                   "Where m.Machine_ID=hr.Machine_ID AND "+
+                   "hr.query_ID=q.query_ID AND "+
+                   "q.queryName='HourlySessions' AND "+
+                   "TO_CHAR(hr.Time,'MMDD')=? "+ 
+                   "order by m.machineName, hr.Time";
+
+    
     public static final String ORACLE_CreateDailyLoadTimesM = "SELECT p.PageName as PageName, "+
                    "dlt.AverageLoadTime as AVELT, "+
                    "dlt.maxloadtime as maxlt, dlt.minloadtime as minlt, "+ 
@@ -154,16 +176,16 @@ public class LPConstants extends java.lang.Object {
                     " AND TO_CHAR(nas3.Day,'MMDD')=TO_CHAR(a.Day,'MMDD') "+
                     " AND TO_CHAR(nas4.Day,'MMDD')=TO_CHAR(a.Day,'MMDD') "+
                     " AND a.page_ID=nas1.Page_ID  "+
-                    " AND nas1.machine_id in(select machine_id from machines where machinename='NAS1')  "+
-                    " AND nas3.machine_id in (select machine_id from machines where machinename='NAS3')  "+
-                    " AND nas4.machine_id in (select machine_id from machines where machinename='NAS4')  "+
+                    " AND nas1.machine_id in(select machine_id from machines where machinename='"+Nas1Name+"')  "+
+                    " AND nas3.machine_id in (select machine_id from machines where machinename='"+Nas3Name+"')  "+
+                    " AND nas4.machine_id in (select machine_id from machines where machinename='"+Nas4Name+"')  "+
                     " AND a.page_id=nas3.page_id  "+
                     " AND a.page_id=nas4.page_id  "+
                     " AND mach_nas1.machine_id=nas1.machine_id "+
                     " AND mach_nas3.machine_id=nas3.machine_id "+
                     " AND mach_nas4.machine_id=nas4.machine_id "+
                     " AND pg.page_id=a.page_id "+
-                    " ORDER BY (nas1.AVERAGELoadtime + nas3.averageLoadtime + nas4.averageLoadtime) ";
+                    " ORDER BY (nas1.AVERAGELoadtime*nas1.totalloads + nas3.averageLoadtime*nas3.totalloads + nas4.averageLoadtime*nas4.totalloads) DESC";
 
  
     
@@ -178,7 +200,7 @@ public class LPConstants extends java.lang.Object {
                     "where a.page_id=p.page_id and m.machine_id=a.machine_id      "+   
                     "AND a.user_id=u.user_id And "+ 
                     "to_char(a.time,'mmdd')=? and a.loadtime>30000      "+
-                    ") order by rownum";
+                    ") order by MACHINE_NAME, PAGE_NAME, USERS";
 /*
  
                 INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) 
