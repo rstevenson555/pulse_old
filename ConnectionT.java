@@ -53,7 +53,7 @@ class ConnectionT {
                              //"NasAccess.Pages, NasAccess.Users, NasAccess.Sessions WHERE "+
                              //"NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
                              //" AND NasAccess.Sessions.sessionTXT=?";
-
+        private static final String sqlUptimeInsert;
     
     static{
         if(LPConstants.Database.equalsIgnoreCase("MySQL")){
@@ -77,6 +77,8 @@ class ConnectionT {
                                  "NasAccess.Pages, NasAccess.Users, NasAccess.Sessions WHERE "+
                                  "NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
                                  " AND NasAccess.Sessions.sessionTXT=?";
+            sqlUptimeInsert = "INSERT INTO Uptimes (startTime,endTime,Machine_ID,Filename,Archive) " +
+                              "VALUES (?,?,?,?,?) ";
         }else{
             sqlUsersAll = "SELECT * FROM Users Where userName=?";
             //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
@@ -98,6 +100,8 @@ class ConnectionT {
                                  "Pages, Users, Sessions WHERE "+
                                  "Pages.pageName=? AND Users.userName=? "+
                                  " AND Sessions.sessionTXT=?";
+            sqlUptimeInsert = "INSERT INTO Uptimes (Uptime_ID, startTime,endTime,Machine_ID,Filename,Archive) " +
+                              "VALUES (UPTIMESSEQUENCE.NEXTVALUE,?,?,?,?,?) ";
 
         }
     }
@@ -222,7 +226,7 @@ public static void main(String args[]){
             System.out.println("Total Cashed Sessions: "+ totalCashedSessions);
 
     if(MachineNo == null)
-	MachineNo = getMachine(machine,sip,con);
+	MachineNo = getMachine(machine,con);
     else 
 	if(++totalCashedMachines == 1000)
             System.out.println("Total Cashed Machines: "+ totalCashedMachines);
@@ -978,7 +982,7 @@ public static void main(String args[]){
     
     
     
-    public static String getMachine(String machine, String sip, Connection con){
+    public static String getMachine(String machine, Connection con){
     PreparedStatement pstmt=null;
     ResultSet rs = null;
     PreparedStatement pstmt2 = null;
@@ -991,88 +995,91 @@ public static void main(String args[]){
     ////////////////////////////////////////////////////////////////////////
     //Session Values
     ////////////////////////////////////////////////////////////////////////
+    if(getCashedMachine(machine) != null){
+        return getCashedMachine(machine);
+    }else{
+        try{
 
-    try{
+            pstmt = con.prepareStatement(sqlMachinesAll);
+            pstmt.setString(1,machine.trim());
+            rs = pstmt.executeQuery();
+            if(rs != null){
+                boolean gotFK=false;
+                if(debug1)
+                    System.out.println("The Result Set is not Null");
+                while (rs.next()) {
+                    MachineNo = ""+rs.getInt("Machine_ID");
+                    gotFK = true;
+                }
+                if(!gotFK){
+    //            private static final String sqlAddSesion = "INSERT INTO Sessions (sessionTXT, sessionNo, IPAddress) "+
+    //                         " VALUES (?,?,?) ";
+                    pstmt2 = con.prepareStatement(sqlAddMachine);
+                    pstmt2.setString(1,machine.trim());
 
-        pstmt = con.prepareStatement(sqlMachinesAll);
-        pstmt.setString(1,machine.trim());
-        rs = pstmt.executeQuery();
-        if(rs != null){
-            boolean gotFK=false;
-            if(debug1)
-                System.out.println("The Result Set is not Null");
-	    while (rs.next()) {
-                MachineNo = ""+rs.getInt("Machine_ID");
-                gotFK = true;
-            }
-            if(!gotFK){
-//            private static final String sqlAddSesion = "INSERT INTO Sessions (sessionTXT, sessionNo, IPAddress) "+
-//                         " VALUES (?,?,?) ";
-                pstmt2 = con.prepareStatement(sqlAddMachine);
-                pstmt2.setString(1,machine.trim());
-                
-                int flag1=0;
-                try{
-                    ++flagSessions;
-                    System.out.println("Just before executeUpdate for the addMachines");
+                    int flag1=0;
+                    try{
+                        ++flagSessions;
+                        System.out.println("Just before executeUpdate for the addMachines");
 
-                    if(pstmt2.executeUpdate() ==1)
-                    {
-                        System.out.println("Machine Presumably added correctly");
-                        flag1 = 1;
-                        pstmt2.close();
-                        flag1 = 2;
-                        pstmt2 = null;
-                        flag1 = 3;
-                        pstmt2 = con.prepareStatement(sqlMachinesAll);
-                        pstmt2.setString(1,machine.trim());
-                        flag1 = 4;
-                        rs2 = pstmt2.executeQuery();
-                        flag1 = 5;
-                        if(rs2.next()){
-                            flag1=51;
-                            MachineNo = ""+rs2.getInt("Machine_ID");
-                            flag1=52;
+                        if(pstmt2.executeUpdate() ==1)
+                        {
+                            System.out.println("Machine Presumably added correctly");
+                            flag1 = 1;
+                            pstmt2.close();
+                            flag1 = 2;
+                            pstmt2 = null;
+                            flag1 = 3;
+                            pstmt2 = con.prepareStatement(sqlMachinesAll);
+                            pstmt2.setString(1,machine.trim());
+                            flag1 = 4;
+                            rs2 = pstmt2.executeQuery();
+                            flag1 = 5;
+                            if(rs2.next()){
+                                flag1=51;
+                                MachineNo = ""+rs2.getInt("Machine_ID");
+                                flag1=52;
+                            }else
+                                MachineNo = "10";
                         }else
                             MachineNo = "10";
-                    }else
+                            flag1 = 6;
+                    }catch (SQLException se){
+                        System.out.println("Error Updating the Machine so Setting the Value to 10");
+                        System.out.println(sqlAddMachine + ", " + machine.trim() + 
+                                  " "  +" at: "+flag1 + " For machine: " + flagSessions);
                         MachineNo = "10";
-                        flag1 = 6;
-                }catch (SQLException se){
-                    System.out.println("Error Updating the Machine so Setting the Value to 10");
-                    System.out.println(sqlAddMachine + ", " + machine.trim() + 
-                              ", " + sip.trim() +" at: "+flag1 + " For machine: " + flagSessions);
-                    MachineNo = "10";
-                }finally{
-                    try{
-                        if(rs2 != null)
-                            rs2.close();
-                        if(pstmt2 != null)
-                            pstmt2.close();
-                    }catch(SQLException sqe){
+                    }finally{
+                        try{
+                            if(rs2 != null)
+                                rs2.close();
+                            if(pstmt2 != null)
+                                pstmt2.close();
+                        }catch(SQLException sqe){
+                        }
                     }
                 }
+            }else{
+                if(debug1)
+                    System.out.println("Machine ID Not Found");
             }
-        }else{
-            if(debug1)
-                System.out.println("Machine ID Not Found");
+        }catch (Exception e){
+            System.out.println("Vauge exception somewhere in the machine Setting Machine to 10");
+            MachineNo="10";
+        }finally{
+            try{
+                if(rs != null)
+                    rs.close();
+                if(pstmt != null)
+                    pstmt.close();
+            }catch(SQLException sqe){
+            }
         }
-    }catch (Exception e){
-        System.out.println("Vauge exception somewhere in the machine Setting Machine to 10");
-        MachineNo="10";
-    }finally{
-        try{
-            if(rs != null)
-                rs.close();
-            if(pstmt != null)
-                pstmt.close();
-        }catch(SQLException sqe){
+
+        addCashedMachine(machine.trim(),MachineNo);
+
+        return MachineNo;
         }
-    }
-
-    addCashedMachine(machine.trim(),MachineNo);
-
-    return MachineNo;
     }
 
    
@@ -1169,14 +1176,43 @@ public static void main(String args[]){
 
 
 
-private static void displayFK(String[] s){
+    private static void displayFK(String[] s){
        for (int i = 0; i < 6 ; ++i){   
            System.out.println(""+i+": " + s[i]);
        }
    }
 
 
-
+   static void PopulateUptimes(java.util.Date[] tsa , String fname, Connection con) throws SQLException, RecordRecordsException{
+       System.out.println("Line 1");
+       int Machine = Integer.parseInt(getMachine(LPConstants.MachineName,con));
+       System.out.println("Line 2");
+       PreparedStatement pstmp = con.prepareStatement(sqlUptimeInsert);
+       System.out.println("Line 3");
+       pstmp.setDate(1,new java.sql.Date(tsa[0].getTime()));
+       System.out.println("Line 4" + tsa[0].toString());
+       pstmp.setDate(2,new java.sql.Date(tsa[1].getTime()));
+       System.out.println("Line 5");
+       pstmp.setInt(3,Machine);
+       System.out.println("Line 6");
+       pstmp.setString(4,fname);
+       System.out.println("Line 7");
+       pstmp.setString(5,"NA");
+       System.out.println("Line 8");
+       boolean success = false;
+	try{
+       System.out.println("Line 9");
+            int rows = pstmp.executeUpdate();
+       System.out.println("Line 10");
+            pstmp.close();
+       System.out.println("Line 11");
+            if(rows == 1)  success = true;
+	}catch(SQLException se){
+	    System.out.println("Inserting into the Uptimes table");
+	    throw new RecordRecordsException();
+	}
+      
+   }
 
 
    

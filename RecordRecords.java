@@ -107,12 +107,43 @@ public class RecordRecords extends java.lang.Object {
         
         EasyReader er;// = new EasyReader(sfile);
         File f = null;
+        try{
+            if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
+                con = DriverManager.getConnection(connectionURL,"root","");
+            }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
+                con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+            }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+                con = DriverManager.getConnection(connectionURL);
+                con.setAutoCommit(true);
+            }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+                con = DriverManager.getConnection(connectionURL);
+                con.setAutoCommit(true);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         
-        File[] filearray = FileTool.getFiles("d:\\Projects\\logs\\nas1");
+        File[] filearray = FileTool.getFiles(".");
+        LinkedList UpTimesLL = FileTool.getUpTimes(filearray);
         for (int jj = 0; jj< filearray.length; ++jj){
             er = new EasyReader(filearray[jj].toString());
             Record(er,con);
+            try{
+                er.close();
+                ConnectionT.PopulateUptimes((java.util.Date[])UpTimesLL.removeFirst(),filearray[jj].toString(),con);
+            }catch (IOException ioe){
+                ioe.printStackTrace();
+            }catch (SQLException se){
+                se.printStackTrace();
+            }catch (RecordRecordsException rre){
+                rre.printStackTrace();
+            }
         }
+        
+        FileTool.addToArchive(filearray,new File("."));
+        FileTool.deleteFiles(filearray);
+        
         
         /*
         String[] ForeignKeys;
@@ -285,17 +316,6 @@ public class RecordRecords extends java.lang.Object {
             ioe.printStackTrace();
         }
         try{
-        if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
-            con = DriverManager.getConnection(connectionURL,"root","");
-        }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
-            con = DriverManager.getConnection("jdbc:odbc:NasAccess");
-        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
-            con = DriverManager.getConnection(connectionURL);
-            con.setAutoCommit(true);
-        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
-            con = DriverManager.getConnection(connectionURL);
-            con.setAutoCommit(true);
-        }
             
             while(!er.isEOF()){
                 //System.out.println("Entering ForeignKeys");

@@ -17,7 +17,10 @@ public class LPConstants extends java.lang.Object {
     public static final SimpleDateFormat MySQLTimeStampFormat = new SimpleDateFormat("yyyyMMddHHmmss");
     public static final SimpleDateFormat TimeStampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.000000000");
     public static final SimpleDateFormat FileNameFormat = new SimpleDateFormat("ddMMyyyyHHmmss");
+    public static final SimpleDateFormat LogFileNameFormat = new SimpleDateFormat("MMddHHmmyyyyss");
     public static final SimpleDateFormat SimpleFileNameFormat = new SimpleDateFormat("MMdd");
+    public static final SimpleDateFormat YearFormat = new SimpleDateFormat("yyyy");
+    public static final SimpleDateFormat MonthFormat = new SimpleDateFormat("MM");
     
     
     public static final String MySQL_CreateHourlyDataPerDay = "Create Temporary table StagingHourly as "+ 
