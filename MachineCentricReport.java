@@ -19,6 +19,7 @@ public class MachineCentricReport implements ReportBuilder {
     Stack _sdataObj;
     String _fsn;
     String _title;
+    String _idoType;
     /** Creates new MachineCentric */
     public MachineCentricReport() {
     
@@ -92,33 +93,6 @@ public class MachineCentricReport implements ReportBuilder {
     }
 
 
-    /**
-     *This produces a linked list of String[] which represent the
-     *header information as the first element, then the rows of data
-     *where it will contain a number of rows equal to getSiz().  Assuming 
-     *that the data is valid.
-     *@return a LinkedList of String[] objects is returned.  The first String[]
-     *represents the header information, and the the subsequent values represent
-     *various rows of the data.  The String[]s will represent all of the _LLdd data
-     *from all of the elements in the DataObject stack, not just the first dependent 
-     *data Object.  If you want the first DependentDataObject you will have to write your
-     *own method to do that.
-     */
-    private LinkedList getDataQueue(){
-        LinkedList rowQueue = null;
-        if(!isValid()){
-            repair();
-        }
-        
-//        if(isValid()){
-            rowQueue = new LinkedList();
-            rowQueue.addLast(getHeader());
-            for(int i = 1;i<getSize();++i){        
-                rowQueue.addLast(getNextRow(i));
-            }
-//        }
-        return rowQueue;
-    }
     
     private LinkedList getDependentDataObjectList(){
         Iterator li = _sdataObj.iterator();
@@ -133,19 +107,21 @@ public class MachineCentricReport implements ReportBuilder {
         return lLinkedList;
     }
     
-    
-
-    boolean repair(){
+    private Vector getVectorIDO(){
+        Vector vido = null;
         Enumeration e = _sdataObj.elements();
         DataObject tldo = (DataObject)e.nextElement();
-        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE)
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE){
+            _idoType= "Date";
             System.out.println("Fond a Date type");
+        }
         if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.TIMESTAMP){
             System.out.println("Fond a Timestamp type");
+            _idoType = "Timestamp";
             DataObject ldo;
             IndependentDataObject ido;
             Enumeration le = _sdataObj.elements();
-            Vector vido = new Vector();
+            vido = new Vector();
             while(le.hasMoreElements()){
                 System.out.println("Location 1");
                 ldo = (DataObject)le.nextElement();
@@ -154,24 +130,12 @@ public class MachineCentricReport implements ReportBuilder {
                 System.out.println("This IDO has " + ido.getCount());
                 vido.add(ido);
             }
-            Hashtable lhtido = getMergedIDO(vido);
-            ListIterator li = _sdataObj.listIterator();
-            while(li.hasNext()){
-                ((DataObject)li.next()).repair(lhtido);
-                
-            
-            }
-                
-            
-            for(int k=1;k<=lhtido.size();++k){
-                System.out.println((String)lhtido.get(new Integer(k)));
-            }
         }
-        
-        
-        System.out.println("Repair was called !!!!!!!!!!!" +Integer.parseInt(((DataObject)e.nextElement()).getIndependentType()));
-        return true;
+        return vido;
     }
+    
+    
+
     
     
     private Hashtable getMergedIDO(Vector v){
@@ -248,56 +212,33 @@ public class MachineCentricReport implements ReportBuilder {
         return rsa;
     }
 
-    /**
-     *This method returns the next row of data from the Dataobjects as a String[].
-     *@param int i this int is the row of data to return.
-     *@return String[] this is the array of strings which represents the specified
-     *row of data.
-     */
-    private String[] getNextRow(int i){
-        String[] rsa = new String[countCols()];
-        Enumeration e = _sdataObj.elements();
-        int k=0;
-        int j=0;
-        while(e.hasMoreElements()){
-            DataObject ldo = ((DataObject)e.nextElement());
-            String[] h = ldo.getDependentArray(i);
-            for(j =0;j<h.length;++j){
-                rsa[j+k] = h[j]; //(((DataObject)e.nextElement()).getDDO()).getHeading();
-            }
-            k=k+j;
-        }
-        return rsa;
-    }
     
     /**
      *Build the CSV File for this Report.
      */
     public void BuildCSVFile(java.io.PrintWriter pw) {
-
-        
         LinkedList dq = getDependentDataObjectList();
-        
-        /*System.out.println("Starting BuildCSVfile from MachineCentric...");
-        String[] rsa = null;
-        LinkedList dq = getDataQueue();
-        Enumeration e = _sdataObj.elements();
-        DataObject ldo;
-        ldo = (DataObject)e.nextElement();
-        Stack ivs = ldo.getIDO().getStackValues();
-        while(dq.size() > 0){
-            rsa = (String[])dq.removeFirst();
-            pw.print((String)ivs.pop());
-            for(int j=0;j<rsa.length;++j){
-                pw.print(", " +rsa[j]);
+        Hashtable htIDO = getMergedIDO(getVectorIDO());
+        String[] headings = getHeader();
+        pw.print(_idoType);
+        for(int i=0;i<headings.length;++i){
+            pw.print(", "+headings[i]);
+        }
+        pw.println();
+        for(int i=1;i<=htIDO.size();++i){
+            System.out.println((String)htIDO.get(new Integer(i)));
+            Iterator iter = dq.iterator();
+            pw.print((String) htIDO.get(new Integer(i)));
+            while(iter.hasNext()){
+                DependentDataObject ddo = (DependentDataObject)iter.next();
+                pw.print(", "+ddo.getHMV((String) htIDO.get(new Integer(i))));
             }
             pw.println();
         }
-         */
-    }
+   }
     
     
-        private int countCols(){
+    private int countCols(){
         Enumeration e = _sdataObj.elements();
         int i = 0;
         while(e.hasMoreElements()){
@@ -375,5 +316,118 @@ public class MachineCentricReport implements ReportBuilder {
     public void BuildExcelFile() {
     
     }
+  
+    
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    //------------------------------------------------------------------------//
+    //DEPRICATED API -- DEPRICATED API -- DEPRICATED API -- DEPRICATED API -- //
+    //------------------------------------------------------------------------//
+    //WARNING  THE METHODS BELOW ARE DEPRICATED, AND SHOULD BE PHASED OUT     //
+    //THESE METHODS WERE USED IN A PREVIOUS DESIGN AND ARE NO LONGER VALID    //
+    //ONCE TESTING OF THE CODE, WITHOUT THESE METHODS, IS COMPLETE AND        //
+    //SUCCESSFUL, THESE METHODS WILL BE REMOVED.                              //
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     *This method returns the next row of data from the Dataobjects as a String[].
+     *@param int i this int is the row of data to return.
+     *@return String[] this is the array of strings which represents the specified
+     *row of data.
+     */
+    private String[] getNextRow(int i){
+        String[] rsa = new String[countCols()];
+        Enumeration e = _sdataObj.elements();
+        int k=0;
+        int j=0;
+        while(e.hasMoreElements()){
+            DataObject ldo = ((DataObject)e.nextElement());
+            String[] h = ldo.getDependentArray(i);
+            for(j =0;j<h.length;++j){
+                rsa[j+k] = h[j]; //(((DataObject)e.nextElement()).getDDO()).getHeading();
+            }
+            k=k+j;
+        }
+        return rsa;
+    }
+
+    
+        boolean repair(){
+        Enumeration e = _sdataObj.elements();
+        DataObject tldo = (DataObject)e.nextElement();
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE)
+            System.out.println("Fond a Date type");
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.TIMESTAMP){
+            System.out.println("Fond a Timestamp type");
+            DataObject ldo;
+            IndependentDataObject ido;
+            Enumeration le = _sdataObj.elements();
+            Vector vido = new Vector();
+            while(le.hasMoreElements()){
+                System.out.println("Location 1");
+                ldo = (DataObject)le.nextElement();
+                System.out.println("Location 2");
+                ido = ldo.getIDO();
+                System.out.println("This IDO has " + ido.getCount());
+                vido.add(ido);
+            }
+            Hashtable lhtido = getMergedIDO(vido);
+            ListIterator li = _sdataObj.listIterator();
+            while(li.hasNext()){
+                ((DataObject)li.next()).repair(lhtido);
+                
+            
+            }
+                
+            
+            for(int k=1;k<=lhtido.size();++k){
+                System.out.println((String)lhtido.get(new Integer(k)));
+            }
+        }
+        
+        
+        System.out.println("Repair was called !!!!!!!!!!!" +Integer.parseInt(((DataObject)e.nextElement()).getIndependentType()));
+        return true;
+    }
+    
+    
+        /**
+     *This produces a linked list of String[] which represent the
+     *header information as the first element, then the rows of data
+     *where it will contain a number of rows equal to getSiz().  Assuming 
+     *that the data is valid.
+     *@return a LinkedList of String[] objects is returned.  The first String[]
+     *represents the header information, and the the subsequent values represent
+     *various rows of the data.  The String[]s will represent all of the _LLdd data
+     *from all of the elements in the DataObject stack, not just the first dependent 
+     *data Object.  If you want the first DependentDataObject you will have to write your
+     *own method to do that.
+     */
+    private LinkedList getDataQueue(){
+        LinkedList rowQueue = null;
+        if(!isValid()){
+            repair();
+        }
+        
+//        if(isValid()){
+            rowQueue = new LinkedList();
+            rowQueue.addLast(getHeader());
+            for(int i = 1;i<getSize();++i){        
+                rowQueue.addLast(getNextRow(i));
+            }
+//        }
+        return rowQueue;
+    }
+
+
+    
+    
+    
+    
+    
+    
+    
+    
     
 }

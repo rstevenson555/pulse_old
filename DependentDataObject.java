@@ -23,6 +23,7 @@ public class DependentDataObject extends java.lang.Object {
     
     /** Creates new IndependentDataObject */
     public DependentDataObject() {
+        _hashMapValues = new HashMap();
         _values = new Hashtable();
         _type="na";
         _min="na";
@@ -70,16 +71,22 @@ public class DependentDataObject extends java.lang.Object {
         return _values.size();
     }
     
+
     protected void mapToIDO(HashMap hm){
         Iterator iter = hm.keySet().iterator();
         while (iter.hasNext()){
             Integer key = (Integer)iter.next();
             String newKey = (String)hm.get(key);
             String value =(String)_values.get(key);
-            _hashMapValues.put(newKey,value);
+            if(value != null){
+                
+                _hashMapValues.put(newKey,value);
+            }
         }
-        
     }
-
+    
+    String getHMV(String s){
+        return (String)_hashMapValues.get(s);
+    }
 
 }

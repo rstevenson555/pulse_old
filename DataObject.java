@@ -41,8 +41,9 @@ public class DataObject extends java.lang.Object {
         _dd = d[0];
         for (int j=0;j<d.length;++j){
             _LLdd.addLast(d[j]);
+            d[j].mapToIDO(i.getHashMap());
         }
-        _dd.mapToIDO(i.getHashMap());
+//        _dd.mapToIDO(i.getHashMap());
 
     }
     int countDependentSets(){
@@ -148,6 +149,8 @@ public class DataObject extends java.lang.Object {
         
         
     }
+    
+
     
     protected void repair(Hashtable fixedIDO){    
         ListIterator li = _LLdd.listIterator();

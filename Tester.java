@@ -27,27 +27,61 @@ public class Tester extends java.lang.Object {
     public static void main (String args[]) {
         Hashtable sdht1 = new Hashtable();
         Hashtable sdht2 = new Hashtable();
+        Hashtable sdhtb1 = new Hashtable();
+        Hashtable sdhtb2 = new Hashtable();
         Stack ss = new Stack();
         sdht1.put(new Integer(1), "NAS1");
         sdht1.put(new Integer(2), "HourlySessions");
         sdht1.put(new Integer(3), "20010430");
-        sdht2.put(new Integer(1), "NAS1");
+        sdht2.put(new Integer(1), "NAS3");
         sdht2.put(new Integer(2), "HourlySessions");
         sdht2.put(new Integer(3), "20010430");
+        sdhtb1.put(new Integer(1), "NAS1");
+        sdhtb1.put(new Integer(2), "QuarterHourlySession");
+        sdhtb1.put(new Integer(3), "20010430");
+        sdhtb2.put(new Integer(1), "NAS3");
+        sdhtb2.put(new Integer(2), "QuarterHourlySession");
+        sdhtb2.put(new Integer(3), "20010430");
 
         
         Stack sQueryObj = new Stack();
         Stack sQueryObj2 = new Stack();
+        Stack sQueryObjb = new Stack();
+        Stack sQueryObjb2 = new Stack();
+        Stack sPageQuery = new Stack(); 
+        Hashtable htPageData = new Hashtable();
+        htPageData.put(new Integer(1),"20010430");
+        sPageQuery.add(new QueryObject(LPConstants.ORACLE_CreateDailyLoadTimesResultSet,htPageData));
+
         sQueryObj.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht1));
         sQueryObj2.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht2));
-        QueryMacro qm = new QueryMacro(sQueryObj);
-        Stack sDataobject = new Stack();
-        sDataobject.add(qm.getDataObject());
-        qm = new QueryMacro(sQueryObj2);
-        sDataobject.add(qm.getDataObject());
+        sQueryObjb.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdhtb1));
+        sQueryObjb2.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdhtb2));
         
-        MachineCentricReport mcr = new MachineCentricReport(sDataobject,"ttt");
+        QueryMacro qmPageQuery = new QueryMacro(sPageQuery);
+        QueryMacro qm = new QueryMacro(sQueryObj);
+        QueryMacro qm2 = new QueryMacro(sQueryObjb);
+        
+        Stack sDataobject2 = new Stack();
+        Stack sDataobject = new Stack();
+        Stack sPageQueryObject = new Stack();
+        sPageQueryObject.add(qmPageQuery.getDataObject());
+
+        sDataobject.add(qm.getDataObject());
+        sDataobject2.add(qm2.getDataObject());
+        
+        qm = new QueryMacro(sQueryObj2);
+        qm2 = new QueryMacro(sQueryObjb2);
+
+        sDataobject.add(qm.getDataObject());
+        sDataobject2.add(qm2.getDataObject());
+        
+        MachineCentricReport mcr = new MachineCentricReport(sDataobject,"HourlySession");
+        MachineCentricReport mcr2 = new MachineCentricReport(sDataobject2,"QuarterHourlySession");
+        PageCentricReport pcr = new PageCentricReport(sPageQueryObject,"PageData");
         ss.add(mcr);
+        ss.add(mcr2);
+        ss.add(pcr);
          ReportDirector rd = new ReportDirector();
          rd.BuildCSVReports(ss.elements());
      
