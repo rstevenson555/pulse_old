@@ -23,6 +23,30 @@ SELECT  DATE_FORMAT(DATE_SUB(Time,INTERVAL
               GROUP BY timePeriod order by timePeriod ASC;
               
               
+//**************************************************
+//Daily Load Time Queries
+//**************************************************
+SELECT a.Page_ID as pageid, a.Machine_ID as machineid,
+        Max(a.loadTime) as maxlt, Min(a.loadTime) as minlt, 
+        AVG(a.loadTime) as alt, count(a.loadTime) as tothits, 
+        DATE_FORMAT(Time,"%Y%m%d") as timePeriod
+ from  AccessRecords a
+ WHERE DATE_FORMAT(Time,"%Y%m%d")=?
+ GROUP BY a.Page_ID, a.Machine_ID ORDER BY maxlt
+              
+//**************************************************
+//ORACLE ORACLE ORACLE ORACLE ORACLE ORACLE ORACLE 
+//Daily Load Time Queries
+//**************************************************
+SELECT a.Page_ID as pageid, a.Machine_ID as machineid,
+        Max(a.loadTime) as maxlt, Min(a.loadTime), AVG(a.loadTime),
+        count(a.loadTime) as tothits, 
+        TO_CHAR(Time,'yyyymmdd') as timePeriod
+ from  AccessRecords a
+ WHERE TO_CHAR(Time,'yyyymmdd')='20010430'
+ GROUP BY a.Page_ID, a.Machine_ID, TO_CHAR(Time,'yyyymmdd') ORDER BY maxlt
+              
+              
               
               
               

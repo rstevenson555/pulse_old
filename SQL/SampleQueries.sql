@@ -191,3 +191,37 @@ SELECT CONCAT(DATE_FORMAT(Time,"%H"),
 	      ms.MachineName='NAS3' and
 	      qt.QueryName='QuarterHourlySession'
               GROUP BY timePeriod order by timePeriod ASC;
+              
+ SELECT a.Page_ID as pageid, a.Machine_ID as machineid,
+        Max(a.loadTime) as maxlt, Min(a.loadTime) as minlt, 
+        AVG(a.loadTime) as alt, count(a.loadTime) as tothits, DATE_FORMAT(Time,"%Y%m%d") as timePeriod
+ from  AccessRecords a
+ WHERE DATE_FORMAT(Time,"%Y%m%d")='20010430'
+ GROUP BY a.Page_ID, a.Machine_ID ORDER BY maxlt 
+ 
+
+
+
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+ORACLE
+//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+
+SELECT a.Machine_ID, TO_CHAR(Time,'yyyymmddHH24'), COUNT(DISTINCT a.SESSION_ID),
+ COUNT(a.SESSION_ID)
+ FROM AccessRecords a
+ WHERE TO_CHAR(Time,'yyyymmdd')='20010430'
+ GROUP BY TO_CHAR(Time,'yyyymmddHH24'), a.Machine_ID ORDER BY TO_CHAR(Time,'yyyymmddHH24')
+ 
+
+
+
+
+
+
+
+
+
+

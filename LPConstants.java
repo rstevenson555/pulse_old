@@ -21,6 +21,9 @@ public class LPConstants extends java.lang.Object {
     public static final SimpleDateFormat SimpleFileNameFormat = new SimpleDateFormat("MMdd");
     public static final SimpleDateFormat YearFormat = new SimpleDateFormat("yyyy");
     public static final SimpleDateFormat MonthFormat = new SimpleDateFormat("MM");
+    public static final SimpleDateFormat QuarterHourlyDBFormat = new SimpleDateFormat("yyyyMMddHHmm");
+    public static final SimpleDateFormat yyyyMMddFormat = new SimpleDateFormat("yyyyMMdd");
+    
     
     
     public static final String MySQL_CreateHourlyDataPerDay = "Create Temporary table StagingHourly as "+ 
@@ -63,7 +66,7 @@ public class LPConstants extends java.lang.Object {
                                "Machines ms, "+
                                "Queries qt "+
                           "where  "+
-                          "DATE_FORMAT(Time,\"%d\")=? and  "+
+                          "DATE_FORMAT(Time,\"%Y%m%d\")=? and  "+
                           "ar.Machine_ID=ms.Machine_ID and  "+
                           "ms.MachineName=? and "+
                           "qt.QueryName='QuarterHourlySession' "+
@@ -74,6 +77,9 @@ public class LPConstants extends java.lang.Object {
                         "SUM(ar.loadTime) as TOT_LT from AccessRecords ar, Pages p "+
                         "Where DATE_FORMAT(Time,\"%d\")='29' AND p.Page_ID=ar.Page_ID  "+
                         "GROUP BY ar.Page_ID ORDER BY TOT_LT DESC";
+    
+    public static final String MySQL_InsertHistoricalRecords = "INSERT INTO HistoricalRecords " +
+                        "(Time,Query_ID,Distinct_Hits,Total_Hits,Machine_ID) Values (?,?,?,?,?)";
     
     
     public static final String MySQL_CreateQuarterHourlyMachineResultSet ="SELECT CONCAT(DATE_FORMAT(Time,\"%H\"),DATE_FORMAT(DATE_ADD(Time,INTERVAL "+
@@ -86,6 +92,19 @@ public class LPConstants extends java.lang.Object {
 	                       "from AccessRecords ar, Machines ms  "+
 	                       "where DATE_FORMAT(Time,\"%d\")='30' and ar.Machine_ID=ms.Machine_ID and ms.MachineName=? "+ 
                                "GROUP BY MinSinceMidnight ORDER BY timePeriod";
+    
+    public static final String MySQL_CreateDailyLoadTimesResultSet = "SELECT a.Page_ID as pageid, "+
+                               "a.Machine_ID as machineid, "+
+                               "Max(a.loadTime) as maxlt, Min(a.loadTime) as minlt, "+ 
+                               "AVG(a.loadTime) as alt, count(a.loadTime) as totalhits,  "+
+                               "DATE_FORMAT(Time,\"%Y%m%d\") as timePeriod "+
+                               "from  AccessRecords a "+
+                               "WHERE DATE_FORMAT(Time,\"%Y%m%d\")=? "+
+                               "GROUP BY a.Page_ID, a.Machine_ID ORDER BY maxlt ";
+    
+    public static final String MySQL_InsertDailyLoadTimeRecords ="INSERT INTO DailyLoadTimes "+
+           "(Day, Page_ID, Machine_ID, AverageLoadTime, MaxLoadTime, MinLoadTime, TotalLoads) " +
+           "VALUES (?,?,?,?,?,?,?) ";
     
     public static final String MachineNameMethod = "LOCAL";// or "SYSTEM" or "LOGFILE"
     public static String MachineName = "NA";

@@ -1,3 +1,4 @@
+
 create table AccessRecords (
       RecordPK INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
       Page_ID INT,
@@ -66,20 +67,28 @@ CREATE TABLE LoadTimes(
       TotalLoadTime INT,
       MaxLoadTime INT
       );
+
+CREATE TABLE DailyLoadTimes(
+      DailyLoadTimes_ID INT  UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+      Page_ID INT,
+      Machine_ID INT,
+      AverageLoadTime INT,
+      MaxLoadTime INT,
+      MinLoadTime INT,
+      TotalLoads INT,
+      Day Time
+      );
+
+CREATE TABLE Uptimes(
+      Uptime_ID INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+      startTime Timestamp,
+      endTime Timestamp,
+      Machine_ID INT,
+      Filename VARCHAR(40),
+      Archive VARCHAR(20)
+);
       
-CREATE TABLE StagingHourly(
-      Session_ID INT,
-      aa Timestamp
-      );
-CREATE TABLE StagingQuarterHourly(
-      Session_ID INT,
-      aa Timestamp
-      );
-CREATE TABLE StagingMinute(
-      Session_ID INT,
-      aa Timestamp
-      );
-      
+   
       
 
       
