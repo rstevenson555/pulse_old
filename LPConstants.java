@@ -28,6 +28,7 @@ public class LPConstants extends java.lang.Object {
     public static final SimpleDateFormat QuarterHourlyDBFormat = new SimpleDateFormat("yyyyMMddHHmm");
     public static final SimpleDateFormat yyyyMMddFormat = new SimpleDateFormat("yyyyMMdd");
     public static final SimpleDateFormat yyyyMMddHHmmssFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    public static final SimpleDateFormat QuarterHourlyQueryFormat = new SimpleDateFormat("yyyyMMddHH mm");
     
     
     
@@ -45,6 +46,9 @@ public class LPConstants extends java.lang.Object {
     public static final String ORACLE_getHRPK = "SELECT HR_ID from HistoricalRecords Where "+
                   "Machine_ID=? AND TO_CHAR(Time,'YYYYMMDDHH24')=? AND Query_ID=?";
     
+    public static final String ORACLE_getQHRPK = "SELECT HR_ID from HistoricalRecords Where "+
+                  "Machine_ID=? AND TO_CHAR(Time,'YYYYMMDDHH24mi')=? AND Query_ID=?";
+
     public static final String ORACLE_CreateDailyLoadTimesResultSet = "SELECT a.Page_ID as pageid, "+
                    "a.Machine_ID as machineid, "+
                    "Max(a.loadTime) as maxlt, Min(a.loadTime) as minlt, "+ 
@@ -54,12 +58,16 @@ public class LPConstants extends java.lang.Object {
                    "WHERE TO_CHAR(Time,'yyyyMMdd')=? "+
                    "GROUP BY a.Page_ID, a.Machine_ID, TO_CHAR(Time,'yyyyMMdd') ORDER BY maxlt ";
 
+    public static final String ORACLE_getDLTPK = "SELECT DailyLoadTimes_ID as dltid from DailyLoadTimes " +
+                  "Where Machine_ID=? AND PAGE_ID=? AND TO_CHAR(Day,'yyyymmdd')=? ";
     
     public static final String ORACLE_InsertDailyLoadTimeRecords ="INSERT INTO DailyLoadTimes "+
                    "(DailyLoadTimes_ID, Day, Page_ID, Machine_ID, AverageLoadTime, MaxLoadTime, MinLoadTime, TotalLoads) " +
                    "VALUES (DAILYLOADTIMESSEQUENCE.NEXTVAL,?,?,?,?,?,?,?) ";
 
-
+    public static final String ORACLE_UpdateDailyLoadTimeRecords = "UPDATE DailyLoadTimes SET "+
+                   "AverageLoadTime=?, MaxLoadTime=?, MinLoadTime=?, TotalLoads=? WHERE DailyLoadTimes_ID=? ";
+    
     public static final String ORACLE_InsertHourlyHistoricalRecords = "INSERT INTO HistoricalRecords "+
                    "(HR_ID, Machine_ID, Time, Query_ID, Distinct_Hits, Total_Hits) "+
                    "VALUES (HISTORICALRECORDSSEQUENCE.NEXTVAL,?,?,?,?,?)";
@@ -75,6 +83,18 @@ public class LPConstants extends java.lang.Object {
                   "WHERE TO_CHAR(Time,'YYYYMMDD')=?  "+
                   "GROUP BY TO_CHAR(Time,'YYYYMMDDHH24'), a.Machine_ID "+
                   "ORDER BY TO_CHAR(Time,'YYYYMMDDHH24') ";
+    
+    public static final String ORACLE_CreateQuarterHourlyResultSet  = "SELECT TO_CHAR(Time,'yyyyMMDDhh24') || TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') - MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09') as timePeriod, "+
+  	      "count(distinct Session_ID) as distSessions, "+
+  	      "count(Session_ID) as totalSessions, "+
+  	      "Machine_ID as Machine "+
+  	      "from accessrecords ar  "+
+  	      "where  "+
+  	      "TO_CHAR(Time,'yyyyMMdd')='20010430'  "+
+                     "group by TO_CHAR(Time,'yyyyMMDDhh24')|| TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') -  MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09'), "+
+                     "Machine_ID "+
+               "order by timePeriod ASC ";
+               
 
     
     public static final String ORACLE_addQueries = "INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) "+
@@ -178,7 +198,7 @@ public class LPConstants extends java.lang.Object {
     public static String MachineName = "NA";
     
     //  Be sure to set the correct driver, make a new driver if the database changes.
-    public static String Driver = "Oracle_Linux"; // Or Oracle_Boise or MySQL_Type4 or MySQL_ODBC or Oracle_Linuxor Oracle_Sun_oci or Oracle_Sun_Type4
+    public static String Driver = "Oracle_Boise"; // Or Oracle_Boise or MySQL_Type4 or MySQL_ODBC or Oracle_Linuxor Oracle_Sun_oci or Oracle_Sun_Type4
     public static String Database = "Oracle"; // Or MySQL
     /** Creates new LPConstants */
     public LPConstants() {
