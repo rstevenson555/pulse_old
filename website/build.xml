@@ -120,7 +120,7 @@
   </target>
 
   <target name="rdeploy" depends="makewar" description="Deploys logParser-website to ART box">
-    <deploy url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="d:/apps/logParser-website/logparser-website.war"/>
+    <deploy url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="${basedir}/logparser-website.war"/>
   </target>
 
   <target name="rundeploy" description="Remove web application">
@@ -128,7 +128,7 @@
   </target>
   
   <target name="ldeploy" depends="makewar" description="Deploys logParser-website to LOCAL box (on port 80)">
-    <deploy url="${lurl}" username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website" war="d:/apps/logParser-website/logparser-website.war"/>
+    <deploy url="${lurl}" username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website" war="${basedir}/logparser-website.war"/>
   </target>
 
   <target name="lundeploy" description="Remove LOCAL web application">
