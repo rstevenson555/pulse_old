@@ -76,7 +76,7 @@ SELECT CONCAT(DATE_FORMAT(Time,"%H"),DATE_FORMAT(DATE_ADD(Time,INTERVAL
 	                    count(distinct Session_ID) as distSessions, 
 	                    TRUNCATE(DATE_FORMAT(Time,"%i")/15,0)*15 + DATE_FORMAT(TIME,"%H")*60
 	                    as MinSinceMidnight,  FORMAT(TRUNCATE(DATE_FORMAT(Time,"%i")/15,0)*15,0) as yyz
-	                    from accessrecords 
+	                    from AccessRecords 
 	                    where DATE_FORMAT(Time,"%d")='23' 
               GROUP BY MinSinceMidnight;
 
