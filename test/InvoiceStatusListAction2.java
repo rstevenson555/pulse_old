@@ -1,0 +1,4 @@
+
+pulbic class InvoiceStatusListAction2{
+
+}
