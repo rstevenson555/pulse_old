@@ -56,7 +56,7 @@ public class MainScreenAction extends BaseAction {
 		//run XMLBuilder
 
         //build xmlDoc
-        request.setAttribute(DOM, viewOrderDoc);
+        request.setAttribute(DOM, MainScreenDoc);
 
 		return actionForward;
 	}
