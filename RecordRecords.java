@@ -618,6 +618,9 @@ public class RecordRecords extends java.lang.Object {
             }catch (NullPointerException ne){
                 hasForeignKeys=false;
                 pw.println(jeoObj.getOracleCSVRecord());
+            }catch(NumberFormatException nfe){
+                hasForeignKeys=false;
+                pw.println(jeoObj.getOracleCSVRecord());
             }
             tc.FKTime = tc.FKTime +(System.currentTimeMillis() - tc.startFKTime);
             tc.startUpdateTime = System.currentTimeMillis();

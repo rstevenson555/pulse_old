@@ -213,7 +213,7 @@ public static void main(String args[]){
     *   @return String[]  is an array of size 7 containing the fields for an accessrecord in the database.
     *   @throws SQLException  This code can throw an SQLException.
     **/
-   public static String[] getForiegnKeys2(jspErrorObject jeo, Connection con) throws SQLException {
+   public static String[] getForiegnKeys2(jspErrorObject jeo, Connection con) throws SQLException, NumberFormatException {
     
         String page = jeo.getPage().trim();
         String uid = jeo.getUserID().trim();
