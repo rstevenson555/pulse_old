@@ -41,6 +41,9 @@ public class RecordRecords extends java.lang.Object {
             connectionURL = "jdbc:odbc:NasAccess";
         }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
             connectionURL = "jdbc:oracle:thin:Boise/boise@localhost.localdomain:1521:Dimok";
+        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+            driverName="oracle.jdbc.driver.OracleDriver";
+            connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
         }
            
         
@@ -104,6 +107,9 @@ public class RecordRecords extends java.lang.Object {
         }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
             con = DriverManager.getConnection("jdbc:odbc:NasAccess");
         }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+            con = DriverManager.getConnection(connectionURL);
+            con.setAutoCommit(true);
+        }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
             con = DriverManager.getConnection(connectionURL);
             con.setAutoCommit(true);
         }

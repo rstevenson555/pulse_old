@@ -75,8 +75,8 @@ public class LPConstants extends java.lang.Object {
     public static String MachineName = "NA";
     
     //  Be sure to set the correct driver, make a new driver if the database changes.
-    public static String Driver = "Oracle_Linux"; // Or MySQL_Type4 or MySQL_ODBC or Oracle_Sun_oci or Oracle_Sun_Type4
-    public static String Database = "Oracle"; // Or MySQL
+    public static String Driver = "MySQL_ODBC"; // Or Oracle_Boise or MySQL_Type4 or MySQL_ODBC or Oracle_Linuxor Oracle_Sun_oci or Oracle_Sun_Type4
+    public static String Database = "MySQL"; // Or MySQL
     /** Creates new LPConstants */
     public LPConstants() {
     }
