@@ -393,6 +393,8 @@ public class RecordRecords extends java.lang.Object {
                                            + ReadTime / (totalRecords/100));
                         System.out.println("          Foreign Key Lookup Time Per 100 Records (millis): "
                                            + FKTime / (totalRecords/100));
+                        System.out.println("               Time in the database for FK Lookup (millis): "
+                                           +  ConnectionT.fkTimer/(totalRecords/100));
                         System.out.println("               Record Update Time Per 100 Records (millis): "
                                            + UpdateTime / (totalRecords/100));
                         System.out.println("                JEO Record Create Per 100 Records (millis): "
@@ -401,8 +403,27 @@ public class RecordRecords extends java.lang.Object {
                                            + dummyTime  );
                         
                         //startTime=endTime
-                        if(totalRecords%50000 == 0)
+                        if(totalRecords%50000 == 0){
+                         //Time to clse a connection, and start a new one.
+                            con.close();
+                            try{
+                                if(LPConstants.Driver.equalsIgnoreCase("MySQL_Type4")){
+                                    con = DriverManager.getConnection(connectionURL,"root","");
+                                }else if(LPConstants.Driver.equalsIgnoreCase("MySQL_ODBC")){
+                                    con = DriverManager.getConnection("jdbc:odbc:NasAccess");
+                                }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
+                                    con = DriverManager.getConnection(connectionURL);
+                                    con.setAutoCommit(true);
+                                }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
+                                    con = DriverManager.getConnection(connectionURL);
+                                    con.setAutoCommit(true);
+                                }
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+
                              System.gc();
+                        }
                     }
                 }catch (RecordRecordsException rre){
                     System.out.println("Error Writing Record: " + nextLine);

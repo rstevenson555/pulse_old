@@ -114,9 +114,20 @@ class ConnectionT {
 
 
 
-
+    static class Mapper {
+        public int key;
+        public int value;
+        Mapper(int k,int v)
+        {
+                key = k; value= v;
+        }
+    };
+    public static long fkTimer =0;
     private static int fullLookup=0;
     private static Hashtable hashSessions = new Hashtable();
+    //private static String[] hashCount = new String[2000];
+    private static Mapper hashCount[] = new Mapper[2000];
+        
     private static Hashtable hashUsers = new Hashtable();
     private static Hashtable hashPages = new Hashtable();
     private static Hashtable hashMachines = new Hashtable();
@@ -128,6 +139,8 @@ class ConnectionT {
     private static int rehashUsers=0;
     private static int rehashPages=0;
     private static int rehashMachines=0;
+    private static Integer hcObject;
+
     private static Stack stackAccessRecords = new Stack();
 
 
@@ -180,17 +193,11 @@ public static void main(String args[]){
     boolean gotfullset = false;
 
 
-    PreparedStatement pstmt=null;
-    ResultSet rs = null;
-    PreparedStatement pstmt2 = null;
-    ResultSet rs2 = null;
-
-    
     //Foriegn Keys to be returned.
-    String UserNo ="NA";
-    String PageNo = "NA";
-    String SessionNo ="NA";
-    String MachineNo = "NA";
+    Integer UserNo =null;//"NA";
+    Integer PageNo = null;//"NA";
+    Integer SessionNo =null;//"NA";
+    Integer MachineNo = null;//"NA";
 
     ////////////////////////////////////////////////////////////////////////////////
     //****************************************************************************//
@@ -247,10 +254,6 @@ public static void main(String args[]){
 //    System.out.println("Build Arrary");
     if(debug2)
        displayFK(results);
-    rs = null;
-    rs2=null;
-    pstmt=null;
-    pstmt2=null;
   //  System.out.println("Returning");
     return results;
     
@@ -265,64 +268,82 @@ public static void main(String args[]){
 
 
 
-    public static String getCashedSession(String session){
-        Object ohu = hashSessions.get(session.trim());
+    public static Integer getCashedSession(String session){
+       /*hcObject = new Integer(session.hashCode());
+        Object ohu = hashSessions.get(hcObject);
 	if(ohu != null)
-	    return ((Integer)ohu).toString();
+	    return (Integer)ohu;
+        else
+            return null;
+         */
+        
+        Mapper map = hashCount[Math.abs(session.hashCode())%1999];
+        if ( map != null  && map.key == session.hashCode() )
+            return new Integer(map.value);
+        return null;
+
+    }
+    public static Integer getCashedUser(String user){
+       hcObject = new Integer(user.hashCode());
+        Object ohu = hashUsers.get(hcObject);
+	if(ohu != null)
+	    return (Integer)ohu;
         else
             return null;
 
     }
-    public static String getCashedUser(String user){
-        Object ohu = hashUsers.get(user.trim());
+    public static Integer getCashedPage(String page){
+       hcObject = new Integer(page.hashCode());
+        Object ohu = hashPages.get(hcObject);
 	if(ohu != null)
-	    return ((Integer)ohu).toString();
+	    return (Integer)ohu;
         else
             return null;
 
     }
-    public static String getCashedPage(String page){
-        Object ohu = hashPages.get(page.trim());
+    public static Integer getCashedMachine(String machine){
+       hcObject = new Integer(machine.hashCode());
+        Object ohu = hashMachines.get(hcObject);
 	if(ohu != null)
-	    return ((Integer)ohu).toString();
-        else
-            return null;
-
-    }
-    public static String getCashedMachine(String machine){
-        Object ohu = hashMachines.get(machine.trim());
-	if(ohu != null)
-	    return ((Integer)ohu).toString();
+	    return (Integer)ohu;
         else
             return null;
 
     }
 
+   
+    
     public static void addCashedSession(String sessionTXT, String sessionNo){
-	if(hashSessions.size() > 2000){
+	/*if(hashSessions.size() > 2000){
 	    hashSessions = new Hashtable();
 	    System.out.println("Ran out of cashe room for session you may want to increase cashe size");
-	}
+	}*/
 
-        Object o =  hashSessions.put(sessionTXT,new Integer(sessionNo));
+        /*hcObject = new Integer(sessionTXT.hashCode());
+        Object o =  hashSessions.put(hcObject,new Integer(sessionNo));
         if(o !=null)
 	    if(++rehashSessions == 1000)
-                System.out.println("Rehashing of Sessions : =" +rehashSessions);
+                System.out.println("Rehashing of Sessions : =" +rehashSessions);*/
+        //Object o = null;
+        hashCount[Math.abs(sessionTXT.hashCode())%1999] = new Mapper(sessionTXT.hashCode() , Integer.parseInt( sessionNo ));
     }
     public static void addCashedUser(String userName , String userNo ){
-	Object o =  hashUsers.put(userName,new Integer(userNo));
+        hcObject = new Integer(userName.hashCode());
+        Object o =  hashUsers.put(hcObject,new Integer(userNo));
         if(o !=null)
 	    if(++rehashUsers == 1000)
                 System.out.println("Rehashing of Users : =" +rehashUsers);
     }
     public static void addCashedPage(String pageName, String pageNo ){
-	Object o =  hashPages.put(pageName,new Integer(pageNo));
+        hcObject = new Integer(pageName.hashCode());
+        Object o =  hashPages.put(hcObject,new Integer(pageNo));
         if(o !=null)
 	    if(++rehashPages == 1000)
                 System.out.println("Rehashing of Pages : =" +rehashPages);
     }
     public static void addCashedMachine(String machineName, String machineNo){
-	Object o =  hashMachines.put(machineName, new Integer(machineNo));
+        hcObject = new Integer(machineName.hashCode());
+	    Object o =  hashMachines.put(hcObject, new Integer(machineNo));
         if(o !=null)
 	    if(++rehashMachines == 1000)
                 System.out.println("Rehashing of Machines : =" +rehashMachines);
@@ -680,7 +701,9 @@ public static void main(String args[]){
 
 
 
-    public static String getUserNo(String uid, Connection con){
+    public static Integer getUserNo(String uid, Connection con){
+    long topTime = System.currentTimeMillis();
+
     PreparedStatement pstmt=null;
     ResultSet rs = null;
     PreparedStatement pstmt2 = null;
@@ -717,8 +740,10 @@ public static void main(String args[]){
             }
             fuser =7;
             rs.close();
+            pstmt.close();
             fuser =8;
             rs=null;
+            pstmt=null;
             fuser =9;
             if(!gotFK){
                 try{
@@ -749,6 +774,11 @@ public static void main(String args[]){
                             UserNo = ""+rs2.getInt("User_ID");
                         else
                             UserNo = "1";
+                        
+                        rs2.close();
+                        pstmt2.close();
+                        rs2=null;
+                        pstmt2=null;
                     }else
                         UserNo = "1";
                 }catch (SQLException se){
@@ -788,8 +818,9 @@ public static void main(String args[]){
         if(debug3)
         System.out.println("Leaving Finally of user Query");
     }
+    fkTimer += System.currentTimeMillis() - topTime;
     addCashedUser(uid,UserNo);
-    return UserNo;
+    return new Integer(UserNo);
 
 
     }    
@@ -797,12 +828,16 @@ public static void main(String args[]){
  
 
 
+    
+    
+    
 
 
 
 
 
-   public static String getPageNo(String page, Connection con){
+   public static Integer getPageNo(String page, Connection con){
+       long topTime = System.currentTimeMillis();
     PreparedStatement pstmt=null;
     ResultSet rs = null;
     PreparedStatement pstmt2 = null;
@@ -833,6 +868,8 @@ public static void main(String args[]){
             }
             rs.close();
             rs=null;
+            pstmt.close();
+            pstmt=null;
             if(!gotFK){
                 pstmt2 = con.prepareStatement(sqlAddPages);
                 pstmt2.setString(1,page.trim());
@@ -859,7 +896,7 @@ public static void main(String args[]){
                             rs2.close();
                         if(pstmt2 != null)
                             pstmt2.close();
-                    }catch(SQLException sqe){
+                        }catch(SQLException sqe){
                     }
                 }
             }
@@ -879,9 +916,10 @@ public static void main(String args[]){
         }catch(SQLException sqe){
         }
     }
+    fkTimer += System.currentTimeMillis() - topTime;
 
     addCashedPage(page.trim(),PageNo);
-    return PageNo;
+    return new Integer(PageNo);
     }
 
 
@@ -895,7 +933,8 @@ public static void main(String args[]){
 
 
 
-    public static String getSession(String fullsession, String sip, Connection con){
+    public static Integer getSession(String fullsession, String sip, Connection con){
+        long topTime = System.currentTimeMillis();
     PreparedStatement pstmt=null;
     ResultSet rs = null;
     PreparedStatement pstmt2 = null;
@@ -921,6 +960,10 @@ public static void main(String args[]){
                 SessionNo = ""+rs.getInt("Session_ID");
                 gotFK = true;
             }
+            rs.close();
+            rs=null;
+            pstmt.close();
+            pstmt = null;
             if(!gotFK){
 //            private static final String sqlAddSesion = "INSERT INTO Sessions (sessionTXT, sessionNo, IPAddress) "+
 //                         " VALUES (?,?,?) ";
@@ -981,10 +1024,11 @@ public static void main(String args[]){
         }catch(SQLException sqe){
         }
     }
+    fkTimer += System.currentTimeMillis() - topTime;
 
     addCashedSession(fullsession.trim(),SessionNo);
 
-    return SessionNo;
+    return new Integer(SessionNo);
     }
     
     
@@ -1027,7 +1071,8 @@ public static void main(String args[]){
         return lines;
     }
     
-    public static String getMachine(String machine, Connection con){
+    public static Integer getMachine(String machine, Connection con){
+        long topTime = System.currentTimeMillis();
     PreparedStatement pstmt=null;
     ResultSet rs = null;
     PreparedStatement pstmt2 = null;
@@ -1056,6 +1101,11 @@ public static void main(String args[]){
                     MachineNo = ""+rs.getInt("Machine_ID");
                     gotFK = true;
                 }
+                
+                rs.close();
+                rs = null;
+                pstmt.close();
+                pstmt = null;
                 if(!gotFK){
     //            private static final String sqlAddSesion = "INSERT INTO Sessions (sessionTXT, sessionNo, IPAddress) "+
     //                         " VALUES (?,?,?) ";
@@ -1117,13 +1167,14 @@ public static void main(String args[]){
                     rs.close();
                 if(pstmt != null)
                     pstmt.close();
-            }catch(SQLException sqe){
+                }catch(SQLException sqe){
             }
         }
+    fkTimer += System.currentTimeMillis() - topTime;
 
         addCashedMachine(machine.trim(),MachineNo);
 
-        return MachineNo;
+        return new Integer(MachineNo);
         }
     }
 
@@ -1143,6 +1194,8 @@ public static void main(String args[]){
        if(cols[5].equalsIgnoreCase("NA"))
            cols[5]="1";
        PreparedStatement pstmp = con.prepareStatement(sqlFullRecordInsert);
+       //System.out.println(sqlFullRecordInsert);
+       //System.out.println(cols[1]+", "+cols[2]+", "+cols[3]+", "+cols[4]+", "+cols[5]+", "+cols[6]);
        pstmp.setInt(1,Integer.parseInt(cols[1]));
        pstmp.setInt(2,Integer.parseInt(cols[2]));
        pstmp.setTimestamp(3,ts);
@@ -1152,9 +1205,9 @@ public static void main(String args[]){
        boolean success = false;
        
 	try{
-      //          System.out.println("Just Before executeUpdate");
+         //       System.out.println("Just Before executeUpdate");
 	        int rows = pstmp.executeUpdate();
-        //        System.out.println("Just After executeUpdate");
+         //       System.out.println("Just After executeUpdate");
 		pstmp.close();
                 if(rows == 1)  success = true;
                 recordsAdded = recordsAdded+rows;
@@ -1230,7 +1283,7 @@ public static void main(String args[]){
 
    static void PopulateUptimes(java.util.Date[] tsa , String fname, int lines, Connection con) throws SQLException, RecordRecordsException{
        System.out.println("Line 1");
-       int Machine = Integer.parseInt(getMachine(LPConstants.MachineName,con));
+       int Machine = getMachine(LPConstants.MachineName,con).intValue();
        System.out.println("Line 2");
        PreparedStatement pstmp = con.prepareStatement(sqlUptimeInsert);
        System.out.println("Line 3");
