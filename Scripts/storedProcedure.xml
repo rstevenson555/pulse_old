@@ -4,13 +4,13 @@
   <target name="init">
     <tstamp/>
     <SetDateOffset name="RemoveDate" 
-                   DayOffset="-15" 
+                   DayOffset="-30" 
                    dateFormat="yyyyMMdd"/>
     <echo message="${RemoveDate}"/>
   </target>
 
   <target name="runProc" depends="init">
-    <exec dir="." executable="/usr/bin/ksh">
+    <exec dir="/apps/artadmin/art/scripts" executable="/usr/bin/ksh">
       <arg line="storedProcedure.sh ${RemoveDate}"/>
     </exec>
   </target>

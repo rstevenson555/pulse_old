@@ -1,5 +1,7 @@
 <project name="getLogs" default="default" basedir=".">
- <taskdef name="SendEmailWithHeader" classname="com.bcop.SendEmailWithHeader"/>
+ <taskdef name="SendEmailWithHeader" classname="com.bcop.ant.tasks.SendEmailWithHeader"/>
+ <taskdef name="SetDateOffset" classname="com.bcop.ant.tasks.SetOffsetDate"/>
+	<property name="dist.list" value="BrianMcKittrick@boiseoffice.com,xiaohui.xiao@boiseoffice.com,BlakeMoritz@boiseoffice.com,chrisdagostino@boiseoffice.com,ThomasBurke@boiseoffice.com,rosemarie.boyle@boiseoffice.com,BobStevenson@BoiseOffice.com,BryceAlcock"/>
 	<property name="nas1" value="10.7.209.201"/>
 	<property name="nas3" value="10.7.209.213"/>
 	<property name="nas4" value="10.7.209.214"/>
@@ -7,7 +9,11 @@
 	<property name="remote.dir" value="/opt/apps/logServer/Holding"/>
 	<property name="local.dir" value="${art_home.dir}/art/reports"/>
 	<property name="jars.dir" value="${art_home.dir}/jars"/>
+	<property name="225Box" value="10.3.12.225"/>
+	<property name="local.reports.dir" value="/apps/artadmin/art/reports/Html"/>
+	<property name="reports.dir" value="/home/artadmin/public_html"/>
       
+
 
 	<target name="default">
          <tstamp>
@@ -15,6 +21,10 @@
           </format>
          </tstamp>
          <echo message="${DSTAMP}.xml"/>
+         <SetDateOffset name="DirectoryDate" 
+                   DayOffset="-1" 
+                   dateFormat="yyyyMMdd"/>
+         <echo message="DirectoryDate: ${DirectoryDate}"/>
 	</target>
 
 
@@ -41,7 +51,17 @@
           </classpath>
          </java>
 
-         <java classname="logParser.Tester"
+         <java classname="logParser.Tools.PercentileTool"
+                fork="yes" dir="${local.dir}/Html" >
+          <arg value="${DirectoryDate}" />
+          <classpath>
+           <pathelement path="${jars.dir}/coloradoER.jar"/>
+           <pathelement path="${jars.dir}/logParser.jar"/>
+           <pathelement path="${jars.dir}/classes12.zip"/>
+          </classpath>
+         </java>
+
+         <!--<java classname="logParser.Tester"
                 fork="yes" dir="${local.dir}/Html" >
           <classpath>
            <pathelement path="${jars.dir}/coloradoER.jar"/>
@@ -49,6 +69,7 @@
            <pathelement path="${jars.dir}/classes12.zip"/>
           </classpath>
          </java>
+		 -->
         </target>
 
   
@@ -58,22 +79,26 @@
               to the file.  Additionally, it moves the files to 
               the directory ${reports}
         -->
-        <target name="prepare.mail">
+        <target name="prepare.mail" depends="default">
          <exec dir="${local.dir}/Html" executable="cat" 
                       output="${local.dir}/Html/30SecondLoad.html">
-          <arg line="Subject30SecondLoad 30SecondLoad${SDSTAMP}.html"/>
+          <arg line="30SecondLoad${SDSTAMP}.html"/>
          </exec>
          <exec dir="${local.dir}/Html" executable="cat" 
                       output="${local.dir}/Html/AllPagesData.html">
-          <arg line="SubjectAllPagesO AllPagesDataOrdered${SDSTAMP}.html"/>
+          <arg line="AllPagesDataOrdered${SDSTAMP}.html"/>
          </exec>
          <exec dir="${local.dir}/Html" executable="cat" 
                       output="${local.dir}/Html/MachineUtilization.html">
-          <arg line="SubjectMachineUtilization MachineUtilization${SDSTAMP}.html"/>
+          <arg line="MachineUtilization${SDSTAMP}.html"/>
          </exec>
          <exec dir="${local.dir}/Html" executable="cat" 
                       output="${local.dir}/Html/HourlyUsage.html">
-          <arg line="SubjectHourlyUsage HourlyUsage${SDSTAMP}.html"/>
+          <arg line="HourlyUsage${SDSTAMP}.html"/>
+         </exec>
+         <exec dir="${local.dir}/Html" executable="cat" 
+                      output="${local.dir}/Html/mainPane.html">
+          <arg line="DailySummary${DirectoryDate}.html"/>
          </exec>
         </target>
 
@@ -84,36 +109,96 @@
               This should be the i97.Orders.
         -->
         <target name="mail.reports">
-          <SendEmailWithHeader from="Ad-Hoc Report Tool" 
-                tolist="i97.orders@bcop.com" 
+          <SendEmailWithHeader from="BryceAlcock@boiseoffice.com" 
+                tolist="${dist.list}@boiseoffice.com" 
                 subject="Machine Utilization (ART Report 004)"
                 files="${local.dir}/Html/MachineUtilization.html"
-                mailhost="10.3.15.100"
+                mailhost="10.7.161.30"
                 type="text"/>
           <echo message="mailling ${local.dir}/Html/MachineUtilization.html"/>
-          <SendEmailWithHeader from="Ad-Hoc Report Tool" 
-                tolist="i97.orders@bcop.com" 
+          <SendEmailWithHeader from="BryceAlcock@boiseoffice.com" 
+                tolist="${dist.list}@boiseoffice.com" 
                 subject="All Pages Data (ART Report 001)"
                 files="${local.dir}/Html/AllPagesData.html"
-                mailhost="10.3.15.100"
+                mailhost="10.7.161.30"
                 type="text"/>
           <echo message="mailling ${local.dir}/Html/AllPagesData.html      "/>
-          <SendEmailWithHeader from="Ad-Hoc Report Tool" 
-                tolist="i97.orders@bcop.com" 
+          <SendEmailWithHeader from="BryceAlcock@boiseoffice.com" 
+                tolist="${dist.list}@boiseoffice.com" 
                 subject="Pages w/>30 Second Load Times (ART Report 002)"
                 files="${local.dir}/Html/30SecondLoad.html"
-                mailhost="10.3.15.100"
+                mailhost="10.7.161.30"
                 type="text"/>
           <echo message="mailling ${local.dir}/Html/30SecondLoad.html      "/>
-          <SendEmailWithHeader from="Ad-Hoc Report Tool" 
-                tolist="i97.orders@bcop.com" 
+          <SendEmailWithHeader from="BryceAlcock@boiseoffice.com" 
+                tolist="${dist.list}@boiseoffice.com" 
                 subject="Hourly Usage (ART Report 003)"
                 files="${local.dir}/Html/HourlyUsage.html"
-                mailhost="10.3.15.100"
+                mailhost="10.7.161.30"
                 type="text"/>
           <echo message="mailling ${local.dir}/Html/HourlyUsage.html       "/>
        
         </target>
+        <target name="mail.report.url" depends="default">
+          <SendEmailWithHeader from="BryceAlcock@boiseoffice.com" 
+                tolist="${dist.list}@boiseoffice.com" 
+                subject="ART(Temporary Address) http://10.3.12.225:8080/art (ART Report url)"
+                message="ART Reports now at  http://10.3.12.225:8080/art"
+                mailhost="10.7.161.30"
+                type="text"/>
+          <echo message="mailling ${local.dir}/Html/MachineUtilization.html"/>
+		</target>
+		<target name="runDailySummary" depends="default">
+			
+         <java classname="logParser.UserNamePopulator"
+                fork="yes" dir="${local.dir}/Html" >
+          <classpath>
+           <pathelement path="${jars.dir}/logParser.jar"/>
+           <pathelement path="${jars.dir}/classes12.zip"/>
+          </classpath>
+         </java>
+
+
+         <java classname="logParser.DailySummaryPopulator"
+                fork="yes" dir="${local.dir}/Html" >
+          <classpath>
+           <pathelement path="${jars.dir}/logParser.jar"/>
+           <pathelement path="${jars.dir}/classes12.zip"/>
+          </classpath>
+         </java>
+
+		</target>
+
+		<target name="dist.reports" depends="default">
+			<echo message="${DSTAMP}"/>
+		    <telnet server="${225Box}">
+				<read>ogin:</read>
+				<write>artadmin</write>
+				<read>assword:</read>
+				<write>abc123</write>
+				<read>$</read>
+				<write string="cd  /home/artadmin/public_html"/>
+				<read>$</read>
+				<write string="mkdir ${DirectoryDate}"/>
+				<read>$</read>
+				<write string="cd ${DirectoryDate}"/>
+				<read>$</read>
+				<write string="cp ../baseFiles/*.html ."/>
+				<read>$</read>
+				<write string="cp ../baseFiles/*.css ."/>
+				<read>$</read>
+     		</telnet>
+	
+			<ftp server="${225Box}" 
+			     userid="artadmin" 
+				 password="abc123" 
+				 remotedir="${reports.dir}/${DirectoryDate}" >
+       			<fileset dir="${local.reports.dir}" 
+				         includes="mainPane.html, 30SecondLoad.html, AllPagesData.html, MachineUtilization.html, HourlyUsage.html" />
+     		</ftp>
+		</target>
+ 
+
 
   
         <!--  
@@ -122,9 +207,11 @@
               condtions.
         -->
         <target name="prep.Reports" depends="default">
+		 <antcall target="runDailySummary"/>
          <antcall target="load.Logs"/>
-         <antcall target="prepare.mail"/>
-         <antcall target="mail.reports"/>
+         <!--<antcall target="prepare.mail"/>-->
+         <!--<antcall target="dist.reports"/>-->
+		 <antcall target="mail.report.url"/>
         </target>
 
 </project>

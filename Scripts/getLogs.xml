@@ -1,7 +1,14 @@
-<project name="getLogs" default="default" basedir=".">
+<project name="getLogs" default="main" basedir=".">
+    <taskdef name="ssh" classname="com.bcop.ant.tasks.SSH"/>
+    <taskdef name="sftp" classname="com.bcop.ant.tasks.SFTP"/>
   <property name="nas1" value="10.7.209.201"/>
+  <property name="nas2" value="10.7.209.202"/>
   <property name="nas3" value="10.7.209.213"/>
   <property name="nas4" value="10.7.209.214"/>
+  <property name="nas5" value="10.7.209.216"/>
+  <property name="nas6" value="10.7.209.218"/>
+  <property name="beta-nas1" value="10.7.209.70"/>
+  <property name="dev-nas1" value="10.7.200.52"/>
   <property name="remote.dir" value="/opt/apps/logServer/Holding"/>
   <property name="local.dir" value="/apps/artadmin/art/logs/xmlLogs"/>
 
@@ -14,189 +21,110 @@
      <echo message="LDSTAMP ${LDSTAMP}"/>
   </target>
 
-  <target name="default" depends="init">
-    <echo message="getting files from nas1"/>
-
-    <telnet server="${nas1}">
-      <read>ogin:</read>
-      <write>nasadmin</write>
-      <read>assword:</read>
-      <write>maddog</write>
-      <read>#</read>
-      <write>cd /opt/apps/logServer/Holding</write>
-      <read>#</read>
-      <write string="if test -f Nas1Logs.tar.Z ; then "/>
-      <read>&gt;</read>
-      <write>/usr/bin/rm -f Nas1Logs.tar.Z</write>
-      <read>&gt;</read>
+  <target name="general.getLogs" depends="init">
+    <ssh server="${machine.param}" userid="nasadmin">
+      <write> cd /opt/apps/logServer/Holding</write>
+      <write string="cat ../LiveLogs/orderpoint.jsp.log ../opend.log > orderpoint.jsp.log${LDSTAMP}.xml"/>
+      <write string="cp ../orderpoint.jsp.log ../LiveLogs/orderpoint.jsp.log"/>
+      <write string="if test -f ${machineName.param}.tar.Z ; then "/>
+      <write string="/usr/bin/rm -f ${machineName.param}.tar.Z"/>
       <write>fi</write>
-      <read>#</read>
       <write string="if test -f orderpoint.jsp.*.xml ; then "/>
-      <read>&gt;</read>
-      <write>tar -cf Nas1Logs.tar orderpoint.jsp.*</write>
-      <read>&gt;</read>
-      <write>compress Nas1Logs.tar</write>
-      <read>&gt;</read>
-      <write>/usr/bin/rm -f orderpoint.jsp.*</write>
-      <read>&gt;</read>
-      <write string="cp Nas1Logs.tar.Z ../Historical/${LDSTAMP}Nas1Logs.tar.Z"/>
-      <read>&gt;</read>
+      <write string="tar -cf ${machineName.param}.tar orderpoint.jsp.*"/>
+      <write string="compress ${machineName.param}.tar"/>
+      <write string="/usr/bin/rm -f orderpoint.jsp.*.xml"/>
       <write>fi</write>
-      <read>#</read>
-    </telnet>
-
-    <ftp action="get" server="${nas1}" userid="nasadmin" password="maddog" remotedir="${remote.dir}" >
-      <fileset dir="${local.dir}/nas1" includes="Nas1Logs.tar.Z" />
-    </ftp>
-
-    <echo message="getting files from nas3"/>
-
-    <telnet server="${nas3}">
-      <read>ogin:</read>
-      <write>nasadmin</write>
-      <read>assword:</read>
-      <write>maddog</write>
-      <read>#</read>
-      <write>cd /opt/apps/logServer/Holding</write>
-      <read>#</read>
-      <write string="if test -f Nas3Logs.tar.Z ; then "/>
-      <read>&gt;</read>
-      <write>/usr/bin/rm -f Nas3Logs.tar.Z</write>
-      <read>&gt;</read>
+      <write string="if test -f javaErrors.txt*.xml ; then "/>
+      <write string="tar -cf ../Historical/JE_${shortName.param}_${LDSTAMP}.tar javaErrors.txt*.xml"/>
+      <write string="compress ../Historical/JE_${shortName.param}_${LDSTAMP}.tar"/>
+      <write string="/usr/bin/rm -f javaErrors.txt*.xml"/>
       <write>fi</write>
-      <read>#</read>
-      <write string="if test -f orderpoint.jsp.*.xml ; then "/>
-      <read>&gt;</read>
-      <write>mv Nas3Logs.tar.Z Nas3Logs.Back.tar.Z</write>
-      <read>&gt;</read>
-      <write>tar -cf Nas3Logs.tar orderpoint.jsp.*</write>
-      <read>&gt;</read>
-      <write>compress Nas3Logs.tar</write>
-      <read>&gt;</read>
-      <write>/usr/bin/rm -f orderpoint.jsp.*</write>
-      <read>&gt;</read>
-      <write string="cp Nas3Logs.tar.Z ../Historical/${LDSTAMP}Nas3Logs.tar.Z"></write>
-      <read>&gt;</read>
+      <write string="if test -f orderpoint.stdout.log*.xml ; then "/>
+      <write string="tar -cf ../Historical/OPSO_${shortName.param}_${LDSTAMP}.tar orderpoint.stdout.log*.xml"/>
+      <write string="compress ../Historical/OPSO_${shortName.param}_${LDSTAMP}.tar"/>
+      <write string="/usr/bin/rm -f orderpoint.stdout.log*.xml"/>
       <write>fi</write>
-      <read>#</read>
-    </telnet>
+    </ssh>
 
-    <ftp action="get" server="${nas3}" userid="nasadmin" password="maddog" remotedir="${remote.dir}" >
-      <fileset dir="${local.dir}/nas3" includes="Nas3Logs.tar.Z" />
-    </ftp>
-
-    <echo message="getting files from nas4"/>
-
-    <telnet server="${nas4}">
-      <read>ogin:</read>
-      <write>nasadmin</write>
-      <read>assword:</read>
-      <write>maddog</write>
-      <read>#</read>
-      <write>cd /opt/apps/logServer/Holding</write>
-      <read>#</read>
-      <write string="if test -f Nas4Logs.tar.Z ; then "/>
-      <read>&gt;</read>
-      <write>/usr/bin/rm -f Nas4Logs.tar.Z</write>
-      <read>&gt;</read>
-      <write>fi</write>
-      <read>#</read>
-      <write string="if test -f orderpoint.jsp.*.xml ; then "/>
-      <read>&gt;</read>
-      <write>mv Nas4Logs.tar.Z Nas4LogsBack.tar.Z</write>
-      <read>&gt;</read>
-      <write>tar -cf Nas4Logs.tar orderpoint.jsp.*</write>
-      <read>&gt;</read>
-      <write>compress Nas4Logs.tar</write>
-      <read>&gt;</read>
-      <write>/usr/bin/rm -f orderpoint.jsp.*</write>
-      <read>&gt;</read>
-      <write string="cp Nas4Logs.tar.Z ../Historical/${LDSTAMP}Nas4Logs.tar.Z"></write>
-      <read>&gt;</read>
-      <write>fi</write>
-      <read>#</read>
-    </telnet>
-
-    <ftp action="get" server="${nas4}" userid="nasadmin" password="maddog" remotedir="${remote.dir}" >
-      <fileset dir="${local.dir}/nas4" includes="Nas4Logs.tar.Z" />
-    </ftp>
-
+    <echo message="${machineName.param}.tar.Z is being looked for for ftp"/>
+    <sftp server="${machine.param}" userid="nasadmin" remotedir="${remote.dir}" >
+        <!--      <fileset dir="${local.dir}/${shortName.param}" includes="${machineName.param}.tar.Z" /> -->
+        <write string="lcd ${local.dir}/${shortName.param}"/>
+        <write string="get ${machineName.param}.tar.Z"/> 
+    </sftp>
   </target>
 
-
-
-  <target name="store.javaErrors" depends="init">
-    <echo message="tar/mv javeErrors.log* to Historical directory" />
-      <telnet server="${nas1}">
-        <read>ogin:</read>
-        <write>nasadmin</write>
-        <read>assword:</read>
-        <write>maddog</write>
-        <read>#</read>
-        <write>cd /opt/apps/logServer/Holding</write>
-        <read>#</read>
-        <write string="if test -f javaErrors.*.xml ; then "/>
-        <read>&gt;</read>
-        <write string="tar -cf javaErrors.tar javaErrors.*.xml"/>
-        <read>&gt;</read>
-        <write>compress javaErrors.tar</write>
-        <read>&gt;</read>
-        <write>/usr/bin/rm -f javaErrors.*.xml</write>
-        <read>&gt;</read>
-        <write string="mv javaErrors.tar.Z ../Historical/${DSTAMP}javaErrors.tar.Z"></write>
-        <read>&gt;</read>
-        <write string="fi"/>
-        <read>#</read>
-      </telnet>
-      <telnet server="${nas3}">
-        <read>ogin:</read>
-        <write>nasadmin</write>
-        <read>assword:</read>
-        <write>maddog</write>
-        <read>#</read>
-        <write>cd /opt/apps/logServer/Holding</write>
-        <read>#</read>
-        <write string="if test -f javaErrors.*.xml ; then "/>
-        <read>&gt;</read>
-        <write string="tar -cf javaErrors.tar javaErrors.*.xml"/>
-        <read>&gt;</read>
-        <write>compress javaErrors.tar</write>
-        <read>&gt;</read>
-        <write>/usr/bin/rm -f javaErrors.*.xml</write>
-        <read>&gt;</read>
-        <write string="mv javaErrors.tar.Z ../Historical/${DSTAMP}javaErrors.tar.Z"></write>
-        <read>&gt;</read>
-        <write string="fi"/>
-        <read>#</read>
-
-      </telnet>
-      <telnet server="${nas4}">
-        <read>ogin:</read>
-        <write>nasadmin</write>
-        <read>assword:</read>
-        <write>maddog</write>
-        <read>#</read>
-        <write>cd /opt/apps/logServer/Holding</write>
-        <read>#</read>
-        <write string="if test -f javaErrors.*.xml ; then "/>
-        <read>&gt;</read>
-        <write string="tar -cf javaErrors.tar javaErrors.*.xml"/>
-        <read>&gt;</read>
-        <write>compress javaErrors.tar</write>
-        <read>&gt;</read>
-        <write>/usr/bin/rm -f javaErrors.*.xml</write>
-        <read>&gt;</read>
-        <write string="mv javaErrors.tar.Z ../Historical/${DSTAMP}javaErrors.tar.Z"></write>
-        <read>&gt;</read>
-        <write string="fi"/>
-        <read>#</read>
-
-      </telnet>
-    </target>
+  <target name="main" depends="init">
+    <antcall target="getNas1"/>
+    <antcall target="getNas2"/>
+    <antcall target="getNas3"/>
+    <antcall target="getNas4"/>
+    <antcall target="getNas5"/>
+    <antcall target="getNas6"/>
+    <antcall target="getBeta"/>
+    <antcall target="getDev"/>
+  </target>
+  <target name="getNas1" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${nas1}"/>
+      <param name="machineName.param" value="Nas1Logs"/>
+      <param name="shortName.param" value="nas1"/>
+    </antcall>
+  </target>
+  <target name="getNas2" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${nas2}"/>
+      <param name="machineName.param" value="Nas2Logs"/>
+      <param name="shortName.param" value="nas2"/>
+    </antcall>
+  </target>
+  <target name="getNas3" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${nas3}"/>
+      <param name="machineName.param" value="Nas3Logs"/>
+      <param name="shortName.param" value="nas3"/>
+    </antcall>
+  </target>
+  <target name="getNas4" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${nas4}"/>
+      <param name="machineName.param" value="Nas4Logs"/>
+      <param name="shortName.param" value="nas4"/>
+    </antcall>
+  </target>
+  <target name="getNas5" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${nas5}"/>
+      <param name="machineName.param" value="Nas5Logs"/>
+      <param name="shortName.param" value="nas5"/>
+    </antcall>
+  </target>
+  <target name="getNas6" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${nas6}"/>
+      <param name="machineName.param" value="Nas6Logs"/>
+      <param name="shortName.param" value="nas6"/>
+    </antcall>
+  </target>
+  <target name="getBeta" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${beta-nas1}"/>
+      <param name="machineName.param" value="Beta"/>
+      <param name="shortName.param" value="beta"/>
+    </antcall>
+  </target>
+  <target name="getDev" depends="init">
+    <antcall target="general.getLogs">
+      <param name="machine.param" value="${dev-nas1}"/>
+      <param name="machineName.param" value="Dev"/>
+      <param name="shortName.param" value="dev"/>
+    </antcall>
+  </target>
+    
 
     <target name="help">
-      <echo message="ant [default]        : process orderpoint.jsp.log files"/>
-      <echo message="ant store.javaErrors : move javaErrors to Historical directory"/>
+      <echo message="ant [main]        : process orderpoint.jsp.log files and move javaError and stdout files to long term storage."/>
     </target>
+
 
 </project>
