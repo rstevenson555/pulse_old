@@ -34,10 +34,10 @@ public class StandardQueryTools extends java.lang.Object {
             System.out.println("Location 3");
             StandardQueryTools sqt = new StandardQueryTools();
             sqt.UpdateStandardQueriesToDB(con);
-            sqt.UpdateQuarterHourlyHistoricalRecords("20010430",con);
+            sqt.UpdateQuarterHourlyHistoricalRecords("20010711",con);
             System.out.println("Location 4");
-            sqt.UpdateDailyLoadTimes("20010430", con);
-            sqt.UpdateHourlyHistoricalRecords("20010430",con);
+            sqt.UpdateDailyLoadTimes("20010711", con);
+            sqt.UpdateHourlyHistoricalRecords("20010711",con);
             System.out.println("Location 5");
         }catch (SQLException se){
             se.printStackTrace();
@@ -252,11 +252,12 @@ public class StandardQueryTools extends java.lang.Object {
                 ht2.put(new Integer(5),new Integer(rs.getInt("maxlt")));
                 ht2.put(new Integer(6),new Integer(rs.getInt("minlt")));
                 ht2.put(new Integer(7),new Integer(rs.getInt("totalhits"))); 
-
+System.out.println("just before QueryService.executeNRSQuery(LPConstants.ORACLE_InsertDailyLoadTimeRecords)");
                 if(QueryService.executeNRSQuery(LPConstants.ORACLE_InsertDailyLoadTimeRecords,ht2,con))
                     ;
                 else
                     System.out.println("Failure adding record to Historical table from QuarterHourly");
+System.out.println("just after QueryService.executeNRSQuery(LPConstants.ORACLE_InsertDailyLoadTimeRecords)");
 
             
             }else{
@@ -349,11 +350,13 @@ public class StandardQueryTools extends java.lang.Object {
                 ht2.put(new Integer(3),new Integer(qid));
                 ht2.put(new Integer(4),new Integer(rs.getInt("distSessions")));
                 ht2.put(new Integer(5),new Integer(rs.getInt("totalSessions")));
-
+                
+System.out.println("ORACLE_InsertHourlyHistoricalRecords");
                 if(QueryService.executeNRSQuery(LPConstants.ORACLE_InsertHourlyHistoricalRecords,ht2,con))
                     ;
                 else
                     System.out.println("Failure adding record to Historical table from Hourly");
+System.out.println("after ORACLE_InsertHourlyHistoricalRecords");
             }else{
                 // This means we found the Unique Key, and are therefore Updating.
                 String hrpk = HistoricalRecordsPKRS.getString("HR_ID");
@@ -364,10 +367,12 @@ public class StandardQueryTools extends java.lang.Object {
                 ht2.put(new Integer(2),new Integer(rs.getInt("totalSessions")));
                 ht2.put(new Integer(3), new Integer(hrpk));
 
+System.out.println("ORACLE_UpdateHourlyHistoricalRecords");
                 if(QueryService.executeNRSQuery(LPConstants.ORACLE_UpdateHourlyHistoricalRecords,ht2,con))
                     ;
                 else
                     System.out.println("Failure adding record to Historical table from Hourly");
+System.out.println("after ORACLE_UpdateInsertHourlyHistoricalRecords");
             }
         }
         return true;  

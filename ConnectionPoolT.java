@@ -34,7 +34,9 @@ public class ConnectionPoolT {
             driverName="oracle.jdbc.driver.OracleDriver";
         }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
             driverName="oracle.jdbc.driver.OracleDriver";
-            connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
+           // connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
+             connectionURL="jdbc:oracle:thin:art_user/stream1@10.7.209.73:5792:artp";
+        
         }
 
         try{

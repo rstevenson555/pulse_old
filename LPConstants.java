@@ -64,14 +64,14 @@ public class LPConstants extends java.lang.Object {
     
     public static final String ORACLE_InsertDailyLoadTimeRecords ="INSERT INTO DailyLoadTimes "+
                    "(DailyLoadTimes_ID, Day, Page_ID, Machine_ID, AverageLoadTime, MaxLoadTime, MinLoadTime, TotalLoads) " +
-                   "VALUES (DAILYLOADTIMESSEQUENCE.NEXTVAL,?,?,?,?,?,?,?) ";
+                   "VALUES (DAILYLOADTIMES_ID_SEQ.NEXTVAL,?,?,?,?,?,?,?) ";
 
     public static final String ORACLE_UpdateDailyLoadTimeRecords = "UPDATE DailyLoadTimes SET "+
                    "AverageLoadTime=?, MaxLoadTime=?, MinLoadTime=?, TotalLoads=? WHERE DailyLoadTimes_ID=? ";
     
     public static final String ORACLE_InsertHourlyHistoricalRecords = "INSERT INTO HistoricalRecords "+
                    "(HR_ID, Machine_ID, Time, Query_ID, Distinct_Hits, Total_Hits) "+
-                   "VALUES (HISTORICALRECORDSSEQUENCE.NEXTVAL,?,?,?,?,?)";
+                   "VALUES (HR_ID_SEQ.NEXTVAL,?,?,?,?,?)";
 
     public static final String ORACLE_UpdateHourlyHistoricalRecords = "UPDATE HistoricalRecords SET "+
                    "Distinct_Hits=?, Total_Hits=? "+
@@ -84,6 +84,14 @@ public class LPConstants extends java.lang.Object {
                   "WHERE TO_CHAR(Time,'YYYYMMDD')=?  "+
                   "GROUP BY TO_CHAR(Time,'YYYYMMDDHH24'), a.Machine_ID "+
                   "ORDER BY TO_CHAR(Time,'YYYYMMDDHH24') ";
+    
+    public static final String ORACLE_CreateMinuteHistoricalResultsSet = 
+                  "SELECT a.Machine_ID as Machine, TO_CHAR(TIME,'YYYYMMDDHH24MI') as timePeriod, "+
+                  "COUNT(DISTINCT a.SESSION_ID) as disSessions, "+
+                  "COUNT(a.SESSION_ID) as totalSessions FROM AccessRecords a "+
+                  "WHERE TO_CHAR(Time, 'YYYYMMDD')=? "+
+                  "GROUP BY TO_CHAR(Time,'YYYYMMDDHH24MI'), a.Machine_ID "+
+                  "ORDER BY TO_CHAR(Time,'YYYYMMDDHH24MI') ";
     
     public static final String ORACLE_CreateQuarterHourlyResultSet  = "SELECT TO_CHAR(Time,'yyyyMMDDhh24') || TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') - MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09') as timePeriod, "+
   	      "count(distinct Session_ID) as distSessions, "+
@@ -99,7 +107,7 @@ public class LPConstants extends java.lang.Object {
 
     
     public static final String ORACLE_addQueries = "INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) "+
-                    " VALUES (QUERIESSEQUENCE.NEXTVAL,?,?,?)";
+                    " VALUES (QUERY_ID_SEQ.NEXTVAL,?,?,?)";
     
     
     
@@ -114,7 +122,7 @@ public class LPConstants extends java.lang.Object {
                    "m.MachineName=? AND "+
                    "hr.query_ID=q.query_ID AND "+
                    "q.queryName=? AND "+
-                   "TO_CHAR(Time,'yyyymmdd')=? ";
+                   "TO_CHAR(Time,'YYYYMMDD')=? ";
     
     public static final String ORACLE_CreateDailyLoadTimesM = "SELECT p.PageName as PageName, "+
                    "dlt.AverageLoadTime as AVELT, "+
@@ -122,7 +130,9 @@ public class LPConstants extends java.lang.Object {
                    "dlt.totalloads as TotalHits  "+
                    "from pages p, dailyloadtimes dlt, machines m "+
                    "Where m.MachineName=? AND dlt.Machine_ID=m.Machine_ID AND "+
-                   " TO_CHAR(DAY,'yyyyMMdd')=? AND p.Page_ID=dlt.Page_ID order by maxlt";
+                   " TO_CHAR(DAY,'YYYYMMDD')=? AND p.Page_ID=dlt.Page_ID order by maxlt";
+    
+ 
     
     /*
  

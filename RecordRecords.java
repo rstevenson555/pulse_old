@@ -39,13 +39,9 @@ public class RecordRecords extends java.lang.Object {
             connectionURL = "jdbc:oracle:thin:Boise/boise@localhost.localdomain:1521:Dimok";
         }else if(LPConstants.Driver.equalsIgnoreCase("Oracle_Boise")){
             driverName="oracle.jdbc.driver.OracleDriver";
-            connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
+            //connectionURL="jdbc:oracle:thin:I97_USER/horton@10.7.209.73:5792:ioe";
+            connectionURL="jdbc:oracle:thin:art_user/stream1@10.7.209.73:5792:artp";
         }
-   
-         
-        
-        
-        
     }
     
     /** Creates new RecordRecords */
@@ -55,15 +51,11 @@ public class RecordRecords extends java.lang.Object {
     /**
     * @param args the command line arguments
     */
-    public static void main (String args[])  {
-        
-           
-        
-        
-            
+    public static void main (String args[]) throws SQLException  {
         Connection con=null;
         String nextLine=null;
         jspErrorObject jeoObj = null;
+        System.out.println("Location 1 in main");
     	try{
             if(!LPConstants.Driver.equalsIgnoreCase("Oracle_Linux")){
                 Class.forName(driverName).newInstance();
@@ -76,11 +68,13 @@ public class RecordRecords extends java.lang.Object {
 	}catch (Exception e){
             e.printStackTrace();
 	}
+        System.out.println("Location 2 in main");
 
         EasyReader erin = new EasyReader(System.in);
         //String sfile = erin.stringQuery("Enter the file Name -->");
         int totalRecords = 0;
-        
+                System.out.println("Location 3 in main");
+
         long startTime = System.currentTimeMillis();
         long endTime = System.currentTimeMillis();
         long startFKTime = System.currentTimeMillis();
@@ -122,16 +116,26 @@ public class RecordRecords extends java.lang.Object {
         }catch (Exception e){
             e.printStackTrace();
         }
+        System.out.println("Location 4 in main");
 
         
         File[] filearray = FileTool.getFiles(".");
         LinkedList UpTimesLL = FileTool.getUpTimes(filearray);
+                System.out.println("Location 5 in main");
+
         for (int jj = 0; jj< filearray.length; ++jj){
+            System.out.println("Location 6 in main");
+            int linesInDatabase = ConnectionT.getLinesInDatabase(filearray[jj].toString(),con);
+            System.out.println("Location 7 in main");
             er = new EasyReader(filearray[jj].toString());
-           Record(er,con);
+            System.out.println("Location 8 in main");
+            egressToCurrentLocation(er,linesInDatabase);
+           //Record should return the total number of lines contained in the file.
+            //  if the file already was processed then it should just return 0.
+            int linesInserted = Record(er,con);
             try{ 
                 er.close();
-                ConnectionT.PopulateUptimes((java.util.Date[])UpTimesLL.removeFirst(),filearray[jj].toString(),con);
+                ConnectionT.PopulateUptimes((java.util.Date[])UpTimesLL.removeFirst(),filearray[jj].toString(),linesInserted+linesInDatabase,con);
             }catch (IOException ioe){
                 ioe.printStackTrace();
             }catch (SQLException se){
@@ -285,8 +289,20 @@ public class RecordRecords extends java.lang.Object {
         PrintWriter pwError = new PrintWriter(oswError);
         return pwError;
     }
+  
+        private static void egressToCurrentLocation(EasyReader er,int linesInDatabase){
+            for(int i =0;i<linesInDatabase;++i){
+                if(!er.isEOF()){
+                    er.stringInputLine();
+                   System.out.println("I am egressing");
+                    
+                }
+            }
+        }
+
     
-    static void Record(EasyReader er, Connection con){
+    
+    static int Record(EasyReader er, Connection con){
         String nextLine=null;
         jspErrorObject jeoObj = null;
         
@@ -304,7 +320,7 @@ public class RecordRecords extends java.lang.Object {
         long startdummyTime = System.currentTimeMillis();
         long dummyTime = 0;
         String stemp;
-
+        
         
         
         
@@ -342,9 +358,9 @@ public class RecordRecords extends java.lang.Object {
                         continue;
                     }
                     JEOTime += System.currentTimeMillis() - startJEOTime; 
-         //           System.out.println("getting the foriegn Keys");
+                    //System.out.println("getting the foriegn Keys");
                     ForeignKeys = ConnectionT.getForiegnKeys2(new jspErrorObject(nextLine),con);
-           //         System.out.println("Returning from the foreign Keys");
+                    //System.out.println("Returning from the foreign Keys");
 
                 }catch (SQLException se){
                     System.out.println("Some SQL ERROR Getting Foreign Keys: " + nextLine);
@@ -365,7 +381,7 @@ public class RecordRecords extends java.lang.Object {
                     //System.out.print(".");
                     //stemp = erin.stringQuery("Add another Recod ->");
                     if(ConnectionT.addRecord(ForeignKeys,con))
-                       ;// System.out.println("Adding the Record");//                    System.out.println("Record Added");
+                     ;//  System.out.println("Adding the Record");//                    System.out.println("Record Added");
                     else
                         System.out.println("Error Adding Record");
                     if(++totalRecords%10000 == 0){
@@ -409,6 +425,7 @@ public class RecordRecords extends java.lang.Object {
         }catch (Exception e){
             e.printStackTrace();
         }
+        return totalRecords;
         
     }
 

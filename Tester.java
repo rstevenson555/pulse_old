@@ -79,25 +79,43 @@ public class Tester extends java.lang.Object {
         sDataobject.add(qm.getDataObject());
         sDataobject2.add(qm2.getDataObject());
         */
+        
+        
+        Stack sPageQuery = new Stack(); 
+
+        Hashtable htPageData = new Hashtable();
+        htPageData.put(new Integer(1),"NAS1");
+        htPageData.put(new Integer(2),"20010711");
+        
+        sPageQuery.add(new QueryObject(LPConstants.ORACLE_CreateDailyLoadTimesM,htPageData));
+        QueryMacro qmPageQuery = new QueryMacro(sPageQuery);
+
+        Stack sPageQueryObject = new Stack();
+        sPageQueryObject.add(qmPageQuery.getDataObject()); 
+  
+        
+        
+        
+        
         MachineCentricReport mcr = MachineCentricReport.createReport(
                                     LPConstants.ORACLE_SessionsDataM,
-                                    true,true,true,
-                                    "20010430",
+                                    true,false,false,
+                                    "20010711",
                                     "HourlyNewWay",
                                     "HourlySessions");
         MachineCentricReport mcr2 = MachineCentricReport.createReport(
                                     LPConstants.ORACLE_SessionsDataM,
-                                    true,true,true,
-                                    "20010430",
+                                    true,false,false,
+                                    "20010711", 
                                     "QuarterHourlyNewWay",
                                     "QuarterHourlySession");
-//      PageCentricReport pcr = new PageCentricReport(sPageQueryObject,"PageData");
+      PageCentricReport pcr = new PageCentricReport(sPageQueryObject,"PageData");
 //        MachineCentricReport mcr = new MachineCentricReport(sDataobject,"teststtt");
         Stack ss = new Stack();
 
         ss.add(mcr);
        ss.add(mcr2);
-//        ss.add(pcr);  
+        ss.add(pcr);  
          ReportDirector rd = new ReportDirector();
          rd.BuildCSVReports(ss.elements());
      

@@ -8,6 +8,7 @@ package logParser;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import edu.colorado.io.EasyReader;
 import java.sql.*;
 
 /**
@@ -21,14 +22,22 @@ public class FileTool extends Object {
     public FileTool() {
     }
     
-    public static void main(String args[]){
-        int i = 12;
+    public static void main(String args[]) throws IOException{
+        
+        /*int i = 12;
         DecimalFormat df = new DecimalFormat("000");
         System.out.println(df.format(i) + "  : from the ### number format");
         System.out.println(System.getProperty("BOISEOP.errors.redirect"));
         Display(getFiles("d:\\Projects\\logs\\nas1"));
        //addToArchive();        
+        */
         
+        
+        File[] inFiles = getFiles(".");
+        File[] outFiles = getOutFiles(inFiles);
+        for(int i =0;i<inFiles.length;++i){
+            buildDataLoaderFile(inFiles[i], outFiles[i]);
+        }
     }
     
 
@@ -42,6 +51,18 @@ public class FileTool extends Object {
     static File[] getFiles(String pathname){
         File currentDir = new File(pathname);
         return currentDir.listFiles(new jsperrorFileFilter());
+    }
+    
+    /**This static method takes an array of input files, and returns 
+     *an array of output files with the same name but different extension.
+     **/ 
+    static File[] getOutFiles(File[] inFiles){
+        File[] outFiles = new File[inFiles.length];
+        for(int i =0;i<inFiles.length;++i){
+            String filename = inFiles[i].getName();
+            outFiles[i] = new File(filename+".DL");
+        }
+        return outFiles;   
     }
     
     /**
@@ -195,4 +216,36 @@ public class FileTool extends Object {
         }
         return ret;
     }
+    
+    
+    /**
+     *This is a method to take in a file, and parse it such that the Oracle data loader can 
+     *handle it.  This would be an excellent candidate for further generalization.
+     */
+    public static void buildDataLoaderFile(File inputFile, File outputFile) throws IOException{
+        StringTokenizer st;
+        String nextLine = "";
+        int tokens ;
+        EasyReader er = new EasyReader(inputFile.toString());
+        PrintWriter pwError = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outputFile)),true);
+        while(!er.isEOF()){
+            nextLine = er.stringInputLine();
+        
+        
+        st = new StringTokenizer(nextLine,"~");
+        tokens= st.countTokens();
+        //System.out.println("Tokens: " + tokens);
+        if(tokens == 8){
+            nextLine = nextLine + "~";
+            pwError.println(nextLine);
+        }else if(tokens ==9){
+            pwError.println(nextLine);
+        }
+        }
+        pwError.flush();
+        pwError.close();
+        er.close();
+        
+    }
+    
 }

@@ -54,6 +54,7 @@ class ConnectionT {
                              //"NasAccess.Pages.pageName=? AND NasAccess.Users.userName=? "+
                              //" AND NasAccess.Sessions.sessionTXT=?";
         private static final String sqlUptimeInsert;
+        private static final String sqlGetLineCountByFile ;
     
     static{
         if(LPConstants.Database.equalsIgnoreCase("MySQL")){
@@ -79,30 +80,34 @@ class ConnectionT {
                                  " AND NasAccess.Sessions.sessionTXT=?";
             sqlUptimeInsert = "INSERT INTO Uptimes (startTime,endTime,Machine_ID,Filename,Archive) " +
                               "VALUES (?,?,?,?,?) ";
+            sqlGetLineCountByFile = "SELECT LINECOUNT FROM UPTIMES, MACHINES WHERE UPTIMES.FILENAME=? AND "+
+                        "UPTIMES.MACHINE_ID=MACHINES.MACHINE_ID AND MACHINES.MACHINENAME=?";
+
         }else{
             sqlUsersAll = "SELECT * FROM Users Where userName=?";
             //    private static final String sqlAddUser = "INSERT INTO USERS (userName) VALUES (?) ";
                                                                         
-            sqlAddUser = "INSERT INTO Users (User_ID, userName) VALUES (USERSSEQUENCE.NEXTVAL, ?) ";
+            sqlAddUser = "INSERT INTO Users (User_ID, userName) VALUES (USER_ID_SEQ.NEXTVAL, ?) ";
             sqlPagesAll = "SELECT * FROM Pages Where PageName=?";
-            sqlAddPages = "INSERT INTO Pages (Page_ID, PageName) VALUES (PAGESSEQUENCE.NEXTVAL, ?) ";
+            sqlAddPages = "INSERT INTO Pages (Page_ID, PageName) VALUES (PAGE_ID_SEQ.NEXTVAL, ?) ";
             sqlSessionsAll = "SELECT * FROM Sessions Where sessionTXT=?";
             sqlMachinesAll = "SELECT * FROM Machines Where MachineName=?";
             sqlAddSession = "INSERT INTO Sessions (Session_ID, sessionTXT, IPAddress) "+
-                                 " VALUES (SESSIONSSEQUENCE.NEXTVAL, ?,?) ";
+                                 " VALUES (SESSION_ID_SEQ.NEXTVAL, ?,?) ";
             sqlAddMachine = "INSERT INTO Machines (Machine_ID, MachineName) "+
-                                 " VALUES (MACHINESSEQUENCE.NEXTVAL, ?) ";
-            sqlFullRecordInsert = "INSERT INTO AccessRecords "+
-                                 "(RecordPK, Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (ACCESSRECORDSSEQUENCE.NEXTVAL, ?,?,?,?,?,?)";
+                                 " VALUES (MACHINE_ID_SEQ.NEXTVAL, ?) ";
+            sqlFullRecordInsert = "INSERT INTO AccessRecords"+
+                                 "(RecordPK, Page_ID, User_ID, Time, Session_ID, Machine_ID, LoadTime ) VALUES (RECORDPK_SEQ.NEXTVAL, ?,?,?,?,?,?)";
             sdf = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
             flagSessions = 0;
             sqlFullLookup = "SELECT Page_ID, User_ID, Session_ID FROM "+
                                  "Pages, Users, Sessions WHERE "+
                                  "Pages.pageName=? AND Users.userName=? "+
                                  " AND Sessions.sessionTXT=?";
-            sqlUptimeInsert = "INSERT INTO Uptimes (Uptime_ID, startTime, endTime, Machine_ID, Filename, Archive) " +
-                              "VALUES (UPTIMESSEQUENCE.NEXTVAL,?,?,?,?,?) ";
-
+            sqlUptimeInsert = "INSERT INTO Uptimes (Uptime_ID, startTime, endTime, Machine_ID, Filename, Archive,Linecount,) " +
+                              "VALUES (UPTIME_ID_SEQ.NEXTVAL,?,?,?,?,?,?) ";
+            sqlGetLineCountByFile = "SELECT LINECOUNT FROM UPTIMES, MACHINES WHERE UPTIMES.FILENAME=? AND "+
+                                    "UPTIMES.MACHINE_ID=MACHINES.MACHINE_ID AND MACHINES.MACHINENAME=?";
         }
     }
         
@@ -721,6 +726,7 @@ public static void main(String args[]){
                     pstmt2 = con.prepareStatement(sqlAddUser);
                     fuser =12;
                     pstmt2.setString(1,uid.trim());
+                    //System.out.println(" at location 13 " + sqlAddUser + " uid : " + uid.trim());
                     fuser =13;
 //        System.out.println("Line 720 fuser set to 13");
 //        System.out.println(sqlAddUser + "   :   : " + uid.trim());
@@ -746,6 +752,7 @@ public static void main(String args[]){
                     }else
                         UserNo = "1";
                 }catch (SQLException se){
+                    se.printStackTrace();
                     System.out.println("Error Adding A User Setting To User 1 location: BLA " + fuser);
                 }finally{
                     try{
@@ -982,6 +989,44 @@ public static void main(String args[]){
     
     
     
+    public static int getLinesInDatabase(String fname, Connection con) throws SQLException {
+        System.out.println("getLinesInDB 1");
+        PreparedStatement pstmt=null;
+        ResultSet rs = null;
+        PreparedStatement pstmt2 = null;
+        ResultSet rs2 = null;
+
+        String UserNo ="NA";
+        String PageNo = "NA";
+        String SessionNo ="NA";
+        boolean gotFK = false;
+        int lines = 0;
+        System.out.println("getLinesInDB 2" + sqlGetLineCountByFile);
+        pstmt = con.prepareStatement(sqlGetLineCountByFile);
+        pstmt.setString(1,fname);
+        pstmt.setString(2,LPConstants.MachineName);
+        System.out.println("getLinesInDB 3");
+        rs = pstmt.executeQuery();
+        System.out.println("getLinesInDB 4");
+        if(rs != null){
+            while (rs.next()) {
+                lines = rs.getInt("LINECOUNT");
+                gotFK = true;
+            }
+            if(!gotFK){
+            }
+        }else{
+            return 0;
+        }
+        if(rs != null)
+            rs.close();
+        if(pstmt != null)
+            pstmt.close();
+
+        
+        return lines;
+    }
+    
     public static String getMachine(String machine, Connection con){
     PreparedStatement pstmt=null;
     ResultSet rs = null;
@@ -1183,7 +1228,7 @@ public static void main(String args[]){
    }
 
 
-   static void PopulateUptimes(java.util.Date[] tsa , String fname, Connection con) throws SQLException, RecordRecordsException{
+   static void PopulateUptimes(java.util.Date[] tsa , String fname, int lines, Connection con) throws SQLException, RecordRecordsException{
        System.out.println("Line 1");
        int Machine = Integer.parseInt(getMachine(LPConstants.MachineName,con));
        System.out.println("Line 2");
@@ -1199,6 +1244,7 @@ public static void main(String args[]){
        System.out.println("Line 7");
        pstmp.setString(5,"NA");
        System.out.println("Line 8");
+       pstmp.setInt(6,lines);
        boolean success = false;
 	try{
        System.out.println("Line 9");
