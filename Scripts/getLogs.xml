@@ -1,0 +1,202 @@
+<project name="getLogs" default="default" basedir=".">
+  <property name="nas1" value="10.7.209.201"/>
+  <property name="nas3" value="10.7.209.213"/>
+  <property name="nas4" value="10.7.209.214"/>
+  <property name="remote.dir" value="/opt/apps/logServer/Holding"/>
+  <property name="local.dir" value="/apps/artadmin/art/logs/xmlLogs"/>
+
+  <target name="init">
+    <echo message="init called:"/>
+         <tstamp>
+          <format property="LDSTAMP" pattern="yyyyMMddHHmm">
+          </format>
+         </tstamp>
+     <echo message="LDSTAMP ${LDSTAMP}"/>
+  </target>
+
+  <target name="default" depends="init">
+    <echo message="getting files from nas1"/>
+
+    <telnet server="${nas1}">
+      <read>ogin:</read>
+      <write>nasadmin</write>
+      <read>assword:</read>
+      <write>maddog</write>
+      <read>#</read>
+      <write>cd /opt/apps/logServer/Holding</write>
+      <read>#</read>
+      <write string="if test -f Nas1Logs.tar.Z ; then "/>
+      <read>&gt;</read>
+      <write>/usr/bin/rm -f Nas1Logs.tar.Z</write>
+      <read>&gt;</read>
+      <write>fi</write>
+      <read>#</read>
+      <write string="if test -f orderpoint.jsp.*.xml ; then "/>
+      <read>&gt;</read>
+      <write>tar -cf Nas1Logs.tar orderpoint.jsp.*</write>
+      <read>&gt;</read>
+      <write>compress Nas1Logs.tar</write>
+      <read>&gt;</read>
+      <write>/usr/bin/rm -f orderpoint.jsp.*</write>
+      <read>&gt;</read>
+      <write string="cp Nas1Logs.tar.Z ../Historical/${LDSTAMP}Nas1Logs.tar.Z"/>
+      <read>&gt;</read>
+      <write>fi</write>
+      <read>#</read>
+    </telnet>
+
+    <ftp action="get" server="${nas1}" userid="nasadmin" password="maddog" remotedir="${remote.dir}" >
+      <fileset dir="${local.dir}/nas1" includes="Nas1Logs.tar.Z" />
+    </ftp>
+
+    <echo message="getting files from nas3"/>
+
+    <telnet server="${nas3}">
+      <read>ogin:</read>
+      <write>nasadmin</write>
+      <read>assword:</read>
+      <write>maddog</write>
+      <read>#</read>
+      <write>cd /opt/apps/logServer/Holding</write>
+      <read>#</read>
+      <write string="if test -f Nas3Logs.tar.Z ; then "/>
+      <read>&gt;</read>
+      <write>/usr/bin/rm -f Nas3Logs.tar.Z</write>
+      <read>&gt;</read>
+      <write>fi</write>
+      <read>#</read>
+      <write string="if test -f orderpoint.jsp.*.xml ; then "/>
+      <read>&gt;</read>
+      <write>mv Nas3Logs.tar.Z Nas3Logs.Back.tar.Z</write>
+      <read>&gt;</read>
+      <write>tar -cf Nas3Logs.tar orderpoint.jsp.*</write>
+      <read>&gt;</read>
+      <write>compress Nas3Logs.tar</write>
+      <read>&gt;</read>
+      <write>/usr/bin/rm -f orderpoint.jsp.*</write>
+      <read>&gt;</read>
+      <write string="cp Nas3Logs.tar.Z ../Historical/${LDSTAMP}Nas3Logs.tar.Z"></write>
+      <read>&gt;</read>
+      <write>fi</write>
+      <read>#</read>
+    </telnet>
+
+    <ftp action="get" server="${nas3}" userid="nasadmin" password="maddog" remotedir="${remote.dir}" >
+      <fileset dir="${local.dir}/nas3" includes="Nas3Logs.tar.Z" />
+    </ftp>
+
+    <echo message="getting files from nas4"/>
+
+    <telnet server="${nas4}">
+      <read>ogin:</read>
+      <write>nasadmin</write>
+      <read>assword:</read>
+      <write>maddog</write>
+      <read>#</read>
+      <write>cd /opt/apps/logServer/Holding</write>
+      <read>#</read>
+      <write string="if test -f Nas4Logs.tar.Z ; then "/>
+      <read>&gt;</read>
+      <write>/usr/bin/rm -f Nas4Logs.tar.Z</write>
+      <read>&gt;</read>
+      <write>fi</write>
+      <read>#</read>
+      <write string="if test -f orderpoint.jsp.*.xml ; then "/>
+      <read>&gt;</read>
+      <write>mv Nas4Logs.tar.Z Nas4LogsBack.tar.Z</write>
+      <read>&gt;</read>
+      <write>tar -cf Nas4Logs.tar orderpoint.jsp.*</write>
+      <read>&gt;</read>
+      <write>compress Nas4Logs.tar</write>
+      <read>&gt;</read>
+      <write>/usr/bin/rm -f orderpoint.jsp.*</write>
+      <read>&gt;</read>
+      <write string="cp Nas4Logs.tar.Z ../Historical/${LDSTAMP}Nas4Logs.tar.Z"></write>
+      <read>&gt;</read>
+      <write>fi</write>
+      <read>#</read>
+    </telnet>
+
+    <ftp action="get" server="${nas4}" userid="nasadmin" password="maddog" remotedir="${remote.dir}" >
+      <fileset dir="${local.dir}/nas4" includes="Nas4Logs.tar.Z" />
+    </ftp>
+
+  </target>
+
+
+
+  <target name="store.javaErrors" depends="init">
+    <echo message="tar/mv javeErrors.log* to Historical directory" />
+      <telnet server="${nas1}">
+        <read>ogin:</read>
+        <write>nasadmin</write>
+        <read>assword:</read>
+        <write>maddog</write>
+        <read>#</read>
+        <write>cd /opt/apps/logServer/Holding</write>
+        <read>#</read>
+        <write string="if test -f javaErrors.*.xml ; then "/>
+        <read>&gt;</read>
+        <write string="tar -cf javaErrors.tar javaErrors.*.xml"/>
+        <read>&gt;</read>
+        <write>compress javaErrors.tar</write>
+        <read>&gt;</read>
+        <write>/usr/bin/rm -f javaErrors.*.xml</write>
+        <read>&gt;</read>
+        <write string="mv javaErrors.tar.Z ../Historical/${DSTAMP}javaErrors.tar.Z"></write>
+        <read>&gt;</read>
+        <write string="fi"/>
+        <read>#</read>
+      </telnet>
+      <telnet server="${nas3}">
+        <read>ogin:</read>
+        <write>nasadmin</write>
+        <read>assword:</read>
+        <write>maddog</write>
+        <read>#</read>
+        <write>cd /opt/apps/logServer/Holding</write>
+        <read>#</read>
+        <write string="if test -f javaErrors.*.xml ; then "/>
+        <read>&gt;</read>
+        <write string="tar -cf javaErrors.tar javaErrors.*.xml"/>
+        <read>&gt;</read>
+        <write>compress javaErrors.tar</write>
+        <read>&gt;</read>
+        <write>/usr/bin/rm -f javaErrors.*.xml</write>
+        <read>&gt;</read>
+        <write string="mv javaErrors.tar.Z ../Historical/${DSTAMP}javaErrors.tar.Z"></write>
+        <read>&gt;</read>
+        <write string="fi"/>
+        <read>#</read>
+
+      </telnet>
+      <telnet server="${nas4}">
+        <read>ogin:</read>
+        <write>nasadmin</write>
+        <read>assword:</read>
+        <write>maddog</write>
+        <read>#</read>
+        <write>cd /opt/apps/logServer/Holding</write>
+        <read>#</read>
+        <write string="if test -f javaErrors.*.xml ; then "/>
+        <read>&gt;</read>
+        <write string="tar -cf javaErrors.tar javaErrors.*.xml"/>
+        <read>&gt;</read>
+        <write>compress javaErrors.tar</write>
+        <read>&gt;</read>
+        <write>/usr/bin/rm -f javaErrors.*.xml</write>
+        <read>&gt;</read>
+        <write string="mv javaErrors.tar.Z ../Historical/${DSTAMP}javaErrors.tar.Z"></write>
+        <read>&gt;</read>
+        <write string="fi"/>
+        <read>#</read>
+
+      </telnet>
+    </target>
+
+    <target name="help">
+      <echo message="ant [default]        : process orderpoint.jsp.log files"/>
+      <echo message="ant store.javaErrors : move javaErrors to Historical directory"/>
+    </target>
+
+</project>

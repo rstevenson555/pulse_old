@@ -1,0 +1,213 @@
+<project name="dbLoad" default="default" basedir=".">
+	<property name="art_home.dir" value="/apps/artadmin"/>
+	<property name="remote.dir" value="/opt/apps/logServer/Holding"/>
+	<property name="local.dir" value="${art_home.dir}/art/logs/xmlLogs"/>
+	<property name="jars.dir" value="${art_home.dir}/jars"/>
+        <property name="historical.dir" value="${local.dir}/Historical"/>
+      
+        <!-- 
+              This ininitialization establishes DSTAMP, SDSTAMP
+              and LDSTAMP for future use.
+        -->
+	<target name="init">
+         <tstamp>
+          <format property="SDSTAMP" pattern="MMdd">
+          </format>
+          <format property="LDSTAMP" pattern="yyyyMMddHHmm">
+          </format>
+         </tstamp>
+	</target>
+
+
+        <!--  
+              This is the default usage which 
+              executes the loaders for each of the
+              three nas boxes.
+        -->
+        <target name="default">
+          <antcall target="load.Nas1Logs"/>
+          <antcall target="load.Nas3Logs"/>
+          <antcall target="load.Nas4Logs"/>
+        </target>
+
+        <!-- 
+              This is for Nas1 
+              Runs the java program that populates the database 
+
+              First we uncompress the .tar.Z file that we downloaded.
+              Second we extract the .xml files from the .tar file.
+              Third we run the java logParser.RecordRecords
+              Fourth we tar up the xml.
+              Fifth we remove the xml.
+              Sixth we remove the tar.
+         -->
+        <target name="load.Nas1Logs" depends="init">
+         
+          <antcall target="load.General">
+            <param name="NasLogFile.Param" value="Nas1Logs"/>
+            <param name="local.dir.Param" value="${local.dir}/nas1"/>
+          </antcall>
+        
+          <antcall target="tarLogFiles">
+            <param name="Nas.Param" value="nas1"/>
+            <param name="local.dir.Param" value="${local.dir}/nas1"/>
+          </antcall>
+
+          <antcall target="cleanxmlDirs">
+            <param name="Nas.Param" value="nas1"/>
+            <param name="local.dir.Param" value="${local.dir}/nas1"/>
+          </antcall>
+
+        </target>
+
+
+        <!-- 
+              This is for Nas3 
+              Runs the java program that populates the database 
+
+              First we uncompress the .tar.Z file that we downloaded.
+              Second we extract the .xml files from the .tar file.
+              Third we run the java logParser.RecordRecords
+              Fourth we tar up the xml.
+              Fifth we remove the xml.
+              Sixth we remove the tar.
+         -->
+        <target name="load.Nas3Logs" depends="init">
+         
+          <antcall target="load.General">
+            <param name="NasLogFile.Param" value="Nas3Logs"/>
+            <param name="local.dir.Param" value="${local.dir}/nas3"/>
+          </antcall>
+        
+          <antcall target="tarLogFiles">
+            <param name="Nas.Param" value="nas3"/>
+            <param name="local.dir.Param" value="${local.dir}/nas3"/>
+          </antcall>
+
+          <antcall target="cleanxmlDirs">
+            <param name="Nas.Param" value="nas3"/>
+            <param name="local.dir.Param" value="${local.dir}/nas3"/>
+          </antcall>
+        </target>
+
+
+        <!-- 
+              This is for Nas4 
+              Runs the java program that populates the database 
+
+              First we uncompress the .tar.Z file that we downloaded.
+              Second we extract the .xml files from the .tar file.
+              Third we run the java logParser.RecordRecords
+              Fourth we tar up the xml.
+              Fifth we remove the xml.
+              Sixth we remove the tar.
+         -->
+        <target name="load.Nas4Logs" depends="init">
+         
+          <antcall target="load.General">
+            <param name="NasLogFile.Param" value="Nas4Logs"/>
+            <param name="local.dir.Param" value="${local.dir}/nas4"/>
+          </antcall>
+        
+          <antcall target="tarLogFiles">
+            <param name="Nas.Param" value="nas4"/>
+            <param name="local.dir.Param" value="${local.dir}/nas4"/>
+          </antcall>
+
+          <antcall target="cleanxmlDirs">
+            <param name="Nas.Param" value="nas4"/>
+            <param name="local.dir.Param" value="${local.dir}/nas4"/>
+          </antcall>
+        </target>
+
+        <!-- 
+             This uses the ant tar to tar the xml files
+             and store them in a local directory on 
+             on the Beta-db1 machine.  This information is
+             duplicated on the production boxes, and 
+             could in theory be deleted.
+        -->  
+        <target name="tarLogFiles" >
+          <tar tarfile="${historical.dir}/${Nas.Param}_${LDSTAMP}.tar"
+               basedir="${local.dir.Param}"
+               includes="**/orderpoint.jsp.log*.xml"
+          />
+          <available file="${historical.dir}/${Nas.Param}_${LDSTAMP}.tar" 
+                     property="tarExists"/>
+          <echo message="Before gzip call"/> 
+          <antcall target="gzipLogFile">
+          </antcall>
+          <echo message="after gzip call"/> 
+          <delete file="${historical.dir}/${Nas.Param}_${LDSTAMP}.tar"/>
+        </target>
+
+
+
+        <target name="gzipLogFile" if="tarExists">
+          <echo message="durring gzip call"/> 
+          <gzip src="${historical.dir}/${Nas.Param}_${LDSTAMP}.tar"
+              zipfile="${historical.dir}/${Nas.Param}_${LDSTAMP}.tar.gz"
+          />
+        </target>
+    
+        <!--
+              This removes all of the processed files, and 
+              generated log files from the processing directory.
+              This directory needs to be cleaned out before the 
+              next batch of files shows up.
+        -->
+        <target name="cleanxmlDirs">
+          <delete>
+            <fileset dir="${local.dir.Param}"
+               includes="**/orderpoint.jsp.log*.xml,
+                         **/jeoError*.log,
+                         **/Nas*Logs.tar"
+            />
+          </delete>
+        </target>
+
+
+        <!--  
+              This is the general load proceedure followed by
+              all three of the machines.  The parameters
+              passed in indicate which machine it is working
+              on.
+        -->
+        <target name="load.General">
+         
+          <exec dir="${local.dir.Param}" executable="uncompress"> 
+            <arg line="${NasLogFile.Param}.tar.Z"/>
+          </exec>
+          <exec dir="${local.dir.Param}" executable="tar"> 
+            <arg line="-xf ${NasLogFile.Param}.tar"/>
+          </exec>
+          <echo message="Starting to Populate the database"/>
+         
+          <java classname="logParser.RecordRecords"
+                fork="yes" dir="${local.dir.Param}" >
+            <classpath>
+              <pathelement path="${jars.dir}/coloradoER.jar"/>
+              <pathelement path="${jars.dir}/logParser.jar"/>
+              <pathelement path="${jars.dir}/classes12.zip"/>
+              <pathelement path="${jars.dir}/jaxp.jar"/>
+              <pathelement path="${jars.dir}/crimson.jar"/>
+              <pathelement path="${jars.dir}/xalan.jar"/>
+            </classpath>
+            <arg line="XmlFile"/>
+          </java>
+        </target>
+        <target name="testTar">
+          <antcall target="tarLogFiles">
+            <param name="Nas.Param" value="nas1"/>
+            <param name="local.dir.Param" value="${local.dir}/nas1"/>
+          </antcall>
+          <antcall target="tarLogFiles">
+            <param name="Nas.Param" value="nas3"/>
+            <param name="local.dir.Param" value="${local.dir}/nas3"/>
+          </antcall>
+          <antcall target="tarLogFiles">
+            <param name="Nas.Param" value="nas4"/>
+            <param name="local.dir.Param" value="${local.dir}/nas4"/>
+          </antcall>
+        </target> 
+</project>

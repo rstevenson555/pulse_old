@@ -1,0 +1,17 @@
+<project name="storedProceedure" default="init" basedir=".">
+  <taskdef name="SetDateOffset" classname="com.bcop.ant.tasks.SetOffsetDate"/>
+
+  <target name="init">
+    <tstamp/>
+    <SetDateOffset name="RemoveDate" 
+                   DayOffset="-15" 
+                   dateFormat="yyyyMMdd"/>
+    <echo message="${RemoveDate}"/>
+  </target>
+
+  <target name="runProc" depends="init">
+    <exec dir="." executable="/usr/bin/ksh">
+      <arg line="storedProcedure.sh ${RemoveDate}"/>
+    </exec>
+  </target>
+</project>

@@ -1,0 +1,30 @@
+<project name="getLogs" default="default" basedir=".">
+  <property name="Jupiter.ip" value="10.7.205.120"/>
+  <property name="mount_point.dir" value="/cygdrive/f/mount_point"/>
+  <property name="webroot.dir" value="${mount_point.dir}/dev_nt_e/jupiter/zone/webroot"/>
+  <property name="Reports.dir" value="${webroot.dir}/ART/Reports"/>
+  <property name="Graphs.dir" value="${webroot.dir}/ART/Graphs"/>
+  <property name="local.dir" value="/apps/artadmin/art/reports/Html"/>
+
+  <target name="init">
+    <echo message="init called:"/>
+         <tstamp>
+          <format property="LDSTAMP" pattern="yyyyMMddHHmm">
+          </format>
+         </tstamp>
+     <echo message="LDSTAMP ${LDSTAMP}"/>
+  </target>
+
+  <target name="default" depends="init">
+
+    <ftp action="put" server="${Jupiter.ip}" userid="Administrator" password="drevil1" remotedir="${Reports.dir} " >
+      <fileset dir="${local.dir}"> 
+        <include name="**/*.html"/>
+      </fileset> 
+    </ftp>
+  </target>
+
+    <target name="help">
+      <echo message="ant [default]        : Publish todays report to the Jupiter Zone"/>
+    </target>
+</project>
