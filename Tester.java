@@ -149,10 +149,11 @@ public class Tester extends java.lang.Object {
                 append(" For each page, shown by machine.<BR>").
                 append("The report is sorted by the Sum of the product of Average Load time and total loads for all machines.<BR>").
                 append("<BR>").
-                append("Ad-Hoc Report Tool (ART Report 002)<BR>").
+                append("Ad-Hoc Report Tool (ART Report 001)<BR>").
                 append("<BR>").
-                append("All times are in milliseconds.<BR>").
-                append("<BR>");
+                append("All times are in Seconds.<BR>").
+                append("<BR>").
+                append("<B>"+LPConstants.HTMLHeaderFormat.format(date)+"</B>");
 
            OrderedReport or4 = new OrderedReport(sPageQueryObject4,"AllPagesDataOrdered",sbTitleBlock.toString());
             
@@ -162,7 +163,7 @@ public class Tester extends java.lang.Object {
             System.out.println("Parameters: "+ (String)htPageData4.get(new Integer(2)));
 //      The Page Centric Prport pcr2 is ready to be added to the Stack.
 ////////////////////////////////////////////////////////////////////////////////
-            
+             
             
 ///////////////////////////////////////////////////////////////////////////////
 //  30 second load time report   -  Page centric reports don't have the Assmbly design pattern yet.
@@ -189,7 +190,8 @@ public class Tester extends java.lang.Object {
                             append("Ad-Hoc Report Tool (ART Report 002)<BR>").
                             append("<BR>").
                             append("All times are in seconds.<BR>").
-                            append("<BR>");
+                            append("<BR>").
+                            append("<B>"+LPConstants.HTMLHeaderFormat.format(date)+"</B>");
             OrderedReport pcr3 = new OrderedReport(sPageQueryObject3,"30SecondLoad", sbTitleBlock.toString());
 //      The Page Centric Prport pcr2 is ready to be added to the Stack.
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,22 +222,53 @@ public class Tester extends java.lang.Object {
                             append("Ad-Hoc Report Tool (ART Report 003)<BR>").
                             append("<BR>").
                             append("Values represent number of distinct users, and total pages served up.<BR>").
-                            append("<BR>");
+                            append("<BR>").
+                            append("<B>"+LPConstants.HTMLHeaderFormat.format(date)+"</B>");
             OrderedReport or5 = new OrderedReport(sPageQueryObject5,"HourlyUsage", sbTitleBlock.toString());
-//      The Page Centric Prport pcr2 is ready to be added to the Stack.
+//      The Ordered Report or5 is ready to be added to the Stack.
 ////////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
+//  Machine Utilization Report.
+///////////////////////////////////////////////////////////////////////////////
+            Stack sPageQuery6 = new Stack(); 
+            Hashtable htPageData6 = new Hashtable();
+            if(args != null && args.length==1){
+                System.out.println("Date: " +args[0]);
+                htPageData6.put(new Integer(1),args[0]);
+            }else{
+                System.out.println("date format: " + LPConstants.SimpleFileNameFormat.format(date));
+                htPageData6.put(new Integer(1),LPConstants.SimpleFileNameFormat.format(date));
+                
+                
+            }
+            sPageQuery6.add(new QueryObject(LPConstants.ORACLE_MachineUtilization,htPageData6));
+            QueryMacro qmPageQuery6 = new QueryMacro(sPageQuery6);
+            Stack sPageQueryObject6 = new Stack();
+            sPageQueryObject6.add(qmPageQuery6.getDataObject()); 
+            sbTitleBlock = new StringBuffer();
+            sbTitleBlock.append("This report represents the Machine Utilization <BR>").
+                            append("The report includes the Total Pages Loaded, Average Time Per Page, and Total CPU time.  <BR>").
+                            append("<BR>").
+                            append("Ad-Hoc Report Tool (ART Report 004)<BR>").
+                            append("<BR>").
+                            append("All time values are in MilliSeconds .<BR>").
+                            append("<BR>").
+                            append("<B>"+LPConstants.HTMLHeaderFormat.format(date)+"</B>");
+            OrderedReport or6 = new OrderedReport(sPageQueryObject6,"MachineUtilization", sbTitleBlock.toString());
+//      The Ordered Report or5 is ready to be added to the Stack.
+////////////////////////////////////////////////////////////////////////////////
                
-            
+             
             //Add all of the various reports to the Stack.
             ss.add(mcr);
             ss.add(mcr2);
             ss.add(pcr);  
-            ss.add(pcr2); 
+            ss.add(pcr2);   
             ss.add(pcr3); 
             ss.add(or4); 
             ss.add(or5);
-        
+            ss.add(or6);
 
             
             
@@ -250,16 +283,6 @@ public class Tester extends java.lang.Object {
          localCal.add(GregorianCalendar.DAY_OF_MONTH,1);
         date=localCal.getTime();
 
-        try{
-         PrintWriter mailpw = new PrintWriter(new FileOutputStream("mailBatch.sh",false));
-         mailpw.println("mail bryce.alcock@mail.bcop.com < AllPagesData" + 
-             LPConstants.SimpleFileNameFormat.format(date)+".csv");
-         mailpw.println("mail bob.stevenson@mail.bcop.com < AllPagesData" + 
-             LPConstants.SimpleFileNameFormat.format(date)+".csv");
-         mailpw.flush();
-        }catch (IOException ioe){
-            ioe.printStackTrace();
-        }
          
       
     }   
@@ -399,7 +422,7 @@ public class Tester extends java.lang.Object {
         for(int i = 1; i<=colcount;++i){
             System.out.print(" " + colnames[i]);
         }
-        
+          
         System.out.println();
         while(rs.next()){
             for(int i =1; i<=colcount; ++i){

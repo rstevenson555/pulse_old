@@ -128,7 +128,7 @@ public class IndependentDataObject extends java.lang.Object {
             System.out.println("next element:" + key.toString() + " value:"+ _values.get(key));
         }
         for(int i=0;i<_values.size();++i){
-            String cVal= (String)_values.get(new Integer(i));
+            String cVal= (String)_values.get(new Integer(i+1));
             vec.add(i,cVal);
         }
         return vec;

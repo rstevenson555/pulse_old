@@ -40,7 +40,7 @@ public class LPConstants extends java.lang.Object {
     public static final SimpleDateFormat yyyyMMddFormat = new SimpleDateFormat("yyyyMMdd");
     public static final SimpleDateFormat yyyyMMddHHmmssFormat = new SimpleDateFormat("yyyyMMddHHmmss");
     public static final SimpleDateFormat QuarterHourlyQueryFormat = new SimpleDateFormat("yyyyMMddHH mm");
-    
+    public static final SimpleDateFormat HTMLHeaderFormat = new SimpleDateFormat("EEE, MMM d, ''yy");
     
     
     
@@ -119,8 +119,7 @@ public class LPConstants extends java.lang.Object {
     public static final String ORACLE_addQueries = "INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) "+
                     " VALUES (QUERY_ID_SEQ.NEXTVAL,?,?,?)";
     
-    
-    
+   
     
     ////////////////////////////////////////////////////////////////////////////
     //Queries from the standard report Tables  
@@ -156,14 +155,15 @@ public class LPConstants extends java.lang.Object {
     
  
     public static final String ORACLE_NasPageReport = "select distinct pg.pagename as Page_Name, "+ 
-                    "mach_nas1.machinename AS Machine,      nas1.maxloadtime AS MAX_LT,   "+
-                    "      nas1.minloadtime AS MIN_LT,      nas1.averageloadtime AS Ave_LT,  "+
+                    "to_char((nas1.AVERAGELoadtime*nas1.totalloads + nas3.averageLoadtime*nas3.totalloads + nas4.averageLoadtime*nas4.totalloads)/1000, '99999') as Total_Page_Load_Time, "+
+                    "mach_nas1.shortname AS Machine,      to_char(nas1.maxloadtime/1000,'999.99') AS MAX_LT,   "+
+                    "      to_char(nas1.minloadtime/1000,'999.99') AS MIN_LT,      to_char(nas1.averageloadtime/1000,'999.99') AS Ave_LT,  "+
                     "      nas1.totalloads,  "+
-                    "mach_nas3.machinename AS Machine,      nas3.maxloadtime AS MAX_LT, "+  
-                    "      nas3.minloadtime AS MIN_LT,      nas3.averageloadtime AS Ave_LT, "+ 
+                    "mach_nas3.shortname AS Machine,      to_char(nas3.maxloadtime/1000,'999.99') AS MAX_LT, "+  
+                    "      to_char(nas3.minloadtime/1000,'999.99') AS MIN_LT,      to_char(nas3.averageloadtime/1000,'999.99') AS Ave_LT, "+ 
                     "      nas3.totalloads, "+
-                    "mach_nas4.machinename AS Machine, nas4.maxloadtime AS MAX_LT,   "+
-                    "      nas4.minloadtime AS MIN_LT, nas4.averageloadtime AS Ave_LT,  "+
+                    "mach_nas4.shortname AS Machine, to_char(nas4.maxloadtime/1000,'999.99') AS MAX_LT,   "+
+                    "      to_char(nas4.minloadtime/1000,'999.99') AS MIN_LT, to_char(nas4.averageloadtime/1000,'999.99') AS Ave_LT,  "+
                     "      nas4.totalloads "+
                     " FROM dailyloadtimes a, dailyloadtimes nas1, dailyloadtimes nas3, dailyloadtimes nas4, "+
                     "      machines mach_nas1, machines mach_nas3, machines mach_nas4, pages pg "+
@@ -185,7 +185,7 @@ public class LPConstants extends java.lang.Object {
                     " AND mach_nas3.machine_id=nas3.machine_id "+
                     " AND mach_nas4.machine_id=nas4.machine_id "+
                     " AND pg.page_id=a.page_id "+
-                    " ORDER BY (nas1.AVERAGELoadtime*nas1.totalloads + nas3.averageLoadtime*nas3.totalloads + nas4.averageLoadtime*nas4.totalloads) DESC";
+                    " ORDER BY Total_Page_Load_Time DESC";
 
  
     
@@ -193,14 +193,28 @@ public class LPConstants extends java.lang.Object {
                     "PAGE_NAME, LOAD_TIME, MACHINE_NAME, USERS, Time "+
                     "FROM( select "+
                     "p.pageName as PAGE_NAME, "+
-                    "m.machineNAME as MACHINE_NAME, "+
+                    "m.shortNAME as MACHINE_NAME, "+
                     "a.loadtime/1000 AS LOAD_TIME,   u.userNAME AS USERS,    "+         
                     "to_char(a.time,'HH:MI:ss') as Time from accessrecords a, "+       
                     "pages p, machines m, users u  "+     
                     "where a.page_id=p.page_id and m.machine_id=a.machine_id      "+   
                     "AND a.user_id=u.user_id And "+ 
                     "to_char(a.time,'mmdd')=? and a.loadtime>30000      "+
-                    ") order by MACHINE_NAME, PAGE_NAME, USERS";
+                    ") order by MACHINE_NAME, PAGE_NAME";
+
+    public static final String ORACLE_MachineUtilization =  "select m.shortName as Machine_Name,  "+                                    
+                                   "sum(TOTALLOADS) as Total_Pages_Loaded, "+
+                                   "to_char(sum(TotalLoads*AVERAGELOADTIME)/sum(TOTALLOADS),'99999') "+   
+                                   "as AVE_TIME_PER_PAGE, "+
+                                   " SUM(TOTALLOADS*AVERAGELOADTIME)  "+   
+                                   "as Total_CPU_Time "+                                                 
+                                   "from  "+                                         
+                                   "machines m, dailyloadtimes dlt "+                                     
+                                   "where dlt.machine_id=m.machine_id "+                                  
+                                   "and to_char(day,'mmdd')=? "+                                       
+                                   "group by m.shortName";                                             
+ 
+
 /*
  
                 INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) 
