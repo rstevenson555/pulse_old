@@ -45,6 +45,28 @@ SELECT a.Page_ID as pageid, a.Machine_ID as machineid,
  from  AccessRecords a
  WHERE TO_CHAR(Time,'yyyymmdd')='20010430'
  GROUP BY a.Page_ID, a.Machine_ID, TO_CHAR(Time,'yyyymmdd') ORDER BY maxlt
+ 
+ 
+ //*************************************************
+ //ORACLE 
+ //QuarterHourlyDaily Load Times
+ //*************************************************
+ SELECT TO_CHAR(Time,'hh24')||
+                     TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') - 
+                     MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09')
+  	           as timePeriod,
+  	      count(distinct Session_ID) as distSessions,
+  	      count(Session_ID) as totalSessions,
+  	      Machine_ID as Machine
+  	      from accessrecords ar 
+  	      where 
+  	      TO_CHAR(Time,'dd')='30' 
+                group by TO_CHAR(Time,'hh24')||
+                     TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') - 
+                     MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09'),
+                     Machine_ID
+               order by timePeriod ASC;
+               
               
               
               

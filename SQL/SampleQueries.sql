@@ -132,6 +132,45 @@ SELECT CONCAT(DATE_FORMAT(Time,"%H"),
               GROUP BY timePeriod order by timePeriod ASC;
 
 
+///ORACLE
+SELECT TO_CHAR(Time,'hh24')||
+                   TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') - MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09')
+                   as timePeriod,
+	           qt.Query_ID as qid,
+	      count(distinct Session_ID) as distSessions,
+	      count(Session_ID) as totalSessions,
+	      ms.Machine_ID as Machine
+	      from accessrecords ar, 
+	           Machines ms,
+	           Queries qt
+	      where 
+	      TO_CHAR(Time,'dd')='30' and 
+	      ar.Machine_ID=ms.Machine_ID and 
+	      ms.MachineName='NAS3' and
+	      qt.QueryName='QuarterHourlySession'
+              group by TO_CHAR(Time,'hh24')||
+                   TO_CHAR(TO_NUMBER(TO_CHAR(Time,'mi'),'09') - MOD(TO_NUMBER(TO_CHAR(Time,'mi'),'09'),15), '09'),
+                  qt.Query_ID, ms.Machine_ID
+ order by timePeriod ASC;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // This is the Quarter Hourly Query so far.
 // There may be a change in the future.
 

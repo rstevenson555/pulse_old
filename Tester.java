@@ -31,15 +31,23 @@ public class Tester extends java.lang.Object {
         sdht1.put(new Integer(1), "NAS1");
         sdht1.put(new Integer(2), "HourlySessions");
         sdht1.put(new Integer(3), "20010430");
-        sdht2.put(new Integer(1), "NAS3");
+        sdht2.put(new Integer(1), "NAS1");
         sdht2.put(new Integer(2), "HourlySessions");
         sdht2.put(new Integer(3), "20010430");
+
+        
         Stack sQueryObj = new Stack();
+        Stack sQueryObj2 = new Stack();
         sQueryObj.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht1));
-        sQueryObj.add
+        sQueryObj2.add(new QueryObject(LPConstants.ORACLE_SessionsDataM,sdht2));
         QueryMacro qm = new QueryMacro(sQueryObj);
-        ReportObject ro = qm.getReportObject("Comp");
-        ss.add(ro);
+        Stack sDataobject = new Stack();
+        sDataobject.add(qm.getDataObject());
+        qm = new QueryMacro(sQueryObj2);
+        sDataobject.add(qm.getDataObject());
+        
+        MachineCentricReport mcr = new MachineCentricReport(sDataobject,"ttt");
+        ss.add(mcr);
          ReportDirector rd = new ReportDirector();
          rd.BuildCSVReports(ss.elements());
      
@@ -112,6 +120,7 @@ public class Tester extends java.lang.Object {
       Stack ts4 = new Stack();      
       sss.add(new QueryObject(sql,new Hashtable()));
       QueryMacro qm = new QueryMacro(sss);
+      
       ReportObject ro =qm.getReportObject("Simp");
       ss.add(ro);
       

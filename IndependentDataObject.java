@@ -18,6 +18,9 @@ public class IndependentDataObject extends java.lang.Object {
     private String _type;
     private String _min;
     private String _max;
+    private String _heading;
+    private java.util.HashMap _hashMapValues;
+    
     
     /** Creates new IndependentDataObject */
     public IndependentDataObject() {
@@ -35,10 +38,12 @@ public class IndependentDataObject extends java.lang.Object {
         }
         ls.addElement(_type);
         return ls;
-        
     }
+
+    
     public IndependentDataObject(Hashtable ht) {
         _values = ht;
+        mapToHashMap();
     }
     
     
@@ -47,10 +52,12 @@ public class IndependentDataObject extends java.lang.Object {
         _type = type;
         _max = (String)_values.get(new Integer(_values.size()));
         _min = (String)_values.get(new Integer(1));
+        mapToHashMap();
     }
 
     public void addObject(Integer num,java.lang.String value) {
         _values.put(num,value);
+        _hashMapValues.put(num,value);
     }
     
     public String getObject(Integer num) {
@@ -63,6 +70,14 @@ public class IndependentDataObject extends java.lang.Object {
 
     public void setType(java.lang.String type) {
         _type = type;
+    }
+
+    public String getHeading() {
+        return _heading;
+    }
+
+    public void setHeading(java.lang.String heading) {
+        _heading = heading;
     }
 
     public String getMax() {
@@ -85,4 +100,22 @@ public class IndependentDataObject extends java.lang.Object {
         _max = (String)_values.get(new Integer(_values.size()));
         _min = (String)_values.get(new Integer(1));
     }
+    void setData(Hashtable ht){
+        _values = ht;
+        mapToHashMap();
+    }
+    
+    
+    void mapToHashMap(){
+        _hashMapValues = new HashMap(_values);
+    }
+    
+    Iterator getIterator(){
+        return _hashMapValues.keySet().iterator();
+    }
+    
+    HashMap getHashMap(){
+        return _hashMapValues;
+    }
+        
 }

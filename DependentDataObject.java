@@ -19,6 +19,7 @@ public class DependentDataObject extends java.lang.Object {
     private String _min;
     private String _max;
     private String _heading;
+    private java.util.HashMap _hashMapValues;
     
     /** Creates new IndependentDataObject */
     public DependentDataObject() {
@@ -31,6 +32,10 @@ public class DependentDataObject extends java.lang.Object {
    
     public String getHeading(){
         return _heading;
+    }
+    
+    public void setHeading(String heading){
+        _heading = heading;
     }
     
     public DependentDataObject(Hashtable ht) {
@@ -63,6 +68,17 @@ public class DependentDataObject extends java.lang.Object {
 
     public int getCount(){
         return _values.size();
+    }
+    
+    protected void mapToIDO(HashMap hm){
+        Iterator iter = hm.keySet().iterator();
+        while (iter.hasNext()){
+            Integer key = (Integer)iter.next();
+            String newKey = (String)hm.get(key);
+            String value =(String)_values.get(key);
+            _hashMapValues.put(newKey,value);
+        }
+        
     }
 
 

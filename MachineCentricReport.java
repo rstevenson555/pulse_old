@@ -7,6 +7,7 @@
 package logParser;
 import java.util.*;
 import java.io.*;
+import java.text.*;
 
 /**
  *
@@ -105,43 +106,144 @@ public class MachineCentricReport implements ReportBuilder {
      */
     private LinkedList getDataQueue(){
         LinkedList rowQueue = null;
-        System.out.println("MCR.getDataQueue() Location 1");
         if(!isValid()){
             repair();
         }
-        if(isValid()){
-        System.out.println("MCR.getDataQueue() Location 2");
+        
+//        if(isValid()){
             rowQueue = new LinkedList();
-        System.out.println("MCR.getDataQueue() Location 3");
             rowQueue.addLast(getHeader());
-        System.out.println("MCR.getDataQueue() Location 4");
             for(int i = 1;i<getSize();++i){        
-        System.out.println("MCR.getDataQueue() Location 5");
                 rowQueue.addLast(getNextRow(i));
-            
             }
-        }
+//        }
         return rowQueue;
     }
     
+    private LinkedList getDependentDataObjectList(){
+        Iterator li = _sdataObj.iterator();
+        DataObject ldo ;
+        LinkedList lLinkedList = new LinkedList();
+        while(li.hasNext()){
+            Iterator i = ((DataObject)li.next()).getIteratorDependentData();
+            while(i.hasNext()){
+                lLinkedList.addLast((DependentDataObject)i.next());
+            }
+        }
+        return lLinkedList;
+    }
+    
+    
+
     boolean repair(){
-        System.out.println("Repair was called !!!!!!!!!!!");
+        Enumeration e = _sdataObj.elements();
+        DataObject tldo = (DataObject)e.nextElement();
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.DATE)
+            System.out.println("Fond a Date type");
+        if(Integer.parseInt(tldo.getIndependentType()) == java.sql.Types.TIMESTAMP){
+            System.out.println("Fond a Timestamp type");
+            DataObject ldo;
+            IndependentDataObject ido;
+            Enumeration le = _sdataObj.elements();
+            Vector vido = new Vector();
+            while(le.hasMoreElements()){
+                System.out.println("Location 1");
+                ldo = (DataObject)le.nextElement();
+                System.out.println("Location 2");
+                ido = ldo.getIDO();
+                System.out.println("This IDO has " + ido.getCount());
+                vido.add(ido);
+            }
+            Hashtable lhtido = getMergedIDO(vido);
+            ListIterator li = _sdataObj.listIterator();
+            while(li.hasNext()){
+                ((DataObject)li.next()).repair(lhtido);
+                
+            
+            }
+                
+            
+            for(int k=1;k<=lhtido.size();++k){
+                System.out.println((String)lhtido.get(new Integer(k)));
+            }
+        }
+        
+        
+        System.out.println("Repair was called !!!!!!!!!!!" +Integer.parseInt(((DataObject)e.nextElement()).getIndependentType()));
         return true;
     }
     
     
+    private Hashtable getMergedIDO(Vector v){
+        Hashtable ht = new Hashtable();
+        for (int i = 0; i<v.size(); ++i){
+            IndependentDataObject lido=(IndependentDataObject)v.elementAt(i);
+            for(int j=0;j<lido.getCount(); ++j){
+                ht.put(lido.getObject(new Integer(j+1)),"na");
+            }
+        }
+        Enumeration e = ht.keys();
+        Vector svec = new Vector();
+        while(e.hasMoreElements()){
+            svec.add(e.nextElement());
+        }
+        return sortVectorOfStringIntsIntoHashtable(svec);
+    }
+    
+
+    private Hashtable sortVectorOfStringIntsIntoHashtable( Vector v){
+        int i=1;
+        Hashtable ht = new Hashtable();
+        while(v.size() >0){
+            try{
+                ht.put(new Integer(i),getSmallest(v));
+            }catch (ParseException pe){
+                pe.printStackTrace();
+            }
+            ++i;
+        }
+        
+        return ht;
+    }
+
+    private String getSmallest(Vector v) throws ParseException{
+     int indexOfSmallest = 0;
+     Date svalue=null;
+     if(!((String)v.elementAt(0)).equalsIgnoreCase("null")){
+         svalue = LPConstants.TimeStampFormat2.parse((String)v.elementAt(0));
+     }else{
+         //svalue=0;
+     }
+     for (int i=1;i<v.size(); ++i){
+         if(!((String)v.elementAt(i)).equalsIgnoreCase("null")){
+             if(!svalue.before(LPConstants.TimeStampFormat2.parse((String)v.elementAt(i)))){
+                 indexOfSmallest = i;
+                 svalue = LPConstants.TimeStampFormat2.parse((String)v.elementAt(i));
+             }      
+         }
+     }
+     return (String)v.remove(indexOfSmallest);
+    }
+    
+
     /**
      *This method returns the header information for a specific row of a DataObject.
      *@return This String[] represents the header information by row for this entire
      *set of DataObjects in the _sdataObj Stack.
      */
     private String[] getHeader(){
-        String[] rsa = new String[_sdataObj.size()];
+        String[] rsa = new String[countCols()];
         Enumeration e = _sdataObj.elements();
 
         int i=0;
+        int j=0;
         while(e.hasMoreElements()){
-            rsa[i++] = (((DataObject)e.nextElement()).getDDO()).getHeading();
+            DataObject ldo = ((DataObject)e.nextElement());
+            String[] h = ldo.getHeadings();
+            for(j =0;j<h.length;++j){
+                rsa[j+i] = h[j]; //(((DataObject)e.nextElement()).getDDO()).getHeading();
+            }
+            i=i+j;
         }
         return rsa;
     }
@@ -153,11 +255,17 @@ public class MachineCentricReport implements ReportBuilder {
      *row of data.
      */
     private String[] getNextRow(int i){
-        String[] rsa = new String[_sdataObj.size()];
+        String[] rsa = new String[countCols()];
         Enumeration e = _sdataObj.elements();
+        int k=0;
         int j=0;
         while(e.hasMoreElements()){
-            rsa[j++] = ((DataObject)e.nextElement()).getDependent(i);
+            DataObject ldo = ((DataObject)e.nextElement());
+            String[] h = ldo.getDependentArray(i);
+            for(j =0;j<h.length;++j){
+                rsa[j+k] = h[j]; //(((DataObject)e.nextElement()).getDDO()).getHeading();
+            }
+            k=k+j;
         }
         return rsa;
     }
@@ -166,21 +274,18 @@ public class MachineCentricReport implements ReportBuilder {
      *Build the CSV File for this Report.
      */
     public void BuildCSVFile(java.io.PrintWriter pw) {
-        System.out.println("Starting BuildCSVfile from MachineCentric...");
+
+        
+        LinkedList dq = getDependentDataObjectList();
+        
+        /*System.out.println("Starting BuildCSVfile from MachineCentric...");
         String[] rsa = null;
-        System.out.println("Location 2");
         LinkedList dq = getDataQueue();
-        System.out.println("Location 3");
         Enumeration e = _sdataObj.elements();
-        System.out.println("Location 4");
         DataObject ldo;
-        System.out.println("Location 5");
         ldo = (DataObject)e.nextElement();
-        System.out.println("Location 6");
         Stack ivs = ldo.getIDO().getStackValues();
-        System.out.println("Location 7");
         while(dq.size() > 0){
-            System.out.println("while in BuildMachineCentric....");
             rsa = (String[])dq.removeFirst();
             pw.print((String)ivs.pop());
             for(int j=0;j<rsa.length;++j){
@@ -188,10 +293,19 @@ public class MachineCentricReport implements ReportBuilder {
             }
             pw.println();
         }
+         */
     }
     
     
-    
+        private int countCols(){
+        Enumeration e = _sdataObj.elements();
+        int i = 0;
+        while(e.hasMoreElements()){
+            i = i + (((DataObject)e.nextElement()).countDependentSets());
+        }
+        return i;
+    }
+   
 
     public void BuildFormattedFile(java.io.PrintWriter pw) {
     

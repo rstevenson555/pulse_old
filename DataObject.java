@@ -31,6 +31,7 @@ public class DataObject extends java.lang.Object {
         _dd = d;
         _LLdd = new LinkedList();
         _LLdd.addLast(d);
+        _dd.mapToIDO(i.getHashMap());
     }
     public DataObject(IndependentDataObject i, DependentDataObject[] d) {
     
@@ -41,6 +42,8 @@ public class DataObject extends java.lang.Object {
         for (int j=0;j<d.length;++j){
             _LLdd.addLast(d[j]);
         }
+        _dd.mapToIDO(i.getHashMap());
+
     }
     int countDependentSets(){
         return _LLdd.size();
@@ -69,6 +72,7 @@ public class DataObject extends java.lang.Object {
             return false;
     }
     
+
     public int getDataSize() {
         if(isValidData())
             return _id.getCount();
@@ -145,5 +149,62 @@ public class DataObject extends java.lang.Object {
         
     }
     
-
+    protected void repair(Hashtable fixedIDO){    
+        ListIterator li = _LLdd.listIterator();
+        LinkedList IDODDOHashtables = new LinkedList();
+        LinkedList repairedTables = new LinkedList();
+        while(li.hasNext()){
+            System.out.println("Building IDODDOHashtables;");
+            Hashtable nht = new Hashtable();
+            DependentDataObject ldd = (DependentDataObject)li.next();
+            for(int i=1;i<_id.getCount();++i){
+                System.out.println("Location 1");
+                String key = _id.getObject(new Integer(i));
+                System.out.println("Location 2");
+                String value = ldd.getObject(new Integer(i));
+                System.out.println("Location 3");
+                nht.put(key,value);
+            }
+            IDODDOHashtables.addLast(nht);
+        }
+        li = IDODDOHashtables.listIterator();
+        System.out.println("Out of createing first map");
+        while(li.hasNext()){
+            System.out.println("while in the repair phase");
+            Hashtable nht = new Hashtable();
+            Enumeration e = fixedIDO.elements();
+            Hashtable liCurrent = (Hashtable)li.next();
+            System.out.println("Starting for");
+            for(int i = 1;i<fixedIDO.size();++i){
+            System.out.println("for l1");
+                String slk = ((String)fixedIDO.get(new Integer(i)));
+            System.out.println("for l2");
+                if(liCurrent.containsKey(slk)){
+            System.out.println("for l3");
+                    String val = (String)liCurrent.get(slk);
+                    nht.put(new Integer(i), val);
+            System.out.println("for l4");
+                }else{
+            System.out.println("for l5");
+                    nht.put(new Integer(i),new Integer(0));
+            System.out.println("for l6");
+                }
+            }
+            System.out.println("for l7");
+            repairedTables.addLast(nht);
+            System.out.println("for l8");
+        }
+        _id.setData(fixedIDO);
+        ListIterator testli = repairedTables.listIterator();
+        //while(testli.hasNext(){
+            
+        //}
+        _LLdd = repairedTables;
+    } 
+    
+    Iterator getIteratorDependentData(){
+        return _LLdd.iterator();
+    }
+    
+    
 }

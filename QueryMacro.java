@@ -167,9 +167,16 @@ public class QueryMacro extends Object {
             colnames[i] = rsmd.getColumnName(i);
             colTypes[i] = rsmd.getColumnType(i);
         }
+        
+        ido.setHeading(colnames[1]);
+        ido.setType(""+colTypes[1]);
+        
 
-        for(int i = 1; i<=colcount;++i){
-            System.out.print(" " + colnames[i]);
+        for(int i = 2; i<=colcount;++i){
+        ddo[i-2].setHeading(colnames[i]);
+        ddo[i-2].setType(""+colTypes[i]);
+        
+        
         }
         
         System.out.println();
