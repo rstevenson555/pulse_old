@@ -1,0 +1,174 @@
+<!-- ======================================================================= -->
+<!-- LogParser-website build file                                                    -->
+<!-- ======================================================================= -->
+
+<project name="logParser-website" default="all" basedir=".">
+
+  <property environment="env"/>
+
+  <property name="Name" value="LOGPARSER"/>
+  <property name="name" value="logParser"/>
+  <property name="version" value="1.0-rc1"/>
+  
+  <property name="logparser-website.java.src"  value="${basedir}/src/java"/>
+  <property name="logparser-website.html.src"  value="${basedir}/src/html"/>
+  <property name="logparser-website.lib"  value="${basedir}/lib"/>
+  <property name="logparser-website.bin"  value="${basedir}/bin"/>
+  <property name="logparser-website.dist"  value="${basedir}/dist"/>
+  <property name="logparser-website.applet.jars"  value="${basedir}/appletjars"/>
+  <property name="remote.tomcat.art" value="/opt/tomcat/tomcat/webapps/art/WEB-INF/classes"/>
+  <property name="deploy.passwd" value="boise"/>
+  <!-- Configure properties to access the Manager application -->
+  <!-- ART App1 -->
+  <property name="url" value="http://art-app1.int.bcop.com:7001/manager"/>
+  <property name="tomcat-username" value="artadmin"/>
+  <property name="tomcat-password" value="abc123"/>
+  <!-- Local App -->
+  <property name="lurl" value="http://i0360d4.int.bcop.com/manager"/>
+  <property name="ltomcat-username" value="admin"/>
+  <property name="ltomcat-password" value="java123"/>
+  <!-- Configure the custom Ant tasks for the Manager application -->
+  <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask"/>
+  <taskdef name="install" classname="org.apache.catalina.ant.InstallTask"/>
+  <taskdef name="list" classname="org.apache.catalina.ant.ListTask"/>
+  <taskdef name="reload" classname="org.apache.catalina.ant.ReloadTask"/>
+  <taskdef name="remove" classname="org.apache.catalina.ant.RemoveTask"/>
+  <taskdef name="resources" classname="org.apache.catalina.ant.ResourcesTask"/>
+  <taskdef name="roles" classname="org.apache.catalina.ant.RolesTask"/>
+  <taskdef name="start" classname="org.apache.catalina.ant.StartTask"/>
+  <taskdef name="stop" classname="org.apache.catalina.ant.StopTask"/>
+  <taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask"/>
+
+<!-- Build classpath -->
+  <path id="classpath">
+      <fileset dir="${logparser-website.lib}">
+          <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${logparser-website.lib}">
+          <include name="**/*.zip"/>
+      </fileset>
+      <!--
+      <pathelement location="${basedir}/java"/>
+      -->
+  </path>
+ 
+  <target name="prepare" description="Prepare For Complilation">
+    <mkdir dir="${logparser-website.bin}" />
+    <mkdir dir="${logparser-website.bin}/classes" />
+    <mkdir dir="${logparser-website.applet.jars}" />
+  </target>
+
+  <target name="init-time">
+    <tstamp>
+      <format property="LDSTAMP" pattern="yyyyMMddHHmm">
+      </format>
+    </tstamp>
+  </target>
+
+  <target name="compile-clean" description="remove class files and compile">
+    <delete>
+       <fileset dir="${logparser-website.bin}/classes" includes="**/*.class"/>
+    </delete>
+     <depend srcdir="${logparser-website.java.src}"
+            destdir="${logparser-website.bin}"
+            cache="${logparser-website.bin}/depcache"
+            closure="yes"/>
+
+     <javac srcdir="${logparser-website.java.src}" destdir="${logparser-website.bin}/classes" debug="on" optimize="off"  excludes="logs/,website/">
+        <classpath refid="classpath"/>
+     </javac>
+  </target>
+  
+  <target name="compile" depends="prepare" description="the default compiler task">
+     <depend srcdir="${logparser-website.java.src}"
+            destdir="${logparser-website.bin}/classes"
+            cache="${logparser-website.bin}/depcache"
+            closure="yes"/>
+
+     <javac srcdir="${logparser-website.java.src}" destdir="${logparser-website.bin}/classes" debug="on" optimize="off"  excludes="logs/,website/">
+        <classpath refid="classpath"/>
+     </javac>
+  </target>
+  
+  <target name="appletjar" depends="compile" description="the build applet task">
+    <jar jarfile="${logparser-website.applet.jars}/logParser-applets.jar" basedir="${logparser-website.bin}/classes" includes="**\*.class"/>
+    <copy file="${logparser-website.lib}/jcommon-0.8.9.jar" todir="${logparser-website.applet.jars}"/>
+    <copy file="${logparser-website.lib}/jfreechart-0.9.14.jar" todir="${logparser-website.applet.jars}"/>
+  </target>
+ 
+  <target name="compile-Art" description="task to build the art website"> 
+    <javac srcdir="${WebSite.src}"    destdir="${WebSite.src}"   debug="on" optimize="off">
+        <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <target name="makejar" depends="prepare,compile" description="Makes a logParser.jar and places it in bin dir">
+     <jar jarfile="${logparser-website.bin}\logParser-website.jar" basedir="${logparser-website.bin}\classes" includes="**\*.class"/>
+  </target>
+  
+  <target name="makewar" depends="prepare,compile,appletjar" description="Makes a logParser-website.war and places it in bin dir">
+    <war destfile="logparser-website.war" webxml="logParser-website.xml">
+      <webinf dir="${basedir}/WEB-INF" includes="*.xml"/>
+      <fileset dir="${logparser-website.html.src}"/>
+      <fileset dir="${logparser-website.applet.jars}"/>
+      <!--
+      <fileset dir="src/jsp/myapp"/>
+      -->
+      <lib dir="${logparser-website.lib}" excludes="servlet-api.jar"/>
+      <classes dir="${logparser-website.bin}/classes"/>
+    </war>
+  </target>
+
+  <target name="rdeploy" depends="makewar" description="Deploys logParser-website to ART box">
+    <deploy url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="d:/apps/logParser-website/logparser-website.war"/>
+  </target>
+
+  <target name="rundeploy" description="Remove web application">
+    <remove url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website"/>
+  </target>
+  
+  <target name="ldeploy" depends="makewar" description="Deploys logParser-website to LOCAL box (on port 80)">
+    <deploy url="${lurl}" username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website" war="d:/apps/logParser-website/logparser-website.war"/>
+  </target>
+
+  <target name="lundeploy" description="Remove LOCAL web application">
+    <remove url="${lurl}" username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website"/>
+  </target>
+
+
+  <!-- =================================================================== -->
+  <!-- Generates documentation from the source code using javadoc          -->
+  <!-- =================================================================== -->
+  <target name="docs">
+    <mkdir dir="${logparser-website.java.src}\docs\api"/>
+    <javadoc packagenames="com.bcop.*" sourcepath="${logparser-website.java.src}" destdir="${logparser-website.java.src}\docs\api"
+           classpath="${classpath}" author="Programmers" version="1.0" use="true"
+           windowtitle="Orderpoint API" doctitle="&lt;h1&gt;System Documentation&lt;\h1&gt;"
+           bottom="&lt;i&gt;Copyright &#169; Boise Cascade. All Rights Reserved.&lt;\i&gt;"/>
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Compiles the whole project                                          -->
+  <!-- =================================================================== -->
+  <target name="all" depends="prepare,compile,makejar"/>
+
+  <!-- =================================================================== -->
+  <!-- Cleans up generated stuff                                           -->
+  <!-- =================================================================== -->
+  <target name="clean" depends="clean-all"/>
+  <target name="clean-all">
+    <echo message="cleaning build directories"/>
+    <delete dir="${logparser-website.bin}"/>
+  </target>
+  
+  <target name="load-pages">
+    <get src="http://localhost:8080/art/servlet/ArtController?Report=005&amp;Date=20030718" dest="./temp.html"/>
+  </target>
+
+  <target name="help">
+    <echo message=""/> 
+    <echo message="ant                    - builds default projects"/>
+    <echo message="ant clean              - cleans build directory"/> 
+  </target>
+
+</project>
