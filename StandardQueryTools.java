@@ -25,26 +25,29 @@ public class StandardQueryTools extends java.lang.Object {
     * @param args the command line arguments
     */
     public static void main (String args[]) {
-        try{
-            System.out.println("Location 1");
-            ConnectionPoolT cpt = new ConnectionPoolT();
-            System.out.println("Location 2");
-            Connection con = cpt.getConnection();
-            con.setAutoCommit(true);
-            System.out.println("Location 3");
-            StandardQueryTools sqt = new StandardQueryTools();
-            sqt.UpdateStandardQueriesToDB(con);
-            sqt.UpdateQuarterHourlyHistoricalRecords("20010711",con);
-            System.out.println("Location 4");
-            sqt.UpdateDailyLoadTimes("20010711", con);
-            sqt.UpdateHourlyHistoricalRecords("20010711",con);
-            System.out.println("Location 5");
-        }catch (SQLException se){
-            se.printStackTrace();
-        }catch (ClassNotFoundException cnfe){
-            cnfe.printStackTrace();
+        if(args != null){
+            for(int i =0;i<args.length;++i){
+                try{
+                    System.out.println("Location 1");
+                    ConnectionPoolT cpt = new ConnectionPoolT();
+                    System.out.println("Location 2");
+                    Connection con = cpt.getConnection();
+                    con.setAutoCommit(true);
+                    System.out.println("Location 3");
+                    StandardQueryTools sqt = new StandardQueryTools();
+                    sqt.UpdateStandardQueriesToDB(con);
+                    sqt.UpdateQuarterHourlyHistoricalRecords(args[i],con);
+                    System.out.println("Location 4");
+                    sqt.UpdateDailyLoadTimes(args[i], con);
+                    sqt.UpdateHourlyHistoricalRecords(args[i],con);
+                    System.out.println("Location 5");
+                }catch (SQLException se){
+                    se.printStackTrace();
+                }catch (ClassNotFoundException cnfe){
+                    cnfe.printStackTrace();
+                }
+            }
         }
-         
     } 
      
     

@@ -712,6 +712,7 @@ public static void main(String args[]){
     String UserNo ="NA";
     String PageNo = "NA";
     String SessionNo ="NA";
+    String errorString ="";
 
 	int fuser =0;
     ////////////////////////////////////////////////////////////////////////
@@ -767,7 +768,8 @@ public static void main(String args[]){
                         fuser =17;
                         pstmt2.setString(1,uid.trim());
                         fuser =18;
-                        rs2 = pstmt.executeQuery();
+                        errorString = uid.trim() + " : " + sqlUsersAll;
+                        rs2 = pstmt2.executeQuery();
 //                        rs2 = stmt2.executeQuery("SELECT userID FROM USERS WHERE userName='"+uid.trim()+"'");
                         fuser =19;
                         if(rs2.next())
@@ -800,7 +802,7 @@ public static void main(String args[]){
             System.out.println("Not Found");
         }
     }catch (Exception e){
-        System.out.println("Vauge exception somewhere in the Updating Users Setting UserNo to 1 : " + fuser);
+        System.out.println("Vauge exception somewhere in the Updating Users Setting UserNo to 1 : " + fuser + "\n " + errorString);
         UserNo = "1";
     }finally{
         if(debug3)

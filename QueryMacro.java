@@ -80,6 +80,7 @@ public class QueryMacro extends Object {
         System.out.println("QM:getRS Locaiton 5");
             QueryObject qo = (QueryObject)_qStack.pop();
         System.out.println("QM:getRS Locaiton 6");
+            System.out.println(qo.getSqlStatement());
             rs =QueryService.executeRSQuery(qo.getSqlStatement(),qo.getParameters(),con);
         }       
         System.out.println("QM:getRS Locaiton 7");

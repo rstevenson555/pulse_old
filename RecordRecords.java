@@ -326,7 +326,9 @@ public class RecordRecords extends java.lang.Object {
         
         String[] ForeignKeys;
         PrintWriter pw = null;
+        PrintWriter LoadLog = null;
         try{
+            LoadLog = getPrintWriter("LoadLog","log");
             pw = getPrintWriter();
         }catch(IOException ioe){
             ioe.printStackTrace();
@@ -386,22 +388,22 @@ public class RecordRecords extends java.lang.Object {
                         System.out.println("Error Adding Record");
                     if(++totalRecords%10000 == 0){
                         endTime = System.currentTimeMillis();
-                        System.out.println("" + totalRecords + " Total Records added in " + 
+                        LoadLog.println("" + totalRecords + " Total Records added in " + 
                                     ( endTime -startTime)/1000 + " seconds " + 
                                     (endTime-startTime)/(totalRecords/100) +" millis per 100 Records");
-                        System.out.println("                   File Read Time Per 100 Records (millis): "
+                        LoadLog.println("                   File Read Time Per 100 Records (millis): "
                                            + ReadTime / (totalRecords/100));
-                        System.out.println("          Foreign Key Lookup Time Per 100 Records (millis): "
+                        LoadLog.println("          Foreign Key Lookup Time Per 100 Records (millis): "
                                            + FKTime / (totalRecords/100));
-                        System.out.println("               Time in the database for FK Lookup (millis): "
+                        LoadLog.println("               Time in the database for FK Lookup (millis): "
                                            +  ConnectionT.fkTimer/(totalRecords/100));
-                        System.out.println("               Record Update Time Per 100 Records (millis): "
+                        LoadLog.println("               Record Update Time Per 100 Records (millis): "
                                            + UpdateTime / (totalRecords/100));
-                        System.out.println("                JEO Record Create Per 100 Records (millis): "
+                        LoadLog.println("                JEO Record Create Per 100 Records (millis): "
                                            + JEOTime / (totalRecords/100));
-                        System.out.println("                       Dummy Call tot All Records (millis): "
+                        LoadLog.println("                       Dummy Call tot All Records (millis): "
                                            + dummyTime  );
-                        
+                        LoadLog.flush();
                         //startTime=endTime
                         if(totalRecords%50000 == 0){
                          //Time to clse a connection, and start a new one.

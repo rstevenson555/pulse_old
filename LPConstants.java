@@ -133,7 +133,38 @@ public class LPConstants extends java.lang.Object {
                    " TO_CHAR(DAY,'YYYYMMDD')=? AND p.Page_ID=dlt.Page_ID order by maxlt";
     
  
-    
+    public static final String ORACLE_NasPageReport = "select distinct pg.pagename as Page_Name, "+ 
+                    "mach_nas1.machinename AS Machine,      nas1.maxloadtime AS MAX_LT,   "+
+                    "      nas1.minloadtime AS MIN_LT,      nas1.averageloadtime AS Ave_LT,  "+
+                    "      nas1.totalloads,  "+
+                    "mach_nas3.machinename AS Machine,      nas3.maxloadtime AS MAX_LT, "+  
+                    "      nas3.minloadtime AS MIN_LT,      nas3.averageloadtime AS Ave_LT, "+ 
+                    "      nas3.totalloads, "+
+                    "mach_nas4.machinename AS Machine, nas4.maxloadtime AS MAX_LT,   "+
+                    "      nas4.minloadtime AS MIN_LT, nas4.averageloadtime AS Ave_LT,  "+
+                    "      nas4.totalloads "+
+                    " FROM dailyloadtimes a, dailyloadtimes nas1, dailyloadtimes nas3, dailyloadtimes nas4, "+
+                    "      machines mach_nas1, machines mach_nas3, machines mach_nas4, pages pg "+
+                    "           WHERE a.page_id   IN  "+
+                    "                (SELECT DISTINCT(page_ID)  "+
+                    "                 from dailyloadtimes WHERE TO_CHAR(Day,'MMDD')='0713' "+
+                    "                )  "+
+                    " AND TO_CHAR(a.Day,'MMDD')='0713'   "+
+                    " AND TO_CHAR(nas1.Day,'MMDD')=TO_CHAR(a.Day,'MMDD')  "+
+                    " AND TO_CHAR(nas3.Day,'MMDD')=TO_CHAR(a.Day,'MMDD') "+
+                    " AND TO_CHAR(nas4.Day,'MMDD')=TO_CHAR(a.Day,'MMDD') "+
+                    " AND a.page_ID=nas1.Page_ID  "+
+                    " AND nas1.machine_id in(select machine_id from machines where machinename='NAS1')  "+
+                    " AND nas3.machine_id in (select machine_id from machines where machinename='NAS3')  "+
+                    " AND nas4.machine_id in (select machine_id from machines where machinename='NAS4')  "+
+                    " AND a.page_id=nas3.page_id  "+
+                    " AND a.page_id=nas4.page_id  "+
+                    " AND mach_nas1.machine_id=nas1.machine_id "+
+                    " AND mach_nas3.machine_id=nas3.machine_id "+
+                    " AND mach_nas4.machine_id=nas4.machine_id "+
+                    " AND pg.page_id=a.page_id "+
+                    " ORDER BY (nas1.AVERAGELoadtime + nas3.averageLoadtime + nas4.averageLoadtime) ";
+
     /*
  
                 INSERT INTO Queries (Query_ID, Query, OpUser_ID, QueryName) 
