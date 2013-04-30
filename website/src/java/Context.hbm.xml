@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.ContextBean" 
+    table="Contexts"
+>
+
+    <id
+        name="contextId"
+        type="int"
+        column="Context_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="contextName"
+        type="java.lang.String"
+        column="contextName"
+        length="50"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional one-to-many association to AccessRecord -->
+    <!--
+    <set
+        name="accessRecords"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Context_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.AccessRecordBean"
+        />
+    </set>
+    -->
+    <!-- bi-directional one-to-many association to FiveSecondLoad -->
+    <!--
+    <set
+        name="fiveSecondLoads"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Context_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.FiveSecondLoadBean"
+        />
+    </set>
+    -->
+    <!-- bi-directional one-to-many association to DailyPageLoadTim -->
+    <!--
+    <set
+        name="dailyPageLoadTims"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Context_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.DailyPageLoadTimBean"
+        />
+    </set>
+    -->
+    <!-- bi-directional one-to-many association to DailyContextStat -->
+    <!--
+    <set
+        name="dailyContextStats"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Context_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.DailyContextStatBean"
+        />
+    </set>
+    -->
+
+</class>
+</hibernate-mapping>

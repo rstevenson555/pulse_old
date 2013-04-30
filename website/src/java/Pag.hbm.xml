@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.PagBean" 
+    table="Pages"
+>
+
+    <id
+        name="pageId"
+        type="int"
+        column="Page_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="pageName"
+        type="java.lang.String"
+        column="pageName"
+        length="75"
+    />
+    <property
+        name="isErrorPage"
+        type="java.lang.String"
+        column="isErrorPage"
+        length="1"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional one-to-many association to AccessRecord -->
+    <!--
+    <set
+        name="accessRecords"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Page_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.AccessRecordBean"
+        />
+    </set>
+    -->
+    <!-- bi-directional one-to-many association to FiveSecondLoad -->
+    <!--
+    <set
+        name="fiveSecondLoads"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Page_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.FiveSecondLoadBean"
+        />
+    </set>
+    -->
+    <!-- bi-directional one-to-many association to DailyPageLoadTim -->
+    <!--
+    <set
+        name="dailyPageLoadTims"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Page_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.DailyPageLoadTimBean"
+        />
+    </set>
+    -->
+
+</class>
+</hibernate-mapping>

@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.DailyContextStatBean" 
+    table="DailyContextStats"
+>
+
+    <composite-id>
+        <key-property 
+            name="day" 
+            column="Day" 
+            type="java.sql.Date"
+            length="10"
+        />
+        <key-property 
+            name="count" 
+            column="Count" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="state" 
+            column="State" 
+            type="java.lang.String"
+            length="1"
+        />
+        <key-property 
+            name="lastModTime" 
+            column="lastModTime" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+    </composite-id>    
+
+
+    <!-- associations -->
+    <!-- bi-directional many-to-one association to Context -->
+    <many-to-one
+        name="context"
+        class="com.bos.art.model.jdo.ContextBean"
+        not-null="true"
+    >
+        <column name="Context_ID" />
+    </many-to-one>
+
+</class>
+</hibernate-mapping>

@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.DailySummaryBean" 
+    table="DailySummary"
+>
+
+    <id
+        name="day"
+        type="java.sql.Date"
+        column="Day"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+    <property
+        name="totalLoads"
+        type="int"
+        column="TotalLoads"
+        length="11"
+    />
+    <property
+        name="averageLoadTime"
+        type="int"
+        column="AverageLoadTime"
+        length="11"
+    />
+    <property
+        name="ninetiethPercentile"
+        type="int"
+        column="NinetiethPercentile"
+        length="11"
+    />
+    <property
+        name="twentyFifthPercentile"
+        type="int"
+        column="TwentyFifthPercentile"
+        length="11"
+    />
+    <property
+        name="fiftiethPercentile"
+        type="int"
+        column="FiftiethPercentile"
+        length="11"
+    />
+    <property
+        name="seventyFifthPercentile"
+        type="int"
+        column="SeventyFifthPercentile"
+        length="11"
+    />
+    <property
+        name="maxLoadTime"
+        type="int"
+        column="MaxLoadTime"
+        length="11"
+    />
+    <property
+        name="minLoadTime"
+        type="int"
+        column="MinLoadTime"
+        length="11"
+    />
+    <property
+        name="distinctUsers"
+        type="int"
+        column="DistinctUsers"
+        length="11"
+    />
+    <property
+        name="errorPages"
+        type="int"
+        column="ErrorPages"
+        length="11"
+    />
+    <property
+        name="thirtySecondLoads"
+        type="int"
+        column="ThirtySecondLoads"
+        length="11"
+    />
+    <property
+        name="twentySecondLoads"
+        type="int"
+        column="TwentySecondLoads"
+        length="11"
+    />
+    <property
+        name="fifteenSecondLoads"
+        type="int"
+        column="FifteenSecondLoads"
+        length="11"
+    />
+    <property
+        name="tenSecondLoads"
+        type="int"
+        column="TenSecondLoads"
+        length="11"
+    />
+    <property
+        name="fiveSecondLoads"
+        type="int"
+        column="FiveSecondLoads"
+        length="11"
+    />
+    <property
+        name="maxLoadTimePageId"
+        type="int"
+        column="MaxLoadTime_Page_ID"
+        length="11"
+    />
+    <property
+        name="maxLoadTimeUserId"
+        type="int"
+        column="MaxLoadTime_User_ID"
+        length="11"
+    />
+    <property
+        name="state"
+        type="java.lang.String"
+        column="State"
+        length="1"
+    />
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>

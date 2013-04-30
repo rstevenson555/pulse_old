@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+Column Name                    Null?    Type
+DAY                            NOT NULL VARCHAR2(8)
+ORDER_COUNT                             NUMBER
+OP_ORDER_COUNT                          NUMBER
+BX_ORDERS                               NUMBER(12)
+CURRENT_ORDERS                          NUMBER(12)
+DELETED_ORDERS                          NUMBER(12)
+LINE_COUNT                              NUMBER
+DOLLAR_TOTAL                            NUMBER(12,2)
+OP_LINE_COUNT                           NUMBER
+OP_DOLLAR_TOTAL                         NUMBER(12,2)
+BX_LINES                                NUMBER(12)
+BX_DOLLARS                              NUMBER(12)
+CURRENT_ORDERS_TLINES                   NUMBER(12)
+CURRENT_ORDERS_TDOLLARS                 NUMBER(12,2)
+DELETED_ORDERS_TLINES                   NUMBER(12)
+DELETED_ORDERS_TDOLLARS                 NUMBER(12,2)
+CSC_IMPRINT_ORDER_COUNT                 NUMBER
+CSC_IMPRINT_LINE_COUNT                  NUMBER
+CSC_IMPRINT_DOLLAR_TOTAL                NUMBER(12,2)
+
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.OrderStatsSummary" 
+    table="order_stats_summary"
+>
+
+    <id name="day" type="java.lang.String" column="DAY" length="8" >
+        <generator class="assigned" />
+    </id>
+
+    <property name="orderCount"               type="java.lang.Integer"        column="ORDER_COUNT"                 length="12"/>
+    <property name="opOrderCount"             type="java.lang.Integer"        column="OP_ORDER_COUNT"              length="12" />
+    <property name="bxOrders"                 type="java.lang.Integer"        column="BX_ORDERS"                   length="12" />
+    <property name="currentOrders"            type="java.lang.Integer"        column="CURRENT_ORDERS"              length="12" />
+    <property name="deletedOrders"            type="java.lang.Integer"        column="DELETED_ORDERS"              length="12" />
+    <property name="lineCount"                type="java.lang.Integer"        column="LINE_COUNT"                  length="12" />
+    <property name="dollarTotal"              type="java.lang.Double"         column="DOLLAR_TOTAL"                length="12" />
+    <property name="opLineCount"              type="java.lang.Integer"        column="OP_LINE_COUNT"               length="12" />
+    <property name="opDollarTotal"            type="java.lang.Double"         column="OP_DOLLAR_TOTAL"             length="12" />
+    <property name="bxLines"                  type="java.lang.Integer"        column="BX_LINES"                    length="12" />
+    <property name="bxDollars"                type="java.lang.Integer"        column="BX_DOLLARS"                  length="12" />
+    <property name="currentOrdersTlines"      type="java.lang.Integer"        column="CURRENT_ORDERS_TLINES"       length="12" />
+    <property name="currentOrdersTdollars"    type="java.lang.Double"         column="CURRENT_ORDERS_TDOLLARS"     length="12" />
+    <property name="deletedOrdersTlines"      type="java.lang.Integer"        column="DELETED_ORDERS_TLINES"       length="12" />
+    <property name="deletedOrdersTdollars"    type="java.lang.Double"         column="DELETED_ORDERS_TDOLLARS"     length="12" />
+    <property name="cscImprintOrderCount"     type="java.lang.Integer"        column="CSC_IMPRINT_ORDER_COUNT"     length="12" />
+    <property name="cscImprintLineCount"      type="java.lang.Integer"        column="CSC_IMPRINT_LINE_COUNT"      length="12" />
+    <property name="cscImprintDollarTotal"    type="java.lang.Double"         column="CSC_IMPRINT_DOLLAR_TOTAL"    length="12" />
+
+
+</class>
+</hibernate-mapping>

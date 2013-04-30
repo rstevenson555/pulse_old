@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+Column Name                    Null?    Type
+Column Name                    Null?    Type
+DAY                            NOT NULL VARCHAR2(8)
+HOUR                           NOT NULL VARCHAR2(2)
+ORDER_COUNT                             NUMBER
+LINE_COUNT                              NUMBER
+DOLLAR_TOTAL                            NUMBER(12,2)
+OP_ORDER_COUNT                          NUMBER
+OP_LINE_COUNT                           NUMBER
+OP_DOLLAR_TOTAL                         NUMBER(12,2)
+SQLWKS> 
+
+
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.OrderStats" 
+    table="order_stats"
+>
+
+    <id name="day" type="java.lang.String" column="DAY" length="8" >
+        <generator class="assigned" />
+    </id>
+
+    <property name="Hour"        type="java.lang.String"            column="HOUR"                        length="2"/>
+
+    <property name="orderCount"               type="int"            column="ORDER_COUNT"                 length="12"/>
+    <property name="lineCount"                type="int"            column="LINE_COUNT"                  length="12" />
+    <property name="dollarTotal"              type="double"         column="DOLLAR_TOTAL"                length="12" />
+    <property name="opOrderCount"             type="int"            column="OP_ORDER_COUNT"              length="12" />
+    <property name="opLineCount"              type="int"            column="OP_LINE_COUNT"               length="12" />
+    <property name="opDollarTotal"            type="double"         column="OP_DOLLAR_TOTAL"             length="12" />
+</class>
+</hibernate-mapping>

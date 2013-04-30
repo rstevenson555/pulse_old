@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.DailyPageLoadTimBean" 
+    table="DailyPageLoadTimes"
+>
+
+    <id
+        name="dailyLoadTimeId"
+        type="int"
+        column="DailyLoadTime_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+    <property
+        name="day"
+        type="java.sql.Date"
+        column="Day"
+        length="10"
+    />
+    <property
+        name="totalLoads"
+        type="int"
+        column="TotalLoads"
+        length="11"
+    />
+    <property
+        name="averageLoadTime"
+        type="int"
+        column="AverageLoadTime"
+        length="11"
+    />
+    <property
+        name="ninetiethPercentile"
+        type="int"
+        column="NinetiethPercentile"
+        length="11"
+    />
+    <property
+        name="twentyFifthPercentile"
+        type="int"
+        column="TwentyFifthPercentile"
+        length="11"
+    />
+    <property
+        name="fiftiethPercentile"
+        type="int"
+        column="FiftiethPercentile"
+        length="11"
+    />
+    <property
+        name="seventyFifthPercentile"
+        type="int"
+        column="SeventyFifthPercentile"
+        length="11"
+    />
+    <property
+        name="maxLoadTime"
+        type="int"
+        column="MaxLoadTime"
+        length="11"
+    />
+    <property
+        name="minLoadTime"
+        type="int"
+        column="MinLoadTime"
+        length="11"
+    />
+    <property
+        name="distinctUsers"
+        type="int"
+        column="DistinctUsers"
+        length="11"
+    />
+    <property
+        name="errorPages"
+        type="int"
+        column="ErrorPages"
+        length="11"
+    />
+    <property
+        name="thirtySecondLoads"
+        type="int"
+        column="ThirtySecondLoads"
+        length="11"
+    />
+    <property
+        name="twentySecondLoads"
+        type="int"
+        column="TwentySecondLoads"
+        length="11"
+    />
+    <property
+        name="fifteenSecondLoads"
+        type="int"
+        column="FifteenSecondLoads"
+        length="11"
+    />
+    <property
+        name="tenSecondLoads"
+        type="int"
+        column="TenSecondLoads"
+        length="11"
+    />
+    <property
+        name="fiveSecondLoads"
+        type="int"
+        column="FiveSecondLoads"
+        length="11"
+    />
+    <property
+        name="state"
+        type="java.lang.String"
+        column="State"
+        length="1"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional many-to-one association to Context -->
+    <many-to-one
+        name="context"
+        class="com.bos.art.model.jdo.ContextBean"
+        not-null="true"
+    >
+        <column name="Context_ID" />
+    </many-to-one>
+    <!-- bi-directional many-to-one association to Pag -->
+    <many-to-one
+        name="pag"
+        class="com.bos.art.model.jdo.PagBean"
+        not-null="true"
+    >
+        <column name="Page_ID" />
+    </many-to-one>
+
+</class>
+</hibernate-mapping>

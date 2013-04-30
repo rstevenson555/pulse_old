@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.HistoricalExternalStatisticBean" 
+    table="Historical_External_Statistics"
+>
+
+    <composite-id>
+        <key-property 
+            name="statisticsId" 
+            column="Statistics_ID" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="lastModTime" 
+            column="lastModTime" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="startTime" 
+            column="StartTime" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="summaryPeriodMinutes" 
+            column="SummaryPeriodMinutes" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="count" 
+            column="Count" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="averageLoadTime" 
+            column="AverageLoadTime" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="maximumLoadTime" 
+            column="MaximumLoadTime" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="minimumLoadTime" 
+            column="MinimumLoadTime" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="state" 
+            column="State" 
+            type="java.lang.String"
+            length="1"
+        />
+    </composite-id>    
+
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>

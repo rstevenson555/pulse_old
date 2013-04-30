@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.BrowserBean" 
+    table="Browsers"
+>
+
+    <id
+        name="browserId"
+        type="int"
+        column="Browser_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="patternMatchString"
+        type="java.lang.String"
+        column="patternMatchString"
+        length="40"
+    />
+    <property
+        name="description"
+        type="java.lang.String"
+        column="Description"
+        length="50"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional one-to-many association to BrowserStat -->
+    <set
+        name="browserStats"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Browser_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.BrowserStatBean"
+        />
+    </set>
+
+</class>
+</hibernate-mapping>

@@ -1,0 +1,57 @@
+@CHARSET "ISO-8859-1";
+/*
+  3D rollovers styles
+  Homepage: http://github.com/codepo8/3Drollovers
+  Copyright (c) 2011 Christian Heilmann
+  Code licensed under the BSD License:
+  http://wait-till-i.com/license.txt
+*/
+.rollover {
+  position: relative;
+  width: 200px;
+  height: 158px;
+  display: block;
+  z-index: 0;
+}
+.front {
+  z-index: 1;
+  position: absolute;
+  background: #fff;
+}
+.back {
+  z-index: 1;
+  position: absolute;
+  background: #fff;
+}
+.rollover:hover .back, 
+.rollover:focus .back {
+  z-index: 2;
+}
+.rollover:hover .front, 
+.rollover:focus .front {
+  z-index: 1;
+}
+.fade .rollover .front {
+  opacity: 1;
+  -webkit-transition: 2s;
+     -moz-transition: 2s;
+      -ms-transition: 2s;
+       -o-transition: 2s;
+          transition: 2s;
+}
+.fade .rollover .back {
+  opacity: 0;
+  -webkit-transition: 2s;
+     -moz-transition: 2s;
+      -ms-transition: 2s;
+       -o-transition: 2s;
+          transition: 2s;
+}
+.fade .rollover:hover .front, 
+.fade .rollover:focus .front {
+  opacity: 0;
+}
+.fade .rollover:hover .back, 
+.fade .rollover:focus .back {
+  opacity: 1;
+}

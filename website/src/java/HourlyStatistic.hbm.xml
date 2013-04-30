@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.HourlyStatisticBean" 
+    table="HourlyStatistics"
+>
+
+    <composite-id>
+        <key-property 
+            name="lastModTime" 
+            column="lastModTime" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="time" 
+            column="Time" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="totalLoads" 
+            column="TotalLoads" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="averageLoadTime" 
+            column="AverageLoadTime" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="ninetiethPercentile" 
+            column="NinetiethPercentile" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="twentyFifthPercentile" 
+            column="TwentyFifthPercentile" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="fiftiethPercentile" 
+            column="FiftiethPercentile" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="seventyFifthPercentile" 
+            column="SeventyFifthPercentile" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="maxLoadTime" 
+            column="MaxLoadTime" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="minLoadTime" 
+            column="MinLoadTime" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="distinctUsers" 
+            column="DistinctUsers" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="errorPages" 
+            column="ErrorPages" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="thirtySecondLoads" 
+            column="ThirtySecondLoads" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="twentySecondLoads" 
+            column="TwentySecondLoads" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="fifteenSecondLoads" 
+            column="FifteenSecondLoads" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="tenSecondLoads" 
+            column="TenSecondLoads" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="fiveSecondLoads" 
+            column="FiveSecondLoads" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="state" 
+            column="State" 
+            type="java.lang.String"
+            length="1"
+        />
+    </composite-id>    
+
+
+    <!-- associations -->
+    <!-- bi-directional many-to-one association to Machin -->
+    <many-to-one
+        name="machin"
+        class="com.bos.art.model.jdo.MachinBean"
+        not-null="true"
+    >
+        <column name="Machine_id" />
+    </many-to-one>
+
+</class>
+</hibernate-mapping>

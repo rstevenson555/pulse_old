@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.FiveSecondLoadBean" 
+    table="FiveSecondLoads"
+>
+
+    <id
+        name="recordPk"
+        type="int"
+        column="RecordPK"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+    <property
+        name="time"
+        type="java.sql.Timestamp"
+        column="Time"
+        length="19"
+    />
+    <property
+        name="loadTime"
+        type="int"
+        column="LoadTime"
+        length="11"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional many-to-one association to Session -->
+    <many-to-one
+        name="session"
+        class="com.bos.art.model.jdo.SessionBean"
+        not-null="true"
+    >
+        <column name="Session_ID" />
+    </many-to-one>
+    <!-- bi-directional many-to-one association to App -->
+    <many-to-one
+        name="app"
+        class="com.bos.art.model.jdo.AppBean"
+        not-null="true"
+    >
+        <column name="App_ID" />
+    </many-to-one>
+    <!-- bi-directional many-to-one association to Context -->
+    <many-to-one
+        name="context"
+        class="com.bos.art.model.jdo.ContextBean"
+        not-null="true"
+    >
+        <column name="Context_ID" />
+    </many-to-one>
+    <!-- bi-directional many-to-one association to Machin -->
+    <many-to-one
+        name="machin"
+        class="com.bos.art.model.jdo.MachinBean"
+        not-null="true"
+    >
+        <column name="Machine_ID" />
+    </many-to-one>
+    <!-- bi-directional many-to-one association to Pag -->
+    <many-to-one
+        name="pag"
+        class="com.bos.art.model.jdo.PagBean"
+        not-null="true"
+    >
+        <column name="Page_ID" />
+    </many-to-one>
+    <!-- bi-directional many-to-one association to User -->
+    <many-to-one
+        name="user"
+        class="com.bos.art.model.jdo.UserBean"
+        not-null="true"
+    >
+        <column name="User_ID" />
+    </many-to-one>
+
+</class>
+</hibernate-mapping>

@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.AccumulatorStatBean" 
+    table="AccumulatorStats"
+>
+
+    <composite-id>
+        <key-property 
+            name="accumulatorStatId" 
+            column="AccumulatorStat_ID" 
+            type="int"
+            length="10"
+        />
+        <key-property 
+            name="lastModTime" 
+            column="lastModTime" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="time" 
+            column="Time" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="value" 
+            column="Value" 
+            type="int"
+            length="11"
+        />
+    </composite-id>    
+
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>
