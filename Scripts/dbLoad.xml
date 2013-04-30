@@ -1,8 +1,10 @@
 <project name="dbLoad" default="default" basedir=".">
+ <taskdef name="SetDateOffset" classname="com.bcop.ant.tasks.SetOffsetDate"/>
 	<property name="art_home.dir" value="/apps/artadmin"/>
 	<property name="remote.dir" value="/opt/apps/logServer/Holding"/>
 	<property name="local.dir" value="${art_home.dir}/art/logs/xmlLogs"/>
 	<property name="jars.dir" value="${art_home.dir}/jars"/>
+    <property name="Windows.Sucks" value="d:\\apps\\logParser\\jars"/>
         <property name="historical.dir" value="${local.dir}/Historical"/>
       
         <!-- 
@@ -16,6 +18,9 @@
           <format property="LDSTAMP" pattern="yyyyMMddHHmm">
           </format>
          </tstamp>
+         <SetDateOffset name="trace.logDate" 
+                   DayOffset="-1" 
+                   dateFormat="yyyy-MM-dd"/>
 	</target>
 
 
@@ -30,7 +35,6 @@
           <antcall target="load.Nas3Logs"/>
           <antcall target="load.Nas4Logs"/>
           <antcall target="load.Nas5Logs"/>
-          <antcall target="load.Nas6Logs"/>
           <antcall target="load.BetaLogs"/>
           <antcall target="load.DevLogs"/>
         </target>
@@ -180,36 +184,6 @@
           <antcall target="cleanxmlDirs">
             <param name="Nas.Param" value="nas5"/>
             <param name="local.dir.Param" value="${local.dir}/nas5"/>
-          </antcall>
-        </target>
-
-
-        <!-- 
-              This is for Nas6 
-              Runs the java program that populates the database 
-
-              First we uncompress the .tar.Z file that we downloaded.
-              Second we extract the .xml files from the .tar file.
-              Third we run the java logParser.RecordRecords
-              Fourth we tar up the xml.
-              Fifth we remove the xml.
-              Sixth we remove the tar.
-         -->
-        <target name="load.Nas6Logs" depends="init">
-         
-          <antcall target="load.General">
-            <param name="NasLogFile.Param" value="Nas6Logs"/>
-            <param name="local.dir.Param" value="${local.dir}/nas6"/>
-          </antcall>
-        
-          <antcall target="tarLogFiles">
-            <param name="Nas.Param" value="nas6"/>
-            <param name="local.dir.Param" value="${local.dir}/nas6"/>
-          </antcall>
-
-          <antcall target="cleanxmlDirs">
-            <param name="Nas.Param" value="nas6"/>
-            <param name="local.dir.Param" value="${local.dir}/nas6"/>
           </antcall>
         </target>
 
@@ -367,4 +341,53 @@
             <param name="local.dir.Param" value="${local.dir}/nas4"/>
           </antcall>
         </target> 
+
+        <!--  
+              This is the general load proceedure for the stack traces 
+              This has been hard coded to work off of my local box, and 
+              should be modified in the future.
+              -->
+        <target name="load.Stacks.General">
+            <java classname="com.bcop.art.tools.StackTraceAnalyzer" fork="yes" dir="${StackDir.param}" >
+                <classpath>
+                    <pathelement path="${Windows.Sucks}/mysqlDriver.jar"/>
+                    <pathelement path="${Windows.Sucks}/../java"/>
+                </classpath>
+                <arg line="boiseoptrace.log.${trace.logDate}"/>
+            </java>
+        </target>
+
+
+        <target name="loadNas1.Stacks" depends="init">
+            <antcall target="load.Stacks.General">
+                <param name="StackDir.param" value="d:\\Projects\\CVST\\Reports\\StackTrace\\nas1"/>
+            </antcall>
+        </target>
+        <target name="loadNas2.Stacks" depends="init">
+            <antcall target="load.Stacks.General">
+                <param name="StackDir.param" value="d:\\Projects\\CVST\\Reports\\StackTrace\\nas2"/>
+            </antcall>
+        </target>
+        <target name="loadNas3.Stacks" depends="init">
+            <antcall target="load.Stacks.General">
+                <param name="StackDir.param" value="d:\\Projects\\CVST\\Reports\\StackTrace\\nas3"/>
+            </antcall>
+        </target>
+        <target name="loadNas4.Stacks" depends="init">
+            <antcall target="load.Stacks.General">
+                <param name="StackDir.param" value="d:\\Projects\\CVST\\Reports\\StackTrace\\nas4"/>
+            </antcall>
+        </target>
+        <target name="loadNas5.Stacks" depends="init">
+            <antcall target="load.Stacks.General">
+                <param name="StackDir.param" value="d:\\Projects\\CVST\\Reports\\StackTrace\\nas5"/>
+            </antcall>
+        </target>
+        <target name="load.all.stacks">
+            <antcall target="loadNas1.Stacks"/>
+            <antcall target="loadNas2.Stacks"/>
+            <antcall target="loadNas3.Stacks"/>
+            <antcall target="loadNas4.Stacks"/>
+            <antcall target="loadNas5.Stacks"/>
+        </target>
 </project>

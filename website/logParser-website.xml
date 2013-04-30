@@ -5,7 +5,30 @@
 
 <web-app>
 
-    <distributable></distributable>
+    <description>ART Client Web Application</description>
+    <!--<distributable></distributable>-->
+
+    <!--<resource-ref>
+        <description>DB Connection</description>
+        <res-ref-name>jdbc/mysqlglobaldb</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref> -->
+    <resource-ref>
+        <description>Postgres Datasource</description>
+        <res-ref-name>jdbc/postgres</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+       <res-sharing-scope>Shareable</res-sharing-scope>
+    </resource-ref>
+    <resource-ref>
+        <description>Oracle Standby</description>
+        <res-ref-name>jdbc/oracleStandBydb</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+       <res-sharing-scope>Shareable</res-sharing-scope>
+    </resource-ref>
+
 
     <!-- The Welcome File List -->
     <welcome-file-list>
@@ -15,9 +38,6 @@
     <servlet id="Servlet_1">
         <servlet-name>action</servlet-name>
         <servlet-class>com.bos.servlets.controller.BosFrontController</servlet-class>
-        <!--
-        <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
-        -->
         <init-param>
             <param-name>config</param-name>
             <param-value>/WEB-INF/struts-config.xml</param-value>
@@ -36,13 +56,26 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    
+    
 
     <servlet id="Servlet_2">
         <servlet-name>XMLService</servlet-name>
         <servlet-class>com.bos.servlets.XMLService</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
+    <servlet id="Servlet_3">
+        <servlet-name>ChartService</servlet-name>
+        <servlet-class>com.bos.servlets.ChartService</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet id="Servlet_4">
+        <servlet-name>HtmlRenderService</servlet-name>
+        <servlet-class>com.bos.servlets.HtmlRenderService</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    
 <!-- Standard Action Servlet Mapping -->
     <servlet-mapping id="ServletMapping_1">
         <servlet-name>action</servlet-name>
@@ -52,6 +85,16 @@
     <servlet-mapping id="ServletMapping_2">
         <servlet-name>XMLService</servlet-name>
         <url-pattern>/servlets/XMLService</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping id="ServletMapping_3">
+        <servlet-name>ChartService</servlet-name>
+        <url-pattern>/servlets/ChartService</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping id="ServletMapping_4">
+        <servlet-name>HtmlRenderService</servlet-name>
+        <url-pattern>/servlets/HtmlRenderService</url-pattern>
     </servlet-mapping>
 
 </web-app>

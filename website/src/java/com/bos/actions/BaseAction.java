@@ -6,18 +6,17 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.struts.action.Action;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
-import org.w3c.dom.Document;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import com.bcop.arch.logger.Logger;
-import com.bcop.arch.exception.BusinessException;
-import com.bcop.arch.exception.RecoverableException;
+
 import com.bcop.arch.exception.BOSApplicationRuntimeException;
+import com.bcop.arch.exception.RecoverableException;
+import com.bcop.arch.logger.Logger;
 import com.bcop.arch.patterns.pageListHandler.IPageListHandler;
 
 /** Functionality common to all action handlers is implemented here. */
@@ -118,8 +117,8 @@ public abstract class BaseAction extends Action {
 
   public static HashMap getRequestParameters(HttpServletRequest request) {
       HashMap hm = new HashMap();
-      for (Enumeration enum = request.getParameterNames(); enum.hasMoreElements(); ) {
-        String strParameterName = (String)enum.nextElement();
+      for (Enumeration e = request.getParameterNames(); e.hasMoreElements(); ) {
+        String strParameterName = (String)e.nextElement();
         hm.put(strParameterName, request.getParameter(strParameterName));
       }
       return hm;

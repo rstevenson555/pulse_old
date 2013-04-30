@@ -17,13 +17,235 @@ Struts Configuration 1.1//EN"
             <forward name="error" redirect="false" path="/error.jsp"/>
         </action>
         
-        <action path="/ViewMainScreen2"
-            type="com.bos.actions.MainScreenAction" scope="session" >
-            <set-property property="styleSheet" value="/stylesheets/MainScreen2.xsl"/>
+        <action path="/ViewRealTimeCharts"
+            type="com.bos.actions.ViewRealTimeChartsAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewRealTimeCharts.xsl"/>
             <forward name="success" redirect="false" path="/servlets/XMLService"/>
             <forward name="error" redirect="false" path="/error.jsp"/>
         </action>
-    
+
+        <action path="/ViewStaticCharts"
+            type="com.bos.actions.ViewStaticChartsAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewStaticCharts.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewHistoricalCharts"
+            type="com.bos.actions.ViewHistoricalChartsAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewHistoricalCharts.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewDailyPageLoadCharts"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChart.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadChartsLoads"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChartLoads.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadChartsAvg"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChartAvg.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadChartsMax"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChartMax.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadChartsPage"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChartPage.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadChartsContext"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChartContext.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadCharts90percentile"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChart90percentile.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadCharts75percentile"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChart75percentile.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadCharts50percentile"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChart50percentile.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/ViewDailyPageLoadCharts25percentile"
+            type="com.bos.actions.ViewDailyPageLoadAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewDailyPageLoadTimesChart25percentile.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewTimeSliceDetail"
+            type="com.bos.actions.ViewTimeSliceDetailAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewTimeSliceDetail.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+  
+        <!--
+        <action path="/ViewLoadTestDetail"
+            type="com.bos.actions.LoadTestDetailAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewTimeSliceDetail.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        -->
+
+        <action path="/ViewExceptions"
+            type="com.bos.actions.ViewExceptionsAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewExceptions.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+            <forward name="exceptionLine" redirect="false" path="/ViewExceptionType.web"/>
+            <forward name="exceptionDetail" redirect="false" path="/ViewExceptionDetail.web"/>
+            <forward name="exceptionEvent" redirect="false" path="/ViewExceptionEvent.web"/>
+        </action>
+
+        <action path="/ViewExceptionDetail"
+            type="com.bos.actions.ViewExceptionDetailAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewExceptionDetail.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewExceptionEvent"
+            type="com.bos.actions.ViewExceptionEventAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewExceptionEvent.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewExceptionType"
+            type="com.bos.actions.ViewExceptionTypeAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewExceptionType.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/View30SecondLoads"
+            type="com.bos.actions.View30SecondLoadsAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/View30SecondLoad.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+            <forward name="pageDetail" redirect="false" path="/View30SecondPage.web"/>
+        </action>
+
+        <action path="/View30SecondPage"
+            type="com.bos.actions.View30SecondPageAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/View30SecondPage.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewCurrentDeployments"
+            type="com.bos.actions.ViewCurrentDeploymentsAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewCurrentDeployments.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewLoadTests"
+            type="com.bos.actions.ViewLoadTestAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewLoadTests.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewLoadTestDetail"
+            type="com.bos.actions.ViewLoadTestDetailAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewLoadTestDetail.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/ViewLoadTestDiff"
+            type="com.bos.actions.ViewLoadTestDiffAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/ViewLoadTestDiff.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/LoadTestStatus"
+            type="com.bos.actions.LoadTestStatusAction" scope="session" >
+            <forward name="success" redirect="false" path="/ViewLoadTests.web"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/testchart"
+            type="com.bos.actions.ViewTimeSliceGraphAction" scope="session" >
+            <forward name="success" redirect="false" path="/servlets/ChartService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/MinuteStatsTimeSliceGraph"
+            type="com.bos.actions.ViewMinuteStatTimeSliceGraphAction" scope="session" >
+            <forward name="success" redirect="false" path="/servlets/ChartService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        <action path="/MonthlyTrendChart"
+            type="com.bos.actions.ViewOnlineReportingTrendingGraph" scope="session" >
+            <forward name="success" redirect="false" path="/servlets/ChartService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/PlaybackErrorPageAnalysis"
+            type="com.bos.actions.PlaybackErrorPageAnalysis" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/PlaybackErrorPageAnalysis.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
+        <action path="/iview"
+            type="com.bos.actions.PageIview" scope="session" >
+            <forward name="success" redirect="false" path="/servlets/HtmlRenderService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+  
+        <action path="/OnlineReportUsageDetail"
+            type="com.bos.actions.ViewOnlineReportingAction" scope="session" >
+            <set-property property="styleSheet" value="/stylesheets/OnlineReportUsageDetail.xsl"/>
+            <forward name="success" redirect="false" path="/servlets/XMLService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+        
+        <action path="/ClickStreamPageView" type="com.bos.actions.NullAction" scope="session">
+            <forward name="success" redirect="false" path="/jsp-dir/ClickStreamPageView.jsp"/>
+        </action>           
+        
+        <action path="/ViewDailySessionSummary" type="com.bos.actions.NullAction" scope="session"> 
+            <forward name="success" redirect="false" path="/jsp-dir/ViewSessionUsage.jsp"/>
+        </action>
+        
+        <action path="/DollarsAndOrdersChart"
+            type="com.bos.actions.DollarsAndOrdersGraphAction" scope="session" >
+            <forward name="success" redirect="false" path="/servlets/ChartService"/>
+            <forward name="error" redirect="false" path="/error.jsp"/>
+        </action>
+
     </action-mappings>
 
 </struts-config>
+

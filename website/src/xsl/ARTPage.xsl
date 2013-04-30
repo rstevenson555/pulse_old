@@ -9,6 +9,8 @@
 <xsl:import href="ARTRightPanel.xsl"/>
 <xsl:import href="ARTFooter.xsl"    />
 
+<xsl:variable name="Payload" select="/Page/Payload"/>
+
 <xsl:output version="1.0" method="html" encoding="ISO-8859-1" indent="yes"/>
 
 <xsl:template match="/">
@@ -18,21 +20,43 @@
 <xsl:template match="Page">
   <html>
     <xsl:call-template name="setHtmlHead"/>
+    <xsl:call-template name="setHtmlBody"/>
   </html>
 </xsl:template>
 
 <xsl:template name="setHtmlHead">
 <head>
  <xsl:call-template name="setHtmlHeadTitle"  />
- <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+ <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
  <meta name="author" content="Will Webb"/>
  <link rel="stylesheet" type="text/css" href="css/default.css" title="default" media="screen"/>
+ <link rel="stylesheet" type="text/css" href="css/default.css" title="print" media="print"/>
 </head>
+</xsl:template>
+
+<!--
+This is the main html section where we output the body tag, along with the
+primary table that provides the header/left/body/right/footer structure
+-->
+<xsl:template name="setHtmlBody">
+<body id="artclient" class="homepage">
+<div id="container">
+
+<div id="header">
+<xsl:apply-templates select="DashBoard"/>
+</div>
+<hr class="hide"/>
+<div id="mBody">
+<xsl:apply-templates select="LeftPanel"/>
+<xsl:apply-templates select="Body"/>
+</div>
+</div>
+</body>
 </xsl:template>
 
 <!-- Sets the head/title element value -->
 <xsl:template name="setHtmlHeadTitle">
-  <title>ART Client - Online statistical reporting for boiseoffice.com</title>
+  <title>ART Client - Online statistical reporting</title>
 </xsl:template>
 
 <xsl:template match="DashBoard">

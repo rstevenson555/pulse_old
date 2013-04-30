@@ -11,8 +11,8 @@
  */
 package com.bos.config.struts;
 
-import org.apache.struts.action.*;
-import com.bcop.arch.logger.*;
+import com.bcop.arch.logger.Logger;
+import org.apache.struts.action.ActionMapping;
 
 public class BoiseActionMapping extends ActionMapping
 {

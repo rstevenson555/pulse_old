@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.ExternalMinuteStatisticBean" 
+    table="ExternalMinuteStatistics"
+>
+
+    <composite-id>
+        <key-property 
+            name="time" 
+            column="Time" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <key-property 
+            name="classificationID" 
+            column="Classification_ID" 
+            type="int"
+            length="11"
+        />
+        <key-property 
+            name="machineID" 
+            column="Machine_id" 
+            type="int"
+            length="11"
+        />
+    </composite-id>    
+
+        <property 
+            name="lastModTime" 
+            column="lastModTime" 
+            type="java.sql.Timestamp"
+            length="19"
+        />
+        <property 
+            name="totalLoads" 
+            column="TotalLoads" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="averageLoadTime" 
+            column="AverageLoadTime" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="ninetiethPercentile" 
+            column="NinetiethPercentile" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="twentyFifthPercentile" 
+            column="TwentyFifthPercentile" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="fiftiethPercentile" 
+            column="FiftiethPercentile" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="seventyFifthPercentile" 
+            column="SeventyFifthPercentile" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="maxLoadTime" 
+            column="MaxLoadTime" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="minLoadTime" 
+            column="MinLoadTime" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="distinctUsers" 
+            column="DistinctUsers" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="errorPages" 
+            column="ErrorPages" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="thirtySecondLoads" 
+            column="ThirtySecondLoads" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="twentySecondLoads" 
+            column="TwentySecondLoads" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="fifteenSecondLoads" 
+            column="FifteenSecondLoads" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="tenSecondLoads" 
+            column="TenSecondLoads" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="fiveSecondLoads" 
+            column="FiveSecondLoads" 
+            type="int"
+            length="11"
+        />
+        <property 
+            name="state" 
+            column="State" 
+            type="java.lang.String"
+            length="1"
+        />
+
+
+    <!-- associations -->
+    <!-- bi-directional many-to-one association to Machin -->
+    <!--  Commented out by BA because this is a problem... not sure how to handle an object as a part of the key...
+    <many-to-one
+        name="machin"
+        class="com.bos.art.model.jdo.MachinBean"
+        not-null="true"
+    >
+        <column name="Machine_id" />
+    </many-to-one>
+    -->
+
+</class>
+</hibernate-mapping>

@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.ExternalAccessRecordBean" 
+    table="ExternalAccessRecords"
+>
+
+    <id
+        name="recordPk"
+        type="int"
+        column="RecordPK"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+    <property
+        name="pageId"
+        type="int"
+        column="Page_ID"
+        not-null="true"
+        length="10"
+    />
+    <property
+        name="userId"
+        type="int"
+        column="User_ID"
+        not-null="true"
+        length="10"
+    />
+    <property
+        name="sessionId"
+        type="int"
+        column="Session_ID"
+        not-null="true"
+        length="10"
+    />
+    <property
+        name="machineId"
+        type="int"
+        column="Machine_ID"
+        not-null="true"
+        length="10"
+    />
+    <property
+        name="contextId"
+        type="int"
+        column="Context_ID"
+        not-null="true"
+        length="10"
+    />
+    <property
+        name="appId"
+        type="int"
+        column="App_ID"
+        not-null="true"
+        length="10"
+    />
+    <property
+        name="classificationId"
+        type="int"
+        column="Classification_ID"
+        length="11"
+    />
+    <property
+        name="dataSection"
+        type="java.lang.String"
+        column="DataSection"
+        length="65535"
+    />
+    <property
+        name="time"
+        type="java.sql.Timestamp"
+        column="Time"
+        length="19"
+    />
+    <property
+        name="loadTime"
+        type="int"
+        column="LoadTime"
+        length="11"
+    />
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>

@@ -2,10 +2,15 @@
 
 package com.bos.actions;
 //  java
+import java.util.Iterator;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+
+import net.sf.hibernate.Hibernate;
+import net.sf.hibernate.Query;
+import net.sf.hibernate.Session;
 
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -14,6 +19,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.bcop.arch.logger.Logger;
+import com.bos.arch.HibernateUtil;
+import com.bos.helper.MainScreenHelper;
+import com.bos.art.model.jdo.DailySummaryBean;
 
 /**
  * This action class is used for the Main screen.<Br>
@@ -46,38 +54,45 @@ public class MainScreenAction extends BaseAction {
         System.out.println("Action Hit!!!");
 		ActionForward actionForward=null;
 		String forwardString = "error";
-		String xsltURL = null;
-		Document MainScreenDoc = null;
 		String requestId = null;
         actionForward = mapping.findForward("success");
 		//run XMLBuilder
         
-        //build xmlDoc
-        DocumentBuilderFactory factory = null;
-        DocumentBuilder builder = null;
-        Document doc = null;
-
-        try {
-            factory = DocumentBuilderFactory.newInstance();
-            builder = factory.newDocumentBuilder();
-            doc = builder.newDocument();
-        } catch (Exception ex) {
-        }
-
-        MainScreenDoc = doc;
-        Element pageElement = MainScreenDoc.createElement("Page");
-        Element headerElement = MainScreenDoc.createElement("DashBoard");
-        Element leftPanelElement = MainScreenDoc.createElement("LeftPanel");
-        Element bodyElement = MainScreenDoc.createElement("Body");
-        pageElement.appendChild(headerElement);
-        pageElement.appendChild(leftPanelElement);
-        pageElement.appendChild(bodyElement);
-        
-        MainScreenDoc.appendChild(pageElement);
-        
-        request.setAttribute(DOM, MainScreenDoc);
+        MainScreenHelper mh = new MainScreenHelper();
+        request.setAttribute(DOM, mh.getXMLDocument());
 
 		return actionForward;
 	}
+	
+    private Element createDailySummaryElement(Document doc) {
+        Session session = null;
+        Element dailySummaryElement = null;
+        try {
+            dailySummaryElement = doc.createElement("DailySummary");
+            //Transaction tx= session.beginTransaction();
+            System.out.println("obtained transaction to DB");
+            session = HibernateUtil.currentSession();
+            Query query = session.createQuery("select DAY from DailySummary");
+    
+            List dailySummaryList = session.find(
+                "from DailySummary as DailySummaryBean where DailySummaryBean.TotalLoads > ?",
+                new Integer(1000),
+                Hibernate.INTEGER
+            );
+
+            Iterator iter = dailySummaryList.iterator();
+            System.out.println("create query to DB");
+            for (; iter.hasNext();) {
+                DailySummaryBean dailySummary = (DailySummaryBean) iter.next();
+                System.out.println("daily summary: " + dailySummary.getDay());
+            }
+            System.out.println("finished query");
+            //tx.commit();
+            HibernateUtil.closeSession();
+        } catch (Exception ex) {
+            ex.printStackTrace();            
+        }
+        return dailySummaryElement;
+    }
 	
 }

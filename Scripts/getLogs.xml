@@ -1,16 +1,18 @@
 <project name="getLogs" default="main" basedir=".">
     <taskdef name="ssh" classname="com.bcop.ant.tasks.SSH"/>
     <taskdef name="sftp" classname="com.bcop.ant.tasks.SFTP"/>
+    <taskdef name="SetDateOffset" classname="com.bcop.ant.tasks.SetOffsetDate"/>
+
   <property name="nas1" value="10.7.209.201"/>
   <property name="nas2" value="10.7.209.202"/>
   <property name="nas3" value="10.7.209.213"/>
   <property name="nas4" value="10.7.209.214"/>
   <property name="nas5" value="10.7.209.216"/>
-  <property name="nas6" value="10.7.209.218"/>
   <property name="beta-nas1" value="10.7.209.70"/>
   <property name="dev-nas1" value="10.7.200.52"/>
   <property name="remote.dir" value="/opt/apps/logServer/Holding"/>
   <property name="local.dir" value="/apps/artadmin/art/logs/xmlLogs"/>
+  <property name="stackTrace.dir" value="/home/artadmin/logs/StackTraces"/>
 
   <target name="init">
     <echo message="init called:"/>
@@ -18,11 +20,21 @@
           <format property="LDSTAMP" pattern="yyyyMMddHHmm">
           </format>
          </tstamp>
+         <SetDateOffset name="trace.logDate" 
+                   DayOffset="-1" 
+                   dateFormat="yyyy-MM-dd"/>
+
      <echo message="LDSTAMP ${LDSTAMP}"/>
+  </target>
+  <target name ="general.getStacks" depends="init">
+      <sftp server="${machine.param}" userid="nasadmin" remotedir="${remote.dir.param}" >
+          <write string="lcd ${local.dir.param}"/>
+          <write string="get ${logFile.param}"/>
+      </sftp>
   </target>
 
   <target name="general.getLogs" depends="init">
-    <ssh server="${machine.param}" userid="nasadmin">
+      <ssh server="${machine.param}" userid="nasadmin">
       <write> cd /opt/apps/logServer/Holding</write>
       <write string="cat ../LiveLogs/orderpoint.jsp.log ../opend.log > orderpoint.jsp.log${LDSTAMP}.xml"/>
       <write string="cp ../orderpoint.jsp.log ../LiveLogs/orderpoint.jsp.log"/>
@@ -60,9 +72,15 @@
     <antcall target="getNas3"/>
     <antcall target="getNas4"/>
     <antcall target="getNas5"/>
-    <antcall target="getNas6"/>
     <antcall target="getBeta"/>
     <antcall target="getDev"/>
+  </target>
+  <target name="getStacks" depends="init">
+    <antcall target="getNas1.StackLogs"/>
+    <antcall target="getNas2.StackLogs"/>
+    <antcall target="getNas3.StackLogs"/>
+    <antcall target="getNas4.StackLogs"/>
+    <antcall target="getNas5.StackLogs"/>
   </target>
   <target name="getNas1" depends="init">
     <antcall target="general.getLogs">
@@ -99,13 +117,6 @@
       <param name="shortName.param" value="nas5"/>
     </antcall>
   </target>
-  <target name="getNas6" depends="init">
-    <antcall target="general.getLogs">
-      <param name="machine.param" value="${nas6}"/>
-      <param name="machineName.param" value="Nas6Logs"/>
-      <param name="shortName.param" value="nas6"/>
-    </antcall>
-  </target>
   <target name="getBeta" depends="init">
     <antcall target="general.getLogs">
       <param name="machine.param" value="${beta-nas1}"/>
@@ -118,6 +129,46 @@
       <param name="machine.param" value="${dev-nas1}"/>
       <param name="machineName.param" value="Dev"/>
       <param name="shortName.param" value="dev"/>
+    </antcall>
+  </target>
+  <target name="getNas1.StackLogs" depends="init">
+    <antcall target="general.getStacks">
+      <param name="machine.param" value="${nas1}"/>
+      <param name="remote.dir.param" value="/opt/WebSphere/AppServer/logs"/>
+      <param name="local.dir.param" value="${stackTrace.dir}/nas1"/>
+      <param name="logFile.param" value="boiseoptrace.log.${trace.logDate}"/>
+    </antcall>
+  </target>
+  <target name="getNas2.StackLogs" depends="init">
+    <antcall target="general.getStacks">
+      <param name="machine.param" value="${nas2}"/>
+      <param name="remote.dir.param" value="/opt/WebSphere/AppServer/logs"/>
+      <param name="local.dir.param" value="${stackTrace.dir}/nas2"/>
+      <param name="logFile.param" value="boiseoptrace.log.${trace.logDate}"/>
+    </antcall>
+  </target>
+  <target name="getNas3.StackLogs" depends="init">
+    <antcall target="general.getStacks">
+      <param name="machine.param" value="${nas3}"/>
+      <param name="remote.dir.param" value="/opt/WebSphere/AppServer/logs"/>
+      <param name="local.dir.param" value="${stackTrace.dir}/nas3"/>
+      <param name="logFile.param" value="boiseoptrace.log.${trace.logDate}"/>
+    </antcall>
+  </target>
+  <target name="getNas4.StackLogs" depends="init">
+    <antcall target="general.getStacks">
+      <param name="machine.param" value="${nas4}"/>
+      <param name="remote.dir.param" value="/opt/WebSphere/AppServer/logs"/>
+      <param name="local.dir.param" value="${stackTrace.dir}/nas4"/>
+      <param name="logFile.param" value="boiseoptrace.log.${trace.logDate}"/>
+    </antcall>
+  </target>
+  <target name="getNas5.StackLogs" depends="init">
+    <antcall target="general.getStacks">
+      <param name="machine.param" value="${nas5}"/>
+      <param name="remote.dir.param" value="/opt/WebSphere/AppServer/logs"/>
+      <param name="local.dir.param" value="${stackTrace.dir}/nas5"/>
+      <param name="logFile.param" value="boiseoptrace.log.${trace.logDate}"/>
     </antcall>
   </target>
     

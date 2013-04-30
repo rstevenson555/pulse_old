@@ -1,151 +1,175 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html lang="en">
-
 <head>
- <title>ART Client - Online statistical reporting for boiseoffice.com</title>
- <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
- <meta name="author" content="Will Webb">
- <link rel="stylesheet" type="text/css" href="css/default.css" title="default" media="screen">
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=ISO-8859-1">
+  <title>ART Client - Online statistical reporting for boiseoffice.com</title>
+  <meta name="author" content="Will Webb">
+  <link rel="stylesheet" type="text/css" href="default.css"
+ title="default" media="screen">
 </head>
-
-<body id="artclient" class="homepage">
-<div id="container">
-
-<div id="header">
- <a href="/" title="Return to home page" accesskey="1"><img src="images/ARTlogo.jpg" width="209" alt="ART logo"></a>
- <div id="tools">
-  <ul id="mainNav">
-   <li><a href="download.html" title="Real time charts of boiseoffice.com performance">Production Environment</a></li>
-   <li><a href="products/" title="Historical charst of boiseoffice.com performance">Test Environment</a></li>
-   <li><a href="support/" title="Report a bug">Development Environment</a></li>
-  </ul>
-  <!-- closes #textSize-->
-  <div id="sf">
-    <!-- <label>boiseoffice.com dashboard:</label> -->
-    <div id="realtimegraphs">
-        <img src="images/newtechnom1.jpg" alt="Server 1 - Wait Queue: 3.2"/>
-        <img src="images/newtechnom2.jpg" alt="Server 2 - Wait Queue: 3.0"/>
-        <img src="images/newtechnom3.jpg" alt="Server 3 - Wait Queue: 2.2"/>
-        <img src="images/newtechnom4.jpg" alt="Server 4 - Wait Queue: 1.9"/>
-        <!--
-    <APPLET ARCHIVE="jfreechart-0.9.14.jar,jcommon-0.8.9.jar,logParser-applets.jar" 
-            CODE="ARTApplet"
-            width=640 height=270 ALT="You should see an applet, not this text.">
-    </APPLET>
-    -->
-    </div>
-  </div>
- </div>
- <!-- closes #tools-->
-</div>
-<!-- closes #header-->
+<body onload="cookieForms('open', 'yourform')"
+ onunload="cookieForms('save', 'yourform')" id="artclient"
+ class="homepage">
 <hr class="hide">
+<script language="JavaScript">
 
-<div id="mBody">
- <div id="side">
-  <h2>Other Graphs</h2>
-  <p>Navigate to other graphs and information...</p>
+<!-- This script and many more are available free online at -->
+<!-- The JavaScript Source!! http://javascript.internet.com -->
+<!-- Original:  Nick Baker -->
+<!-- Begin
+// Cookie Functions  ////////////////////  (:)
 
- <ul id="oN">
-   <li>
-     <a href="http://support.decisionone.com/mozilla/mozilla_help_main.htm">Realtime Charts</a>
-   </li>
-   <li>
-     <a href="foundation/donate.html">Historical Charts</a>
-   </li>
-   <li>
-     <a href="http://newsletter.mozdev.org/">About ART</a>
-   </li>
-  </ul>
+// Set the cookie.
+// SetCookie('your_cookie_name', 'your_cookie_value', exp);
 
- </div>
- <!-- closes #side -->
- <hr class="hide">
+// Get the cookie.
+// var someVariable = GetCookie('your_cookie_name');
 
- 
- <div id="mainContent">
-  <div id="finds">
-    <h2>What am I looking at?</h2>
+var expDays = 100;
+var exp = new Date(); 
+exp.setTime(exp.getTime() + (expDays*24*60*60*1000));
 
-	<p>The Art Client application provides a view into information and statistics provided by the Art System.
-    </p>
+function go() 
+{
+    frm = document.forms[0];
+    frm.submitform.disabled=true;
+    location.replace("ViewDailySessionSummary.web");
+}
 
-  </div>
-  <!-- closes #finds-->
+function getCookieVal (offset) {  
+	var endstr = document.cookie.indexOf (";", offset);  
+	if (endstr == -1) { endstr = document.cookie.length; }
+	return unescape(document.cookie.substring(offset, endstr));
+}
 
-  <div id="which">
+function GetCookie (name) {  
+	var arg = name + "=";  
+	var alen = arg.length;  
+	var clen = document.cookie.length;  
+	var i = 0;  
+	while (i < clen) {    
+		var j = i + alen;    
+		if (document.cookie.substring(i, j) == arg) return getCookieVal (j);    
+		i = document.cookie.indexOf(" ", i) + 1;    
+		if (i == 0) break;   
+	}  
+	return null;
+}
 
-   <h2>Mercado Search Performance</h2>
-   <dl>
-   <dt class="im"/>
-   <dd>
+function SetCookie (name, value) {  
+	var argv = SetCookie.arguments;  
+	var argc = SetCookie.arguments.length;  
+	var expires = (argc > 2) ? argv[2] : null;  
+	var path = (argc > 3) ? argv[3] : null;  
+	var domain = (argc > 4) ? argv[4] : null;  
+	var secure = (argc > 5) ? argv[5] : false;  
+	document.cookie = name + "=" + escape (value) + 
+	((expires == null) ? "" : ("; expires=" + expires.toGMTString())) + 
+	((path == null) ? "" : ("; path=" + path)) +  
+	((domain == null) ? "" : ("; domain=" + domain)) +    
+	((secure == true) ? "; secure" : "");
+}
 
-	 <ul id="ftr">
-     <p class="d1">The following are realtime graphs of External calls to XYZ.</p>
-      <img src="images/graph.jpg"/>
-      <img src="images/graph.jpg"/>
-      <img src="images/graph.jpg"/>
-      <img src="images/graph.jpg"/>
-	 </ul>
+// cookieForms saves form content of a page.
 
-	<div style="clear: both"></div>
+function cookieForms() {  
+    var mode = cookieForms.arguments[0];
+    var valueset = 'false';
 
-   </dd>
-   </dl>
+	for(f=1; f<cookieForms.arguments.length; f++) {
+		formName = cookieForms.arguments[f];
 
+		if(mode == 'open') {	
+			cookieValue = GetCookie('saved_'+formName);
+			if(cookieValue != null) {
+				var cookieArray = cookieValue.split('#cf#');
 
-   <h2>AS400 Connectivity Performance</h2>
-   <dl>
-    <dt class="im"/>
-    <dd>
-     <p>Customer Validation Response Time</p>
-      <img src="images/graph.jpg"/>
-    </dd>
-    
-    <dt class="im"/>
-    <dd>
-     <p>Customer Pricing Response Time</p>
-      <img src="images/graph.jpg"/>
-    </dd>
-    
-    <dt class="im"/>
-    <dd>
-     <p>Campaigns Response Time</p>
-      <img src="images/graph.jpg"/>
-    </dd>
-   </dl>
+				if(cookieArray.length == document[formName].elements.length) {
+					for(i=0; i<document[formName].elements.length; i++) {
 
-   <h2>Contact us on issues identified in ART</h2>
-   <dl>
-    <dt class="im"><a href="http://www.bugzilla.org/"><img src="images/ico-bugz.gif" width="34" height="34" alt="Bugzilla"></a></dt>
-    <dt><a href="http://www.bugzilla.org/">Bugzilla</a></dt>
-    <dd>
+                        if(cookieArray[i].substring(0,6) == 'select') { 
+                            document[formName].elements[i].options.selectedIndex = cookieArray[i].substring(7, cookieArray[i].length-1); 
+                        }
+                        else if((cookieArray[i] == 'cbtrue') || (cookieArray[i] == 'rbtrue')) { 
+                            document[formName].elements[i].checked = true; 
+                        }
+                        else if((cookieArray[i] == 'cbfalse') || (cookieArray[i] == 'rbfalse')) { 
+                            document[formName].elements[i].checked = false; 
+                        }
+                        else { 
+                            document[formName].elements[i].value = (cookieArray[i]) ? cookieArray[i] : '';
+                            if ( document[formName].elements[i].name == 'username' && document[formName].elements[i].value!='') {
+                                valueset = 'true';
+                            }
+                        }
+					}
+				}
+            }
 
-     <p>Enterprise-grade bug tracking software [<a href="http://www.bugzilla.org/">more</a>]</p>
-    </dd>
-   </dl>
-  </div>
-  <!-- closes #which -->
-  
-  <hr class="hide">
-  <div id="footer">
+            if ( valueset == 'true') {
+                go();
+            }
+		}
 
-   <ul id="bn">
-    <li><a href="sitemap.html">Site Map</a></li>
-    <li><a href="contact/">Contact Us</a></li>
-    <li><a href="foundation/donate.html">About ART</a></li>
-   </ul>
-   <p>Copyright &copy; 1998-2003 BoiseOffice Solutions</p>
+		if(mode == 'save') {	
+			cookieValue = '';
+			for(i=0; i<document[formName].elements.length; i++) {
+				fieldType = document[formName].elements[i].type;
 
-  </div>
-  
- </div>
- <!-- closes #mainContent-->
-</div>
-<!-- closes #mBody-->
+				if(fieldType == 'password') { passValue = ''; }
+				else if(fieldType == 'checkbox') { passValue = 'cb'+document[formName].elements[i].checked; }
+				else if(fieldType == 'radio') { passValue = 'rb'+document[formName].elements[i].checked; }
+				else if(fieldType == 'select-one') { passValue = 'select'+document[formName].elements[i].options.selectedIndex; }
+				else { passValue = document[formName].elements[i].value; }
 
-</div>
-<!-- closes #container -->
+				cookieValue = cookieValue + passValue + '#cf#';
+			}
+			cookieValue = cookieValue.substring(0, cookieValue.length-4); // Remove last delimiter
 
+			SetCookie('saved_'+formName, cookieValue, exp);		
+		}	
+	}
+}
+//  End --> </script><img
+ style="width: 209px; height: 155px;" alt="art logo"
+ src="images/ARTlogo.jpg"><br>
+<br>
+<table style="width: 100%; text-align: left;" border="0" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <td><br>
+      </td>
+      <td>Please login to the ART System </td>
+    </tr>
+    <tr>
+      <td><br>
+      </td>
+      <td>
+      <form name="yourform" action="javascript:go();"> <br>
+Please Enter your Full Name <input name="username"><br>
+        <input onclick="yourform.submit()" name="submitform"
+ value="Login" type="submit"> </form>
+      </td>
+    </tr>
+    <tr>
+      <td><br>
+      </td>
+      <td><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 </body>
 </html>

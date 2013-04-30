@@ -13,9 +13,11 @@
   <property name="logparser-website.java.src"  value="${basedir}/src/java"/>
   <property name="logparser-website.html.src"  value="${basedir}/src/html"/>
   <property name="logparser-website.xsl.src"  value="${basedir}/src/xsl"/>
+  <property name="logparser-website.jsp.src"  value="${basedir}/src/jsp"/>
   <property name="logparser-website.lib"  value="${basedir}/lib"/>
   <property name="logparser-website.bin"  value="${basedir}/bin"/>
   <property name="logparser-website.dist"  value="${basedir}/dist"/>
+  <property name="logparser-website.dtd" value="${basedir}/src/dtd"/>
   <property name="logparser-website.applet.jars"  value="${basedir}/appletjars"/>
   <property name="remote.tomcat.art" value="/opt/tomcat/tomcat/webapps/art/WEB-INF/classes"/>
   <property name="deploy.passwd" value="boise"/>
@@ -25,11 +27,11 @@
   <property name="tomcat-username" value="artadmin"/>
   <property name="tomcat-password" value="abc123"/>
   <!-- Local App -->
-  <property name="lurl" value="http://i0360d4.int.bcop.com/manager"/>
-  <property name="ltomcat-username" value="admin"/>
-  <property name="ltomcat-password" value="java123"/>
+  <property name="lurl" value="http://localhost:7001/manager"/>
+  <property name="ltomcat-username" value="manager"/>
+  <property name="ltomcat-password" value="manager"/>
   <!-- Configure the custom Ant tasks for the Manager application -->
-  <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask"/>
+  <!--<taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask"/>
   <taskdef name="install" classname="org.apache.catalina.ant.InstallTask"/>
   <taskdef name="list" classname="org.apache.catalina.ant.ListTask"/>
   <taskdef name="reload" classname="org.apache.catalina.ant.ReloadTask"/>
@@ -38,20 +40,33 @@
   <taskdef name="roles" classname="org.apache.catalina.ant.RolesTask"/>
   <taskdef name="start" classname="org.apache.catalina.ant.StartTask"/>
   <taskdef name="stop" classname="org.apache.catalina.ant.StopTask"/>
-  <taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask"/>
+  <taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask"/>  -->
 
 <!-- Build classpath -->
   <path id="classpath">
       <fileset dir="${logparser-website.lib}">
           <include name="**/*.jar"/>
-      </fileset>
-      <fileset dir="${logparser-website.lib}">
           <include name="**/*.zip"/>
+      </fileset>
+      <fileset dir="${logparser-website.applet.jars}">
+          <include name="**/*.jar"/>
       </fileset>
       <!--
       <pathelement location="${basedir}/java"/>
       -->
   </path>
+ 
+  <path id="runclasspath">
+      <fileset dir="${logparser-website.lib}">
+          <include name="**/*.jar"/>
+          <include name="**/*.zip"/>
+      </fileset>
+      <pathelement location="${logparser-website.bin}/classes"/>
+      <!--
+      <pathelement location="${basedir}/java"/>
+      -->
+  </path>
+ 
  
   <target name="prepare" description="Prepare For Complilation">
     <mkdir dir="${logparser-website.bin}" />
@@ -66,21 +81,17 @@
     </tstamp>
   </target>
 
-  <target name="compile-clean" description="remove class files and compile">
-    <delete>
-       <fileset dir="${logparser-website.bin}/classes" includes="**/*.class"/>
-    </delete>
-     <depend srcdir="${logparser-website.java.src}"
-            destdir="${logparser-website.bin}"
-            cache="${logparser-website.bin}/depcache"
-            closure="yes"/>
-
-     <javac srcdir="${logparser-website.java.src}" destdir="${logparser-website.bin}/classes" debug="on" optimize="off"  excludes="logs/,website/">
-        <classpath refid="classpath"/>
-     </javac>
+  <target name="test" depends="prepare" description="run test application">
+    <java classname="com.bos.applets.AvgLoadTime" fork="true" >
+        <classpath refid="runclasspath"/>
+    </java>
   </target>
-  
+
   <target name="compile" depends="prepare" description="the default compiler task">
+    <ant antfile="build.xml" dir=".." target="jar-LiveLogParser"/>
+    <copy todir="${logparser-website.applet.jars}">
+        <fileset dir="..\\dist\\" includes="LiveLogParserBeans.jar,LiveLogParser.jar"/>
+    </copy>
      <depend srcdir="${logparser-website.java.src}"
             destdir="${logparser-website.bin}/classes"
             cache="${logparser-website.bin}/depcache"
@@ -89,12 +100,36 @@
      <javac srcdir="${logparser-website.java.src}" destdir="${logparser-website.bin}/classes" debug="on" optimize="off"  excludes="logs/,website/">
         <classpath refid="classpath"/>
      </javac>
+     <copy todir="${logparser-website.bin}/classes">
+        <fileset dir="${logparser-website.java.src}" includes="*.xml, *.properties"/>
+     </copy>
+  </target>
+  
+  <target name="copy-xsl">
+    <copy todir="d:/apps/jakarta-tomcat-5.0.14b/webapps/logparser-website/stylesheets/">
+        <fileset dir="${logparser-website.xsl.src}" includes="*.xsl"/>
+     </copy>
   </target>
   
   <target name="appletjar" depends="compile" description="the build applet task">
-    <jar jarfile="${logparser-website.applet.jars}/logParser-applets.jar" basedir="${logparser-website.bin}/classes" includes="**\*.class"/>
-    <copy file="${logparser-website.lib}/jcommon-0.8.9.jar" todir="${logparser-website.applet.jars}"/>
-    <copy file="${logparser-website.lib}/jfreechart-0.9.14.jar" todir="${logparser-website.applet.jars}"/>
+    <ant antfile="build.xml" dir=".." target="jar-LiveLogParser"/>
+    <copy todir="${logparser-website.applet.jars}">
+        <fileset dir="../dist/" includes="LiveLogParserBeans.jar,LiveLogParser.jar"/>
+    </copy>
+
+    <!-- <mkdir dir="${logparser-website.applet.jars}/jfreechart"/>
+    <unzip src="${logparser-website.applet.jars}/jfreechart-1.0.12.jar"
+        dest="${logparser-website.applet.jars}/jfreechart"/> -->
+    
+    <jar jarfile="${logparser-website.applet.jars}/logParser-applets.jar" >
+        <fileset dir="${logparser-website.bin}/classes"
+            includes="**/*.class" />
+        <fileset dir="../dist/"
+            includes="java.policy.applet" />
+        <!-- <fileset dir="${logparser-website.applet.jars}/jfreechart"/> -->
+    </jar>
+    <!--<signjar jar="${logparser-website.applet.jars}/logParser-applets.jar" alias="key1" storepass="boiseks" keystore="..\\dist\\boisechart.ks"/>   -->
+    <!--<signjar jar="${logparser-website.applet.jars}/logParser-applets.jar" alias="boise" storepass="changeit" keystore="..\\dist\\boise.cer"/>  -->
   </target>
  
   <target name="compile-Art" description="task to build the art website"> 
@@ -110,31 +145,85 @@
   <target name="makewar" depends="prepare,compile,appletjar" description="Makes a logParser-website.war and places it in bin dir">
     <war destfile="logparser-website.war" webxml="logParser-website.xml">
       <webinf dir="${basedir}/WEB-INF" includes="*.xml"/>
+      <zipfileset dir="${basedir}/META-INF" prefix="META-INF" />
       <fileset dir="${logparser-website.html.src}"/>
       <zipfileset dir="${logparser-website.xsl.src}" prefix="stylesheets" />
       <fileset dir="${logparser-website.xsl.src}"/>
+      <zipfileset dir="${logparser-website.jsp.src}" prefix="jsp-dir" />
+      <fileset dir="${logparser-website.jsp.src}"/>
       <fileset dir="${logparser-website.applet.jars}"/>
+      <zipfileset dir="${logparser-website.dtd}" prefix="WEB-INF/dtd" />
+      <zipfileset dir="${basedir}/dist" prefix="WEB-INF/classes" includes="jg-magic-map.xml" />
+      <zipfileset dir="${basedir}/dist" prefix="WEB-INF" includes="jg-magic-map.xml" />
+      <zipfileset dir="${basedir}/dist" prefix="/" includes="jg-magic-map.xml" />
+      
       <!--
       <fileset dir="src/jsp/myapp"/>
       -->
       <lib dir="${logparser-website.lib}" excludes="servlet-api.jar"/>
-      <classes dir="${logparser-website.bin}/classes"/>
+      <classes dir="${logparser-website.bin}/classes" />
+      <zipfileset dir="${basedir}/dist" prefix="WEB-INF/classes/com/bos/applets/arch" includes="*.xml"/>
     </war>
   </target>
 
   <target name="rdeploy" depends="makewar" description="Deploys logParser-website to ART box">
-    <deploy url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="${basedir}/logparser-website.war"/>
+    <!--<install url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/>-->
+    <!--<stop url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" /> -->
+    <deploy url="${url}" update="true" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/>
   </target>
 
+  <target name="pocdeploy" depends="makewar" description="Deploys logParser-website to ART box">
+    <!--<deploy url="http://poc-art-app1:7001/manager" update="true" username="artadmin" password="abc123" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/> -->
+    <deploy url="http://poc-art-app1/manager" update="true" username="artadmin" password="abc123" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/>
+  </target>
+
+  <target name="proddeploy" depends="makewar" description="Deploys logParser-website to ART box">
+      <!--<remove url="http://prod-art-app1/manager" username="artadmin" password="abc123" path="/logparser-website"/> -->
+      <!--<deploy url="http://prod-art-app1:7209/manager" update="true" username="artadmin" password="abc123" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/> -->
+  </target>
+
+  <target name="localdeploy" depends="proddeploy" description="Deploys logParser-website to ART box">
+      <copy file="logparser-website.war" todir="${env.JBOSS_HOME}/server/default/deploy" />
+      
+      <tstamp>
+    	<format property="current.time" pattern="MM/dd/yyyy hh:mm:ss aa" />
+ 	  </tstamp>
+  	  <echo message="${current.time}" />  
+  </target> 
+
+
+    <target name="stressdeploy" depends="makewar" description="Deploys logParser-website to ART box">
+      <!--<remove url="http://prod-art-app1/manager" username="artadmin" password="abc123" path="/logparser-website"/> -->
+      <!--<deploy url="http://stress-art-app1:7209/manager" update="true" username="artadmin" password="abc123" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/> -->
+</target>
+
+  <target name="testdeploy" depends="makewar" description="Deploys logParser-website to ART box">
+      <deploy url="http://test-art-app1/manager" update="true" username="artadmin" password="abc123" path="/logparser-website" config="file:${basedir}\META-INF\context.xml" war="file:${basedir}/logparser-website.war"/>
+  </target>
+
+  <target name="external-rdeploy" depends="makewar" description="Deploys logParser-website to ART box">
+    <!--<install url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/>-->
+    <!--<stop url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website" /> -->
+    <deploy url="${param.url}" update="true" username="${param.tomcat-username}" password="${param.tomcat-password}" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/>
+  </target>
+
+  <target name="external-rundeploy" description="Remove web application">
+    <remove url="${param.url}" username="${param.tomcat-username}" password="${param.tomcat-password}" path="/logparser-website"/>
+  </target>
   <target name="rundeploy" description="Remove web application">
     <remove url="${url}" username="${tomcat-username}" password="${tomcat-password}" path="/logparser-website"/>
   </target>
   
-  <target name="ldeploy" depends="makewar" description="Deploys logParser-website to LOCAL box (on port 80)">
-    <deploy url="${lurl}" username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website" war="${basedir}/logparser-website.war"/>
+
+  <target name="ldeploy" depends="clean,makewar" description="Deploys logParser-website to LOCAL box (on port 80)">
+      <deploy url="${lurl}" username="${ltomcat-username}" update="true" password="${ltomcat-password}" path="/logparser-website" war="file:\${basedir}/logparser-website.war"/>
   </target>
 
-  <target name="lundeploy" description="Remove LOCAL web application">
+  <target name="lreload" depends="compile">
+    <reload url="${lurl}"   username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website"/>
+  </target>
+
+  <target name="lundeploy" depends="clean,makewar" description="Remove LOCAL web application">
     <remove url="${lurl}" username="${ltomcat-username}" password="${ltomcat-password}" path="/logparser-website"/>
   </target>
 
@@ -172,6 +261,136 @@
     <echo message=""/> 
     <echo message="ant                    - builds default projects"/>
     <echo message="ant clean              - cleans build directory"/> 
+  </target>
+
+  <!-- =================================================================== -->
+  <!-- Generate Hibernate Java Beans based on HBM's                        -->
+  <!-- =================================================================== -->
+  <target name="generate-all-hibernate-java">
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="AccessRecord.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="Accumulator.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="AccumulatorStat.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="App.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="Browser.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="BrowserStat.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="Context.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="DailyContextStat.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="DailyPageLoadTim.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="DailySummary.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="ExternalAccessRecord.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="ExternalStat.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="FiveSecondLoad.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="HistoricalExternalStatistic.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="HourlyStatistic.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="Machin.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="MinuteStatistic.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="Pag.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="PagesTest.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadAccessRecord.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadApp.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadContext.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadMachin.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadPag.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadSession.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="RloadUser.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="Session.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="User.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-oracle-hbm-java"/>
+    <antcall target="generate-stacktrace-hbm-java"/>
+  </target>
+  
+  <target name="generate-hibernate-java">
+    <java classname="net.sf.hibernate.tool.hbm2java.CodeGenerator" classpathref="classpath" fork="true">
+      <arg value="--output=${logparser-website.java.src}"/>
+      <arg value="${logparser-website.java.src}/${hbmFile}"/>
+    </java>
+  </target>
+
+  <target name="generate-oracle-hbm-java">
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="OrderStats.hbm.xml"/>
+    </antcall>
+
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="OrderStatsSummary.hbm.xml"/>
+    </antcall>
+  </target>
+
+  <target name="generate-stacktrace-hbm-java">
+
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="StackTrac.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="StackTraceBeanContainer.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="StackTraceDetail.hbm.xml"/>
+    </antcall>
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="StackTraceRow.hbm.xml"/>
+    </antcall>
+  </target>
+  <target name="generate-External-hbm-java">
+    <antcall target="generate-hibernate-java">
+        <param name="hbmFile" value="ExternalMinuteStatistic.hbm.xml"/>
+    </antcall>
   </target>
 
 </project>

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.ExternalStatBean" 
+    table="ExternalStats"
+>
+
+    <id
+        name="classificationId"
+        type="int"
+        column="Classification_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="destination"
+        type="java.lang.String"
+        column="Destination"
+        length="75"
+    />
+    <property
+        name="description"
+        type="java.lang.String"
+        column="Description"
+        length="255"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>

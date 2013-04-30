@@ -17,47 +17,30 @@
 
 package com.bos.servlets.controller;
 
+import com.bcop.arch.logger.Logger;
+import com.bcop.arch.utility.*;
+import com.bos.cache.factory.impl.NonExpiringFactory;
+import com.bos.cache.impl.MRUCache;
+import com.bos.config.struts.BoiseActionMapping;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Properties;
 import java.util.ArrayList;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.RequestDispatcher;
+import org.apache.commons.digester.Digester;
 import org.apache.struts.Globals;
 import org.apache.struts.action.ActionServlet;
 import org.apache.struts.config.ModuleConfig;
-import org.apache.xalan.xsltc.trax.SAX2DOM;
-import org.apache.xml.utils.DefaultErrorHandler;
-import org.apache.xpath.CachedXPathAPI;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-import com.bos.config.struts.BoiseActionMapping;
-//import com.bcop.arch.communication.GlobalProperties;
-import com.bcop.arch.exception.BusinessException;
-import com.bcop.arch.logger.Logger;
-import com.bcop.arch.utility.ControllerInterface;
-import com.bcop.arch.utility.URLWatchDog;
-import com.bcop.arch.utility.FileWatchDog;
-import com.bcop.arch.utility.WatchDog;
-import com.bcop.arch.utility.FileChangedListener;
-import com.bcop.arch.utility.Util;
-import com.bos.cache.Cache;
-import com.bos.cache.CacheFactory;
-import org.apache.commons.digester.*;
 
 public class BosFrontController extends ActionServlet implements ControllerInterface, FileChangedListener {
     protected String _version = "1.0";
     // used to cache the struts config file.
-    private static Cache aliasCache = null;
+    private static MRUCache aliasCache = null;
     private static WatchDog strutsConfigWatcher = null;
     private static java.util.ArrayList aliasMapping = null;
     protected static final String ERROR = "javax.servlet.jsp.jspException";
@@ -65,10 +48,11 @@ public class BosFrontController extends ActionServlet implements ControllerInter
     private static final Logger logger = (Logger)Logger.getLogger(BosFrontController.class.getName());
 
     static {
-        CacheFactory cf = CacheFactory.newInstance();
-        aliasCache = cf.createMRUCache();
+        //CacheFactory cf = CacheFactory.newInstance();
+        //aliasCache = cf.createMRUCache();
         // a nice prime store 337 of the virtual names
-        aliasCache.setCacheSize(337);
+        //aliasCache.setCacheSize(337);
+        aliasCache = new MRUCache(337, new NonExpiringFactory());
     }
 
     /** this gets fired on when a config file that was being watched gets updated */
