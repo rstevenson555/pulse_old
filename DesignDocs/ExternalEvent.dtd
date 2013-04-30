@@ -1,0 +1,24 @@
+<!-- ExternalEvent.dtd -->
+<!ELEMENT FILESTARTXML (Event+)>
+
+<!ELEMENT Event (PAGE, Payload, Classification)>
+
+<!ATTLIST type CDATA #REQUIRED 
+	priority CDATA 
+	id CDATA #REQUIRED
+    appname CDATA #REQUIRED
+	servername CDATA #REQUIRED
+	context CDATA #REQUIRED
+    Classification CDATA>
+
+
+<!ELEMENT PAGE (DATE,TIME,ELAPSED,USERINFO)>
+<!ATTLIST name CDATA #REQUIRED 
+          begin CDATA #REQUIRED >
+<!ELEMENT DATE (#PCDATA)>
+<!ELEMENT TIME (#PCDATA)>
+<!ELEMENT ELAPSED (#PCDATA)>
+<!ELEMENT USERINFO (IP,USERKEY,BROWSER)>
+<!ATTLIST sessionid CDATA #REQUIRED>
+<!ELEMENT Payload (#CDATA)>
+<!ATTLIST name CDATA #REQUIRED>

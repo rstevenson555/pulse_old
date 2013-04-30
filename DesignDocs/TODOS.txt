@@ -1,0 +1,102 @@
+Task Key
+(BS - BA - WW - BG)
+
+
+1.  Accumulators  (Implement Api to Accept them)
+    A.  Idntify All the Accumulators
+        BA  BG
+    B.  Create Accumulator API for BoiseCode
+        BS
+    C.  Create Accumulator Administrative Console (ART Website)
+        BA WW
+2.  External Event Timings  (Add Api for these)
+    A.  Persisting of External Events.
+        BA
+    B.  Summary Accumulators and Statistics Modules.
+        BA
+3.  MySLQ  Tasks 
+    A.  Mysql Auto Check of tables and indexes.
+        BA
+    B.  Cleanup of Sessions table and AccessRecords.
+        BA
+    C.  Writing of Standard query files.
+        BA WW
+4.  WebSite
+    A.  High Level Design
+        WW  BG BS BA
+    B.  Framework and Structure
+        WW
+    C.  Identifying Autonomous Components to Build
+        WW BG BA BS
+    D.  Assigning Components and Tracking Progress
+        BG
+5.  Obtaining Production Environment
+    A.  POC Box
+        BG
+    B.  test-art-app1  test-art-db1
+        BG
+    C.  prod-art-app1  prod-art-db1
+        BG
+    D.  Open Firewall from prod-ec-app? to prod-art-app1 on port 5557
+        BG
+6.  LogServer
+    A.  Install LogServer on Test
+        BS
+    B.  Install LogServer on Prod
+        BS
+7.  Unix Tasks
+    A.  Create Auto Start Jobs 
+        BA BS
+    B.  Install and setup Tomcat 5
+        (POC only) BA BS
+    C.  Identify and Install Cron jobs
+        BA BS
+8.  Reloading of Records
+    A.  Reload Thread Process
+        BA
+    B.  Reload Request Form (ART Website)
+        BA WW
+9.  JUnit Tests
+    A.  Run Audits and Metrics on the Code
+        BS BA
+    B.  Create JUnit Framework
+        WW
+    C.  Write JUnit tests
+        BS BA WW
+10. Website DashBoard Priorities and Dependencies.
+    1.  90% and Average From Boiseoffice
+        BS BA  (Done Ready to Integrate).
+    2.  Number Of Users
+        BA  - get JavaGroup Publishing Done.
+        WW  - create Dashboard component.
+    3.  Wait Queue 
+        BS  - Instrument logServer
+        BA  - JavaGroup Publishing
+        WW  - create Dashboard component.
+    4.  DB Connections 
+        BS  - Instrument logServer
+        BA  - JavaGroup Publish
+        WW  - Create Dashboard component.
+    5.  AS440 Connections
+        BS  - Instrument BoiseOffice (CommonAS400.jar)
+        BA  - JavaGroup Publish
+        WW  - Create Dashboard component.
+    6.  AS400  Response Time
+        BS  - Instrument Boiseoffice
+        BA  - JavaGroup Publish
+        WW  - Create Dashboard component.
+    7.  Chase Connection/Performance
+        WW  BS  - Instrument Code
+        BA  - JavaGroup Publish
+        WW  - Create Dashboard component.
+    Additional information 
+    #Users -  Speedometer component.
+    Wait Queue - Graph
+    #AS400 Conns  - Thermometer component. (green good, yellow caution , Red touble)
+    #DB Conns     - Thermometer component. (green good, yellow caution, Red touble)
+
+    8.  Duplicate each of the above general for context specific Data.
+        BA WW BS
+11. Prioritize Graphs other than DashBoard 
+    A.  Design what graphs will go where.
+        WW, BA, BS

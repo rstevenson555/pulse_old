@@ -1,0 +1,38 @@
+<project name="getLogs" default="default" basedir=".">
+ <taskdef name="SendEmailWithHeader" classname="com.bcop.ant.tasks.SendEmailWithHeader"/>
+ <taskdef name="SetDateOffset" classname="com.bcop.ant.tasks.SetOffsetDate"/>
+	<property name="summary.list" value ="xiaohui.xiao"/>
+	<property name="local.dir" value ="d:\"/>
+	<property name="base.dir" value ="d:\apps\logParser"/>
+	<target name="default">
+         <tstamp>
+          <format property="SDSTAMP" pattern="MMdd">
+          </format>
+         </tstamp>
+         <echo message="${DSTAMP}.xml"/>
+         <SetDateOffset name="DirectoryDate" 
+                   DayOffset="-1" 
+                   dateFormat="yyyyMMdd"/>
+         <echo message="DirectoryDate: ${DirectoryDate}"/>
+	</target>
+	<target name="reportDriver" depends="default">
+            <java classname="com.bcop.art.reports.reportDriver"
+			fork="yes" dir="${local.dir}/Html/" >
+                <classpath>
+                    <pathelement path="${base.dir}/jars/classes12.zip"/>
+                    <pathelement path="${base.dir}/jars/website.jar"/>
+
+                </classpath>
+                <arg line="${DirectoryDate} ${local.dir}/Html/"/>
+            </java>
+
+		  <SendEmailWithHeader from="Ad-Hoc Report Tool" 
+                tolist="${summary.list}@bcop.com" 
+                subject="Internet Ordering Summary Report for ${DirectoryDate}"
+                files="${local.dir}/Html/internetSummaryReport.html"
+                mailhost="10.3.15.100"
+                type="text"/>
+          <echo message="mailling ${local.dir}/Html/internetSummaryReport.html"/>
+
+        </target>
+</project>

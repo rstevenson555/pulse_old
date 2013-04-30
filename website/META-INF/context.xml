@@ -1,0 +1,16 @@
+<Context path="/logparser-website">
+    <ResourceLink name="jdbc/mysqldb" global="jdbc/mysqlglobaldb" type="javax.sql.DataSource"/>
+    <ResourceLink name="jdbc/postgres" global="jdbc/postgres" type="javax.sql.DataSource"/>
+    <ResourceLink name="jdbc/oracleStandBydb" global="jdbc/oracleProdStandby" type="javax.sql.DataSource"/>
+ 
+    <!--<Resource name="jdbc/postgres" auth="Container"
+           type="javax.sql.DataSource" username="artadmin" password="abc123"
+           driverClassName="org.postgresql.Driver" url="jdbc:postgresql://stress-art-db1:5432/artdb"
+           maxActive="8" maxIdle="4" maxWait="5000"/>
+
+   <Resource name="jdbc/oracleStandBydb" auth="Container"
+           type="javax.sql.DataSource" username="i97_user" password="horton"
+           driverClassName="oracle.jdbc.driver.OracleDriver" url="jdbc:oracle:thin:@prod-ec-db1:5792:ioep"
+           maxActive="8" maxIdle="4" maxWait="5000"/> -->
+    
+</Context>

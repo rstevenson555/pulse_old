@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+
+<jboss-web>
+    <display-name>ART Website</display-name>
+    <context-root>logparser-website</context-root>
+  
+     <resource-ref>
+        <res-ref-name>jdbc/postgres</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <jndi-name>java:/jdbc/postgres</jndi-name>
+    </resource-ref> 
+     <resource-ref>
+        <res-ref-name>jdbc/oracleStandBydb</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <jndi-name>java:/oracleStandBydb</jndi-name>
+    </resource-ref> 
+</jboss-web>
+

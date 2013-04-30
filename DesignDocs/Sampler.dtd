@@ -1,0 +1,18 @@
+<!-- Sampler.dtd -->
+<!ELEMENT FILESTARTXML (Event+)>
+
+<!ELEMENT Event (Sampler)>
+
+<!ATTLIST type CDATA #REQUIRED 
+	priority CDATA #REQUIRED
+	id CDATA #REQUIRED
+	servername CDATA #REQUIRED>
+	context CDATA #REQUIRED>
+
+<!ELEMENT Sampler (SamplerClassification, Number, DATE, TIME)>
+<!ATTLIST type CDATA #REQUIRED >
+<!ELEMENT SamplerClassification (#PCDATA)>
+<!ELEMENT NUMBER (#PCDATA)>
+<!ELEMENT DATE (#PCDATA)>
+<!ELEMENT TIME (#PCDATA)>
+

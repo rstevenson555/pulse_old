@@ -1,0 +1,59 @@
+## YAML Template.
+---
+localconfig:
+  #------------------------------------------------------------------------
+    db:
+        host: stress-art-db1
+        login: artadmin
+        pwd: abc123
+        port: 5432
+        driver: jdbc:postgresql
+        drivername: org.postgresql.Driver
+        instance: artdb
+    engine:
+        port: 5557
+        machine: stress-art-app1
+    collector:
+        port: 5558
+    javagroups:
+        gossipserver: localhost
+        routerserver: localhost     
+        port: 7800
+stressconfig:
+  #------------------------------------------------------------------------
+    db:
+        host: stress-art-db1
+        login: artadmin
+        pwd: abc123
+        port: 5432
+        driver: jdbc:postgresql
+        drivername: org.postgresql.Driver
+        instance: artdb
+    engine:
+        port: 5557
+        machine: stress-art-app1
+    collector:
+        port: 5558        
+    javagroups:
+        gossipserver: stress-art-app1
+        routerserver: stress-art-app1    
+        port: 7800
+prodconfig:
+  #------------------------------------------------------------------------
+    db:
+        host: prod-art-db1
+        login: artadmin
+        pwd: abc123
+        port: 5432
+        driver: jdbc:postgresql
+        drivername: org.postgresql.Driver
+        instance: artdb
+    engine:
+        port: 5557
+        machine: prod-art-app1
+    collector:
+        port: 5558        
+    javagroups:
+        gossipserver: prod-art-app1
+        routerserver: prod-art-app1      
+        port: 7800

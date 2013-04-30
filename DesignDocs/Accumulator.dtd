@@ -1,0 +1,16 @@
+<!-- Accumulator.dtd -->
+<!ELEMENT FILESTARTXML (Event+)>
+
+<!ELEMENT Event (Accumulator)>
+
+<!ATTLIST type CDATA #REQUIRED 
+	priority CDATA #REQUIRED
+	id CDATA #REQUIRED
+	servername CDATA #REQUIRED>
+	context CDATA #REQUIRED>
+
+<!ELEMENT Accumulator (AccumulatorClassification, Number)>
+<!ATTLIST type CDATA #REQUIRED >
+<!ELEMENT AccumulatorClassification (#PCDATA)>
+<!ELEMENT NUMBER (#PCDATA)>
+

@@ -1,0 +1,522 @@
+<!-- ======================================================================= -->
+<!-- LogParser build file                                                    -->
+<!-- ======================================================================= -->
+<project name="logParser" default="all" basedir=".">
+  <property environment="env"/>
+  <property name="Name" value="LOGPARSER"/>
+  <property name="name" value="logParser"/>
+  <property name="version" value="1.0-rc1"/>
+  
+<property name="remote.logparser" value="/apps/artadmin/jars"/>
+  <property name="remote.logparser.scripts" value="/apps/artadmin/art/scripts/"/>
+  <property name="logparser.src"  value="${basedir}/java"/>
+  <property name="logparser.bin"  value="${basedir}/bin"/>
+  <property name="logparser.dist"  value="${basedir}/dist"/>
+  <property name="WebSite.src"    value="${basedir}/website/classes"/>
+  <property name="boisechart.bin" value="${basedir}/website/boisechart"/>
+  <property name="remote.tomcat.art" value="/opt/tomcat/tomcat/webapps/art/WEB-INF/classes"/>
+  <property name="logparser.jars" value="${basedir}/jars"/>
+<!--<property name="logparser.colorado" value="${basedir}/../colorado/"/>-->
+  <property name="logparser.scripts" value="${basedir}/scripts/"/>
+  <property name="deploy.basedir" value="D:\BcopDeploy"/>
+  <property name="deploy.user" value="cvs.deploy"/>
+<!--<property name="tomcat.local" value="d:\apps\jakarta-tomcat"/>-->
+  <property name="deploy.passwd" value="deployuser001"/>
+  <property name="remote.JBoss.deploy" value="/opt/jboss/JBoss/jboss/deploy"/>
+  <property name="jboss.deploy" value="${env.JBOSS_HOME}/${env.JBOSS_DEPLOY}"/>
+  <property name="Java.src" value="./java"/>
+  <property name="prodLiveLogParserJars.dir" value="/opt/logParser/jars"/>
+  <property name="prodLiveLogParser.dir" value="/opt/logParser"/>
+  <property name="poc-LiveLogParser.dir" value="/opt/art/logParser"/>
+  <property name="poc-stage-LiveLogParser.dir" value="/opt/art/staging"/>
+  <property name="localLiveLogParserJars.dir" value="${basedir}/jars"/>
+  <property name="cvsroot" value=":pserver:${deploy.user}@nt-hqecommdev1:/ecommerce"/>
+<!-- Build classpath -->
+  <path id="export_classpath">
+<fileset dir="./build/logParser/jars">
+    <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="./build/logParser/jars">
+          <include name="**/*.zip"/>
+      </fileset>
+      <pathelement location="./build/logParser/java"/>
+  </path>
+  <path id="classpath">
+      <fileset dir="${logparser.jars}">
+          <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${logparser.jars}">
+          <include name="**/*.zip"/>
+      </fileset>
+      <pathelement location="${basedir}/java"/>
+  </path>
+ 
+  <target name="prepare" description="Prepare For Complilation">
+    <mkdir dir="${logparser.bin}" />
+    <mkdir dir="${boisechart.bin}"/>
+  </target>
+  <target name="init-time">
+    <tstamp>
+      <format property="LDSTAMP" pattern="yyyyMMddHHmm">
+      </format>
+    </tstamp>
+  </target>
+  <target name="start-prodLiveLogParserServer" description="Start this in prod">
+       <java  classname="com.bos.art.logParser.server.LiveLogServer"
+           fork="true"
+           failonerror="true"
+           jvm="/opt/java/jdk14/bin/java"
+           >
+           <jvmarg line="-XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -Xmx1900m -Xms680m -XX:NewSize=32m -XX:MaxNewSize=64m -Xloggc:gcFile.log"/>
+           <!--
+           <jvmarg line="-Xmx680m -Xms680m -XX:NewSize=32m -XX:MaxNewSize=64m"/>
+           -->
+         <classpath>
+           <pathelement location="dist/LiveLogParser.jar"/>
+         </classpath>
+        <classpath refid="classpath"/>
+       </java>
+  </target>
+  <target name="testApplication" description="Start this in prod">
+       <java  classname="com.bos.art.logParser.test.AvgLoadTime"
+           fork="true"
+           failonerror="true"
+           >
+         <classpath>
+           <pathelement location="dist/LiveLogParser.jar"/>
+         </classpath>
+        <classpath refid="classpath"/>
+       </java>
+  </target>
+  <target name="start-LiveLogParserServer" depends="jar-LiveLogParser" description="Start the live logParser Server...">
+       <java  classname="com.bos.art.logParser.server.LiveLogServer"
+           fork="true"
+           failonerror="true"
+           maxmemory="512m"
+           >
+         <arg value="-h"/> 
+         <classpath>
+           <pathelement location="dist/LiveLogParser.jar"/>
+         </classpath>
+        <classpath refid="classpath"/>
+       </java>
+  </target>
+  <target name="run-LiveLogParserTest" description="Start the live logParser Server...">
+       <java  classname="com.bos.art.logParser.test.FakeLoadTester"
+           fork="true"
+           failonerror="true"
+           maxmemory="128m"
+           >
+         <arg value="-h"/> 
+         <classpath>
+           <pathelement location="dist/LiveLogParser.jar"/>
+         </classpath>
+        <classpath refid="classpath"/>
+       </java>
+  </target>
+  
+  <target name="start-logServer" description="Start the logServer...">
+        <echo message="${ant.java.version}"/>
+       <java  classname="com.bos.art.logServer.main.LogServer"
+           fork="true"
+           failonerror="true" >
+           <!--<jvmarg line="-Xmx128m -XX:NewSize=16m -XX:MaxNewSize=32m"/> -->
+           <jvmarg line="-Xms32m -Xmx128m"/>
+         <arg value="${param}"/> 
+         <arg value="${param2}"/> 
+         <classpath>
+           <pathelement location="dist/LiveLogParser.jar"/>
+         </classpath>
+        <classpath refid="classpath"/>
+       </java>
+  </target>
+  <target name="compile-clean" description="remove class files and compile">
+    <delete>
+       <fileset dir="${logparser.bin}" includes="**/*.class"/>
+    </delete>
+     <depend srcdir="${logparser.src}"
+            destdir="${logparser.bin}"
+            cache="${logparser.bin}/depcache"
+            closure="yes"/>
+     <javac srcdir="${logparser.src}" destdir="${logparser.bin}" debug="on" optimize="off"  excludes="logs/,website/,**/test/**">
+        <classpath refid="classpath"/>
+     </javac>
+  </target>
+  
+  <target name="compile" depends="prepare" description="the default compiler task">
+     <depend srcdir="${logparser.src}"
+            destdir="${logparser.bin}"
+            cache="${logparser.bin}/depcache"
+            closure="yes"/>
+     <javac srcdir="${logparser.src}" destdir="${logparser.bin}" debug="on" optimize="off"  excludes="logs/,website/">
+        <classpath refid="classpath"/>
+     </javac>
+  </target>
+  <target name="compile_optimize">
+     <javac srcdir="${logparser.src}" destdir="${logparser.src}" debug="off" optimize="on" classpath="${classpath}" excludes="javaxml/**,logs/"/>
+  </target>
+  
+  <target name="compile-Art" description="task to build the art website"> 
+    <javac srcdir="${WebSite.src}"    destdir="${WebSite.src}"   debug="on" optimize="off">
+        <classpath refid="classpath"/>
+    </javac>
+  </target>
+  <target name="makejar" depends="prepare,compile" description="Makes a logParser.jar and places it in bin dir">
+     <jar jarfile="${logparser.bin}\logParser.jar" basedir="${logparser.bin}" includes="**\*.class"/>
+  </target>
+  <target name="export-makejar" depends="build-from-export" description="Makes a logParser.jar and places it in ./build/classess dir">
+    <copy tofile="./build/logParser/java/logParser.properties" file="./build/logParser/java/${propertiesFile}" overwrite="true" />
+    <jar destfile="./build/classess/LiveLogParser.jar">
+      <fileset dir="./build/classess"
+             includes="**/*.class"
+             />
+      <fileset dir="./build/logParser/java"
+             includes="**/*.properties" 
+             />
+     </jar>
+  </target>
+  <target name="clean-old-app" description="removes the old application">
+    <delete dir="../logParser/jars" failonerror="false"/>
+    <delete dir="../logParser/dist" failonerror="false"/>
+    <delete>
+      <fileset dir="../logParser" includes="*.sh"/>
+    </delete>
+    <delete>
+      <fileset dir="../logParser" includes="*.xml"/>
+    </delete>
+    <mkdir dir="../logParser/jars"/>
+    <mkdir dir="../logParser/dist"/>
+  </target>
+  <target name="export-install" depends="clean-old-app" description="installs the system.">
+     <antcall target="export-makejar">
+        <param name="propertiesFile" value="prodLogParser.properties"/>
+     </antcall>
+    <copy file="./build/classess/LiveLogParser.jar" todir="../logParser/dist"/>
+    <copy todir="../logParser/jars" >
+      <fileset dir="./build/logParser/jars" />
+    </copy>
+    <copy todir="../logParser" >
+      <fileset dir="./build/logParser" 
+         includes="*.sh"/>
+    </copy>
+    <copy todir="../logParser" >
+      <fileset dir="./build/logParser" 
+         includes="*.xml"/>
+    </copy>
+  </target>
+  <target name="export-install-test" depends="clean-old-app" description="installs the system.">
+     <antcall target="export-makejar">
+        <param name="propertiesFile" value="testLogParser.properties"/>
+     </antcall>
+    <copy file="./build/classess/LiveLogParser.jar" todir="../logParser/dist"/>
+    <copy todir="../logParser/jars" >
+      <fileset dir="./build/logParser/jars" />
+    </copy>
+    <copy todir="../logParser" >
+      <fileset dir="./build/logParser" 
+         includes="*.sh"/>
+    </copy>
+    <copy todir="../logParser" >
+      <fileset dir="./build/logParser" 
+         includes="*.xml"/>
+    </copy>
+  </target>
+  <target name="makeBoiseChartJar" depends="compile-Art">
+    <!-- boisechart.jar is a client-side jar. It is never run server-side, thus put it in special web-accessible folder -->
+    <jar destfile="${boisechart.bin}/boisechart.jar" basedir="${basedir}/website/classes" includes="com/bcop/art/chart/*.class">
+      <manifest>
+        <attribute name="Manifest-Version" value="1.0"                        />
+        <attribute name="Main-Class"       value="${main-class}"              />
+        <attribute name="Class-Path"       value="xercesImpl.jar xml-apis.jar"/>
+      </manifest>
+    </jar>
+    <!-- jar must be signed so that applet is permitted to get chart data from servers other than the one from which it came -->
+    <!--<signjar jar="${boisechart.bin}/boisechart.jar" alias="key1" storepass="boiseks" keystore="${boisechart.bin}/boisechart.ks"/> -->
+  </target>
+             
+  <!-- =================================================================== -->
+  <!-- Generates documentation from the source code using javadoc          -->
+  <!-- =================================================================== -->
+  <target name="docs">
+    <mkdir dir="${logparser.src}\docs\api"/>
+    <javadoc packagenames="com.bcop.*" sourcepath="${logparser.src}" destdir="${logparser.src}\docs\api"
+           classpath="${classpath}" author="Programmers" version="1.0" use="true"
+           windowtitle="Orderpoint API" doctitle="&lt;h1&gt;System Documentation&lt;\h1&gt;"
+           bottom="&lt;i&gt;Copyright &#169; Boise Cascade. All Rights Reserved.&lt;\i&gt;"/>
+  </target>
+  <!-- =================================================================== -->
+  <!-- Compiles the whole project                                          -->
+  <!-- =================================================================== -->
+  <target name="all" depends="prepare,compile,makejar"/>
+  <target name="send_home">
+    <echo message="usage: ant -DUsername, -DPasswdsend_home"/>
+    <exec dir="" command="cmd.exe /c echo ${deploy.passwd}|cvs -d :pserver:${deploy.user}@10.7.205.120:f:\mount_point\dev_nt_e\jupiter\boise\dev\cvsroot login"/>
+    <mkdir dir="${deploy.basedir}/logParser"/>
+    <cvs dest="${deploy.basedir}" 
+        cvsRoot=":pserver:${deploy.user}@10.7.205.120:f:\mount_point\dev_nt_e\jupiter\boise\dev\cvsroot"
+        package="logParser"
+        command="export -r Cardinal"
+        />
+    <jar jarfile="${deploy.basedir}\logParser.jar" basedir="${deploy.basedir}" includes="**\logParser\**"/>
+  </target>
+  <target name="dist.prod" depends="makejar,init-time" description="make the jar and put it on prod" >
+     <taskdef name="ssh"  classname="com.bcop.ant.tasks.SSH" />
+     <taskdef name="sftp" classname="com.bcop.ant.tasks.SFTP"/>
+     <echo message=""/>
+     <echo message="[ Copying logParser app to prod, ${remote.logparser}/bin ]"/>   
+     <sftp server="inet-db2.int.bcop.com" userid="artadmin" remotedir="${remote.logparser}" >
+       <!-- <fileset dir="${logparser.bin}" includes="logParser.jar" />-->
+       <write string="lcd ${logparser.bin}" />
+       <write string="put logParser.jar" />
+     </sftp>
+    <ssh server="inet-db2.int.bcop.com" userid="artadmin">
+      <write string="cd ${remote.logparser}"/>
+      <write string="cp logParser.jar logParser_${LDSTAMP}_jar"/>
+    </ssh>
+  </target>
+  <target name="dist.art-app1" depends="jar-LiveLogParser" description="Place this code on the art-app1 box">
+     <taskdef name="ssh"  classname="com.bcop.ant.tasks.SSH" />
+     <taskdef name="sftp" classname="com.bcop.ant.tasks.SFTP"/>
+    <sftp server="art-app1.int.bcop.com" userid="artadmin" remotedir="${prodLiveLogParser.dir}" >
+
+        <write string="cd jars"/>
+        <write string="lcd ${localLiveLogParserJars.dir}"/>
+        <write string="chmod 755 *.jar"/>
+        <write string="chmod 755 *.zip"/>
+        <write string="put *.jar"/>
+        <write string="put *.zip"/>
+        <write string="chmod 755 *.jar"/>
+        <write string="chmod 755 *.zip"/>
+        <write string="cd ../dist"/>
+        <write string="lcd ../dist"/>
+        <write string="chmod 755 LiveLogParser.jar"/>
+        <write string="put LiveLogParser.jar"/>
+        <write string="chmod 755 LiveLogParser.jar"/>
+        <write string="cd .."/>
+        <write string="lcd .."/>
+        <write string="put build.xml"/>
+    </sftp>
+    <ssh server="art-app1.int.bcop.com" userid="artadmin">
+      <write string="cd /opt/logParser"/>
+      <write string="/opt/logParser/removeProcess.sh"/>
+      <write string="/opt/logParser/startLogParser.sh"/>
+      <!--
+        <write string="/bin/rm -f /opt/logParser/serverlog.out"/>
+        <write string="nohup ant start-prodLiveLogParserServer -logfile serverlog.out 1&gt; temp.out 2&gt; error.out &amp; "/>
+        <write string="sleep 20"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsMinuteStats"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsHourlyStats"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsDailyStats"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsDailyPageStats"/>
+      -->
+      <write string="ps -efA |grep java"/>
+    </ssh>
+  </target>
+  <target name="dist.poc-art-app1" depends="jar-LiveLogParser" description="Place this code on the art-app1 box">
+     <taskdef name="ssh"  classname="com.bcop.ant.tasks.SSH" />
+     <taskdef name="sftp" classname="com.bcop.ant.tasks.SFTP"/>
+    <sftp server="poc-art-app1.int.bcop.com" userid="i0360d3" remotedir="${poc-stage-LiveLogParser.dir}" >
+        <write string="lcd ${localLiveLogParserJars.dir}"/>
+        <write string="rm -rf *.jar"/>
+        <write string="rm -rf *.zip"/>
+        <write string="put *.jar"/>
+        <write string="put *.zip"/>
+        <write string="chmod 777 *.jar"/>
+        <write string="chmod 777 *.zip"/>
+        <write string="lcd ../dist"/>
+        <write string="put LiveLogParser.jar"/>
+        <write string="chmod 777 LiveLogParser.jar"/>
+        <write string="lcd .."/>
+        <write string="put build.xml"/>
+        <write string="put removeProcess.sh"/>
+        <write string="put art.sh"/>
+        <write string="put startLogParser.sh"/>
+    </sftp>
+    <ssh server="poc-art-app1.int.bcop.com" userid="i0360d3">
+      <write string="cd /opt/art/staging"/>
+      <write string="sudo -u artadmin cp /opt/art/staging/LiveLogParser.jar /opt/art/logParser/dist"/>
+      <write string="sudo -u artadmin cp /opt/art/staging/*.jar /opt/art/logParser/jars"/>
+      <write string="sudo -u artadmin cp /opt/art/staging/*.zip /opt/art/logParser/jars"/>
+      <write string="sudo -u artadmin cp /opt/art/staging/*.xml /opt/art/logParser"/>
+      <write string="sudo -u artadmin cp /opt/art/staging/*.sh /opt/art/logParser"/>
+      <!--
+         <write string="sudo -u artadmin rm -f /opt/art/staging/* /opt/art/logParser"/>
+      -->
+      <write string="cd /opt/art/logParser"/>
+      <write string="sudo -u artadmin /opt/art/logParser/removeProcess.sh"/>
+      <write string="sudo -u artadmin /opt/art/logParser/startLogParser.sh"/>
+      <!--
+        <write string="/bin/rm -f /opt/logParser/serverlog.out"/>
+        <write string="nohup ant start-prodLiveLogParserServer -logfile serverlog.out 1&gt; temp.out 2&gt; error.out &amp; "/>
+        <write string="sleep 20"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsMinuteStats"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsHourlyStats"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsDailyStats"/>
+        <write string="./art.sh loadstatunit|com.bos.art.logParser.statistics.AccessRecordsDailyPageStats"/>
+      -->
+      <write string="ps -efA |grep java"/>
+    </ssh>
+  </target>
+ 
+  <target name="dist.scripts" >
+     <taskdef name="ssh"  classname="com.bcop.ant.tasks.SSH" />
+     <taskdef name="sftp" classname="com.bcop.ant.tasks.SFTP"/>
+    <echo message=""/>
+    <echo message="[ Copying logParser scritps to prod, ${remote.logparser}/bin ]"/>   
+    <sftp server="inet-db2.int.bcop.com" userid="artadmin" remotedir="${remote.logparser.scripts}">
+    <!--<fileset dir="${logparser.scripts}" includes="*.xml *.sh *.pkg" /> -->
+      <write string="lcd ${logparser.scripts}"/>
+      <write string="put *.xml"/>
+      <write string="put *.sh"/>
+      <write string="put *.pkg"/>
+      <write string="exit"/>
+    </sftp>
+    <sftp server="inet-db2.int.bcop.com" userid="artadmin" remotedir="${remote.logparser.scripts}/SQL">
+      <!--<fileset dir="${logparser.scripts}../SQL" includes="*.pkg" />-->
+      <write string="lcd ${logparser.scripts}../SQL" />
+      <write string="put *.pkg" />
+      <write string="exit"/>
+    </sftp>
+    <ssh server="inet-db2.int.bcop.com" userid="artadmin">
+      <write>cd /apps/artadmin/art/scripts</write>
+      <write>chmod 755 *.sh *.xml *.pkg</write>
+      <write>for i in *.xml *.sh *.pkg; do </write>
+      <write>dos2unix -ascii $i $i </write>
+      <write>done</write>
+      <write>chmod 755 *.sh *.xml *.pkg</write>
+    </ssh>
+  </target>
+  
+  <target name="build-jboss-local" depends="Build-Art-Ear" description="Build and deploy website to JBOSS_HOME">
+    <copy file="${logparser.bin}/art.ear" tofile="${jboss.deploy}/art.ear"/>
+  </target>
+  <target name="jar-LiveLogParser" depends="compile" description="compile the code, and build the jar for LiveLogParser">
+        <!--
+            don't need to delete, it will be if it needs to rebuild
+            <delete file="${logparser.dist}/LiveLogParser.jar"/> 
+            -->
+        <jar jarfile="${logparser.dist}/LiveLogParser.jar">
+            <fileset dir="${logparser.bin}" includes="**/*.class"/>
+            <fileset dir="${logparser.src}" includes="**/*.properties"/>
+        </jar> 
+        <jar jarfile="${logparser.dist}/LiveLogParserBeans.jar">
+            <fileset dir="${logparser.bin}" includes="**/broadcast/beans/*.class"/>
+            <fileset dir="${logparser.bin}" includes="**/logParser/records/*.class"/>
+            <fileset dir="${logparser.src}" includes="**/*.properties"/>
+        </jar> 
+  </target>
+  <target name="clean-bin">
+    <delete>
+      <fileset dir="${logparser.bin}" includes="**/**"/>
+   </delete>
+  </target>
+  <target name="Build-Art-Ear" depends="clean-bin,compile-Art">
+     <echo message="Build Art Ear is being called ${WebSite.src}"/>
+     <antcall target="makeBoiseChartJar"/>
+     <!-- 
+     <jar jarfile="${logparser.bin}/loadtest.jar">
+        <fileset dir="${WebSite.src}" includes="**/ejb/**"/>
+        <zipfileset dir="${WebSite.src}/com/bcop/art/ejb/loadtest/META-INF" includes="*.xml" prefix="meta-inf"/>
+     </jar>
+     -->
+     <!--
+     <ejbjar srcdir="${WebSite.src}"
+             descriptordir="${WebSite.src}/com/bcop/art/ejb/loadtest/META-INF"
+             basejarname="loadtest">
+       <jBoss destdir="${logparser.bin}"></jBoss>
+       <include name="**/ejb-jar.xml,**/jaws.xml, **/ejb/*.class, **/ejb/*.java"/>
+     </ejbjar>
+     -->
+    
+    <war warfile="${logparser.bin}/artadmin.war" webxml="${WebSite.src}/web.xml">
+      <fileset dir="${WebSite.src}/.."      includes="*.html,**/*.jsp,**/*.css,**/*.dtd,**/common/**,chart.jar,**/boisechart/*.jar"/>
+<!--  <fileset dir="${logparser.bin}"       includes="boisechart/boisechart.jar"/>    -->
+<!--  <fileset dir="${WebSite.src}/../jars" includes="xml-apis.jar, xercesImpl.jar"/> -->
+      <classes dir="${WebSite.src}"         includes="**/*.class,**/*.tld" excludes="**/com/bcop/art/chart/**"    />
+      <!-- Put all jars into "lib" except for xml-apis.jar and xercesImpl.jar, which are never needed on the server side (they are needed only for boisechart) -->
+      <lib     dir="${WebSite.src}/../jars" includes="*.jar"      excludes="xml-apis.jar,xercesImpl.jar" />
+    </war>
+    <ear earfile="${logparser.bin}/art.ear" appxml="${WebSite.src}/application.xml">
+      <fileset dir="${logparser.bin}" includes="*.war"/>
+    </ear>
+  </target>
+  <target name="build-jboss-225" depends="Build-Art-Ear">
+  <!--
+     <javac srcdir="${WebSite.src}"
+           destdir="${WebSite.src}"
+           debug="on"
+           optimize="off" 
+       classpath="${classpath.WebSite}"
+       >
+    </javac>
+     <jar jarfile="${logparser.bin}\ArtSite.jar"
+        basedir="${WebSite.src}"
+        includes="**\*.class"
+     />
+     -->
+     <ftp server="10.3.12.225" userid="artadmin" password="abc123" remotedir="${remote.JBoss.deploy}" binary="yes">
+       <fileset dir="${logparser.bin}" includes="art.ear" />
+     </ftp>
+     <!--
+     <telnet server="10.3.12.225"> sftp11656.out
+       <read>ogin:</read>
+       <write>artadmin</write>
+       <read>assword:</read>
+       <write>abc123</write>
+       <read>]$</read>
+       <write string="cd  ${remote.tomcat.art}"/>
+       <read>]$</read>
+       <write string="/opt/jdk1.2.2/bin/jar -xvf ArtSite.jar"/>
+       <read>]$</read>
+     </telnet>
+     -->
+  </target>
+  
+  <!-- =================================================================== -->
+  <!-- Cleans up generated stuff                                           -->
+  <!-- =================================================================== -->
+  <target name="clean">
+    <echo message="cleaning build directories"/>
+    <delete>
+      <fileset dir="${logparser.src}" includes="**/*.class"/>
+    </delete>
+    <delete>
+      <fileset dir="${logparser.bin}" includes="**/*.class"/>
+      <fileset dir="${logparser.bin}" includes="**/*.jar"/>
+      <fileset dir="${logparser.dist}" includes="**/*.jar"/>
+    </delete>
+  </target>
+  <target name="load-pages">
+    <get src="http://localhost:8080/art/servlet/ArtController?Report=005&amp;Date=20030718" dest="./temp.html"/>
+  </target>
+  <target name="build-from-export" depends="export">
+     <mkdir dir="./build/classess"/>
+     <javac srcdir="./build/logParser/java" destdir="./build/classess" debug="on" optimize="off"  excludes="logs/,website/,**/test/**">
+        <classpath refid="export_classpath"/>
+     </javac>
+     
+  </target>
+  <target name="export" depends="clean-export">
+    <echo message="usage: ant -Ddeploy.ReleaseTag=[cvs Freeze Tag or Release] export"/>
+    <cvspass cvsroot="${cvsroot}" passfile="/export/home/artadmin/.cvspass" password="${deploy.passwd}"/>
+    <echo message="user: ${cvsroot} + password ${deploy.passwd}"/>
+    <mkdir dir="./build/logParser"/>
+    <cvs dest="./build" cvsRoot="${cvsroot}" package="logParser" command="export -r ${deploy.ReleaseTag}"/>
+  </target>
+  <target name="clean-export">
+    <delete dir="./build" failonerror="false"/>
+    <mkdir dir="./build"/>
+  </target>
+  <target name="help">
+    <echo message=""/> 
+    <echo message="ant                    - builds default projects"/>
+    <echo message="ant dist.beta          - distributes app to beta"/>
+    <echo message="ant dist.prod          - distributes app to prod"/>
+    <echo message="ant dist.scripts       - distributes scripts to prod"/>
+    <echo message="ant compile_optimize   - builds java optimized"/>
+    <echo message="ant build-tomcat-225   - Builds the Website for the Art Tool and dist to 225Box"/>
+    <echo message="ant docs               - builds javadocs"/>
+    <echo message="ant all                - build everything"/>
+    <echo message="ant clean              - cleans build directory"/> 
+  </target>
+</project>
