@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.StackTraceBean" 
+    table="StackTraces"
+>
+
+    <id
+        name="traceId"
+        type="int"
+        column="Trace_id"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="traceKey"
+        type="java.lang.String"
+        column="Trace_Key"
+    />
+
+    <property
+        name="traceMessage"
+        type="java.lang.String"
+        column="Trace_Message"
+    />
+
+    <property
+        name="traceTime"
+        type="java.sql.Timestamp"
+        column="Trace_Time"
+        length="19"
+    />
+
+<!--
+NOT SURE HOW THIS WORKS so leaving it out...
+    <property
+        name="artUserId"
+        type="int"
+        column="ART_User_id"
+        length="11"
+    />
+-->
+
+    <many-to-one
+        name="artUser"
+        type="com.bos.art.model.jdo.UserBean"
+        not-null="false"
+        >
+        <column name="ART_User_id"/>
+    </many-to-one>
+</class>
+</hibernate-mapping>
+

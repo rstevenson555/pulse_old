@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.RloadMachin" 
+    table="Rload_Machines"
+>
+
+    <id
+        name="machineId"
+        type="int"
+        column="Machine_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="machineName"
+        type="java.lang.String"
+        column="MachineName"
+        length="50"
+    />
+    <property
+        name="shortName"
+        type="java.lang.String"
+        column="shortName"
+        length="10"
+    />
+    <property
+        name="machineType"
+        type="java.lang.String"
+        column="machineType"
+        length="1"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>

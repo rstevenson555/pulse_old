@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.StackTrac" 
+    table="StackTraces"
+>
+
+    <id
+        name="traceId"
+        type="java.lang.Integer"
+        column="Trace_id"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="traceKey"
+        type="java.lang.String"
+        column="Trace_Key"
+        length="50"
+    />
+    <property
+        name="traceMessage"
+        type="java.lang.String"
+        column="Trace_Message"
+        length="250"
+    />
+    <property
+        name="traceTime"
+        type="java.sql.Timestamp"
+        column="Trace_Time"
+        length="19"
+    />
+    <property
+        name="artUserId"
+        type="java.lang.Integer"
+        column="ART_User_id"
+        length="11"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional one-to-many association to StackTraceDetail -->
+    <set
+        name="stackTraceDetails"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Trace_id" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.StackTraceDetail"
+        />
+    </set>
+    <!-- bi-directional one-to-many association to StackTraceBeanContainer -->
+    <!--
+    <set
+        name="stackTraceBeanContainers"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Trace_id" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.StackTraceBeanContainer"
+        />
+    </set>
+    -->
+
+</class>
+</hibernate-mapping>

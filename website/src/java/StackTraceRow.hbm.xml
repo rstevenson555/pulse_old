@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.StackTraceRow" 
+    table="StackTraceRows"
+>
+
+    <id
+        name="rowId"
+        type="java.lang.Integer"
+        column="Row_id"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="rowMessage"
+        type="java.lang.String"
+        column="Row_Message"
+        length="250"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional one-to-many association to StackTraceDetail -->
+    <set
+        name="stackTraceDetails"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Row_id" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.StackTraceDetail"
+        />
+    </set>
+
+</class>
+</hibernate-mapping>

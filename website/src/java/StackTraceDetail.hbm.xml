@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.StackTraceDetail" 
+    table="StackTraceDetails"
+>
+
+    <composite-id name="comp_id" class="com.bos.art.model.jdo.StackTraceDetailPK">
+        <key-property 
+            name="stackDepth" 
+            column="Stack_Depth" 
+            type="java.lang.Integer"
+            length="11"
+        />
+        <!-- bi-directional many-to-one association to StackTrac -->
+        <key-many-to-one
+        	name="stackTrac"
+	        class="com.bos.art.model.jdo.StackTrac"
+	    >
+    	    <column name="Trace_id" />
+	    </key-many-to-one>
+    </composite-id>    
+
+
+    <!-- associations -->
+    <!-- bi-directional many-to-one association to StackTraceRow -->
+    <many-to-one
+        name="stackTraceRow"
+        class="com.bos.art.model.jdo.StackTraceRow"
+        not-null="true"
+    >
+        <column name="Row_id" />
+    </many-to-one>
+
+</class>
+</hibernate-mapping>

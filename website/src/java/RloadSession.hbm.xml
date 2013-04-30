@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.RloadSession" 
+    table="Rload_Sessions"
+>
+
+    <id
+        name="sessionId"
+        type="int"
+        column="Session_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="ipaddress"
+        type="java.lang.String"
+        column="IPAddress"
+        length="20"
+    />
+    <property
+        name="sessionTxt"
+        type="java.lang.String"
+        column="sessionTXT"
+        length="50"
+    />
+    <property
+        name="browserType"
+        type="java.lang.String"
+        column="browserType"
+        length="125"
+    />
+    <property
+        name="userId"
+        type="int"
+        column="User_ID"
+        length="11"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>

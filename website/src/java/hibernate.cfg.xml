@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<!DOCTYPE hibernate-configuration
+
+    PUBLIC "-//Hibernate/Hibernate Configuration DTD//EN"
+
+    "http://hibernate.sourceforge.net/hibernate-configuration-2.0.dtd">
+
+
+
+<hibernate-configuration>
+
+
+
+    <session-factory>
+
+
+
+        <!-- properties -->
+
+        <!--<property name="connection.datasource">java:comp/env/jdbc/mysqldb</property>
+
+        <property name="dialect">net.sf.hibernate.dialect.MySQLDialect</property>
+
+        <property name="show_sql">true</property>
+
+        <property name="use_outer_join">false</property>-->
+
+
+
+        <property name="connection.datasource">java:comp/env/jdbc/postgres</property>
+
+        <property name="dialect">net.sf.hibernate.dialect.PostgreSQLDialect</property>
+
+        <property name="show_sql">true</property>
+
+        <property name="use_outer_join">true</property>
+
+
+
+
+
+        <!--
+
+        <property name="transaction.factory_class">net.sf.hibernate.transaction.JTATransactionFactory</property>
+
+        <property name="jta.UserTransaction">java:comp/UserTransaction</property>
+
+        -->
+
+
+
+        <!-- Mapping files -->
+
+	<mapping resource="AccessRecord.hbm.xml"/>
+
+	<mapping resource="Accumulator.hbm.xml"/>
+
+	<mapping resource="AccumulatorStat.hbm.xml"/>
+
+	<mapping resource="App.hbm.xml"/>
+
+	<mapping resource="Browser.hbm.xml"/>
+
+	<mapping resource="BrowserStat.hbm.xml"/>
+
+	<mapping resource="Context.hbm.xml"/>
+
+	<mapping resource="DailyContextStat.hbm.xml"/>
+
+	<mapping resource="DailyPageLoadTim.hbm.xml"/>
+
+	<mapping resource="DailySummary.hbm.xml"/>
+
+	<mapping resource="ExternalAccessRecord.hbm.xml"/>
+
+	<mapping resource="ExternalStat.hbm.xml"/>
+
+	<mapping resource="FiveSecondLoad.hbm.xml"/>
+
+	<mapping resource="HistoricalExternalStatistic.hbm.xml"/>
+
+	<mapping resource="HourlyStatistic.hbm.xml"/>
+
+	<mapping resource="Machin.hbm.xml"/>
+
+	<mapping resource="MinuteStatistic.hbm.xml"/>
+
+	<mapping resource="Pag.hbm.xml"/>
+
+	<mapping resource="PagesTest.hbm.xml"/>
+
+	<mapping resource="RloadAccessRecord.hbm.xml"/>
+
+	<mapping resource="RloadApp.hbm.xml"/>
+
+	<mapping resource="RloadContext.hbm.xml"/>
+
+	<mapping resource="RloadMachin.hbm.xml"/>
+
+	<mapping resource="RloadPag.hbm.xml"/>
+
+	<mapping resource="RloadSession.hbm.xml"/>
+
+	<mapping resource="RloadUser.hbm.xml"/>
+
+	<mapping resource="Session.hbm.xml"/>
+
+	<mapping resource="User.hbm.xml"/>
+
+    <mapping resource="StackTrac.hbm.xml"/>
+
+    <mapping resource="StackTraceRow.hbm.xml"/>
+
+    <mapping resource="StackTraceDetail.hbm.xml"/>
+
+    <mapping resource="StackTraceBeanContainer.hbm.xml"/>
+
+    <mapping resource="ExternalMinuteStatistic.hbm.xml"/>
+
+    </session-factory>
+
+
+
+</hibernate-configuration>
+
+
+

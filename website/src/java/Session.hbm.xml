@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.SessionBean" 
+    table="Sessions"
+>
+
+    <id
+        name="sessionId"
+        type="int"
+        column="Session_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="ipaddress"
+        type="java.lang.String"
+        column="IPAddress"
+        length="20"
+    />
+    <property
+        name="sessionTxt"
+        type="java.lang.String"
+        column="sessionTXT"
+        length="50"
+    />
+    <property
+        name="browserType"
+        type="java.lang.String"
+        column="browserType"
+        length="255"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+    <property
+        name="insertTime"
+        type="java.sql.Timestamp"
+        column="insertTime"
+        length="19"
+    />
+    <property
+        name="userId"
+        type="int"
+        column="User_ID"
+        length="11"
+        not-null="false"
+    />
+    <property
+        name="contextId"
+        type="java.lang.Integer"
+        column="Context_ID"
+        length="11"
+        not-null="false"
+    />
+    <property
+        name="sessionStartTime"
+        type="java.sql.Timestamp"
+        column="sessionStartTime"
+        length="19"
+    />
+    <property
+        name="sessionEndTime"
+        type="java.sql.Timestamp"
+        column="sessionEndTime"
+        length="19"
+    />
+    <property
+        name="sessionHits"
+        type="java.lang.Integer"
+        column="sessionHits"
+        length="11"
+        not-null="false"
+    />
+    <property
+        name="sessionDuration"
+        type="java.lang.Long"
+        column="sessionDuration"
+        length="20"
+        not-null="false"
+    />
+
+    <!-- associations -->
+    <!-- bi-directional one-to-many association to AccessRecord -->
+    <!--
+    <set
+        name="accessRecords"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Session_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.AccessRecordBean"
+        />
+    </set>
+    -->
+    <!-- bi-directional one-to-many association to FiveSecondLoad -->
+    <!--
+    <set
+        name="fiveSecondLoads"
+        lazy="true"
+        inverse="true"
+    >
+        <key>
+            <column name="Session_ID" />
+        </key>
+        <one-to-many 
+            class="com.bos.art.model.jdo.FiveSecondLoadBean"
+        />
+    </set>
+    -->
+
+</class>
+</hibernate-mapping>

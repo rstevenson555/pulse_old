@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-2.0.dtd" >
+    
+<hibernate-mapping>
+<!-- 
+    Created by the Middlegen Hibernate plugin
+
+    http://boss.bekk.no/boss/middlegen/
+    http://hibernate.sourceforge.net/
+-->
+
+<class 
+    name="com.bos.art.model.jdo.RloadUser" 
+    table="Rload_Users"
+>
+
+    <id
+        name="userId"
+        type="int"
+        column="User_ID"
+    >
+        <generator class="assigned" />
+    </id>
+
+    <property
+        name="userName"
+        type="java.lang.String"
+        column="userName"
+        length="25"
+    />
+    <property
+        name="fullName"
+        type="java.lang.String"
+        column="fullName"
+        length="64"
+    />
+    <property
+        name="companyName"
+        type="java.lang.String"
+        column="companyName"
+        length="50"
+    />
+    <property
+        name="lastModTime"
+        type="java.sql.Timestamp"
+        column="lastModTime"
+        length="19"
+    />
+
+    <!-- associations -->
+
+</class>
+</hibernate-mapping>
