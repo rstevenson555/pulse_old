@@ -1,0 +1,357 @@
+
+CREATE OR REPLACE PACKAGE LOGPARSER
+AS
+  PROCEDURE GET_FK_PROC;
+  FUNCTION GETPAGEID (pName IN VARCHAR2) RETURN NUMBER;
+  FUNCTION GETUSERID (sUser IN VARCHAR2) RETURN NUMBER;
+  FUNCTION GETMACHINEID (sMachine IN VARCHAR2) RETURN NUMBER;
+  FUNCTION GETSESSIONID (sName IN VARCHAR2) RETURN NUMBER;
+  PROCEDURE UPDATEBROWSERINFO (nSessionID IN NUMBER, sBrowser IN VARCHAR2);
+  PROCEDURE POPULATE_ACCESSRECORDS;
+  PROCEDURE DELETE_FULL_DATA_STAGING;
+  PROCEDURE GET_TIME(t OUT NUMBER);
+  PROCEDURE ValidateDailyLoadTimes(ddate VARCHAR2);
+  PROCEDURE INORUPDLT (pageid IN NUMBER, ddate VARCHAR2, nas in NUMBER); 
+  PROCEDURE DELETE_ACCESSRECORDS(sdate VARCHAR2); 
+END LOGPARSER;
+/
+CREATE OR REPLACE PACKAGE BODY LOGPARSER
+AS
+ 
+-- test
+-- This Procedure populates the Foriegn key values
+-- which will be used to populate the access records table.
+-- it pulls the values into corresponding fields in this staging
+-- table, and as the fields are pulled in, it ensures that the
+-- corresponding database tables have all the records needed
+-- such that there will not be a Foriegn key contraint violation.
+--
+  PROCEDURE GET_FK_PROC IS
+    TYPE pageidTab IS TABLE OF NUMBER(10) INDEX BY BINARY_INTEGER;
+    TYPE useridTab IS TABLE OF NUMBER(10) INDEX BY BINARY_INTEGER;
+    TYPE sessionidTab IS TABLE OF NUMBER(10) INDEX BY BINARY_INTEGER;
+    TYPE machineidTab IS TABLE OF NUMBER(10) INDEX BY BINARY_INTEGER;
+    TYPE adateTab IS TABLE OF DATE INDEX BY BINARY_INTEGER;
+    TYPE nextRowIntTab is TABLE of NUMBER(10) INDEX BY BINARY_INTEGER;
+    TYPE LoadTimeTab is TABLE of NUMBER(10) INDEX BY BINARY_INTEGER;
+    CURSOR myCursor is select * from FULL_DATA_STAGING; 
+    pageidt pageidTab;
+    useridt useridTab;
+    sessionidt sessionidTab;
+    machineidt machineidTab;
+    adatet adateTab;
+    nextRowIntt nextRowIntTab;
+    loadTimet LoadTimeTab;
+    pageid2 number;
+    userid2 number;
+    sessionid2 number;
+    machineid2 number;
+    rownum  number:=0;
+    adate DATE;
+    bulkint INT;
+    t1 CHAR(5);
+    t2 CHAR(5);
+    t3 CHAR(5);
+
+ 
+    --  
+    --  Currently only one tag contains a brower info, and that
+    --  is put into the database through the sessions table. 
+    --  
+    browserPage VARCHAR2(50);
+  BEGIN
+    bulkint:=0;
+    browserPage:='docs/index';
+    get_time(t1);
+    FOR nextRow in myCursor 
+    LOOP
+      bulkint :=bulkint+1;
+      rownum:=rownum + 1;
+      nextRowIntt(bulkint) :=nextRow.FDS_PK;
+      pageidt(bulkint) := getPageID(nextRow.pagename);
+      useridt(bulkint) := getUserID(nextRow.username);
+      sessionidt(bulkint) := getSessionID(nextRow.sessionName);
+      machineidt(bulkint) := getMachineID(nextRow.machineName);
+      adatet(bulkint) :=TO_DATE(nextRow.TIME_ASCII,'MM/DD/YYYY, HH:MI:SS PM');
+      loadtimet(bulkint) :=nextRow.LOADTIME;
+      IF nextRow.pagename=browserPage THEN
+        get_time(t3);
+        -- updateBrowserINFO(nextRow.sessionID,nextRow.BrowserTYPE);
+      END IF;
+      IF bulkint=1000 THEN
+        FORALL i IN 1..1000
+          INSERT INTO ACCESSRECORDS (RECORDPK, PAGE_ID, USER_ID, TIME,
+               SESSION_ID, MACHINE_ID, LOADTIME) VALUES 
+               (RECORDPK_SEQ.NEXTVAL, pageidt(i), useridt(i), 
+               adatet(i), sessionidt(i), machineidt(i), 
+               loadtimet(i));
+--         update FULL_DATA_STAGING set 
+--                      pageid=pageidt(i),
+--                      USREID=useridt(i),
+--                      SESSIONID=sessionidt(i),
+--                      MACHINEID=machineidt(i),
+--                      TIME=adatet(i)
+--                      WHERE FULL_DATA_STAGING.FDS_PK=nextRowIntt(i);
+        bulkint:=0;
+      END IF;
+      IF 
+        MOD(rownum,1000) = 0
+      THEN
+        commit;
+        get_time(t2);
+       -- DBMS_OUTPUT.PUT_LINE('1000 Commits' || TO_CHAR(t2 - t1));	
+        get_time(t1);
+      END IF;
+    END LOOP;
+      commit;
+  END GET_FK_PROC;
+
+--
+--  This function accepts a parameter pName, and returns
+--  the Page_ID (As a NUMBER) that corresponds to 
+--  the pName as pageName  from the pages table. 
+--  If there was no PageName record corresponding
+--  to the pName, then a new record is created, and the
+--  Page_ID of this new record is returned.
+--
+  FUNCTION GETPAGEID (pName IN VARCHAR2) RETURN NUMBER IS
+    retpageid NUMBER;
+    seq_num NUMBER;
+  BEGIN
+    select p.page_id into retpageid 
+             from pages p where p.pagename=pName;
+    RETURN retpageid;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        select PAGE_ID_SEQ.NEXTVAL into seq_num from DUAL;
+        INSERT INTO PAGES (PAGE_ID, PAGENAME) VALUES 
+                        (seq_num,pName);
+        RETURN seq_num;
+  END getPageid;
+
+--
+--  This function accepts a parameter sUser, and returns
+--  the user_ID (As a NUMBER) that corresponds to 
+--  the sUser as userName  from the users table. 
+--  If there was no userName record corresponding
+--  to the sUser, then a new record is created, and the
+--  user_ID of this new record is returned.
+--
+  FUNCTION GETUSERID (sUser IN VARCHAR2) RETURN NUMBER IS
+    retuserid NUMBER;
+    seq_num NUMBER;
+  BEGIN
+    select u.user_id into retuserid 
+             from users u where u.username=sUser;
+    RETURN retuserid;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        select USER_ID_SEQ.NEXTVAL into seq_num from DUAL;
+        INSERT INTO USERS (USER_ID, USERNAME) VALUES 
+                       (seq_num,sUser);
+        RETURN seq_num;
+  END GETUSERID;
+
+
+--
+--  This function accepts a parameter sName, and returns
+--  the session_id (As a NUMBER) that corresponds to 
+--  the sName as sessionName  from the sessions table. 
+--  If there was no sessionName record corresponding
+--  to the sName, then a new record is created, and the
+--  session_ID of this new record is returned.
+--
+  FUNCTION GETSESSIONID (sName IN VARCHAR2) RETURN NUMBER IS
+    retsessionid NUMBER;
+    seq_num NUMBER;
+  BEGIN
+    select s.session_id into retsessionid 
+             from sessions s where s.SESSIONTXT=sName;
+    RETURN retsessionid;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        select session_id_seq.nextval into seq_num from DUAL;
+        INSERT INTO SESSIONS (SESSION_ID, SESSIONTXT) VALUES 
+                             (seq_num,sName);
+        RETURN seq_num; 
+  END GETSESSIONID;
+
+--
+--  This function accepts a parameter sMachine , and returns
+--  the machine_id (As a NUMBER) that corresponds to 
+--  the sMachine as machineName  from the machines table. 
+--  If there was no machineName record corresponding
+--  to the sMachine, then a new record is created, and the
+--  machine_ID of this new record is returned.
+--
+  FUNCTION GETMACHINEID (sMachine IN VARCHAR2) RETURN NUMBER IS
+    retMachineid NUMBER;
+    seq_num NUMBER;
+  BEGIN
+    select m.machine_ID into retMachineid 
+           from machines m where m.machineName=sMachine;
+
+    RETURN retMachineid;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        select MACHINE_ID_SEQ.NEXTVAL into seq_num from DUAL;
+        INSERT INTO Machines (Machine_ID, MachineNAME) VALUES 
+                       (seq_num,sMachine);
+        RETURN seq_num;
+  END GETMACHINEID;
+
+--
+--  This proceedure updates the browser info if it exists in 
+--  Database that we are updating from.
+--  The Browser info will only be updated for the docs/index page, 
+--  As the other page lines will not contain browser information.
+--
+  PROCEDURE UPDATEBROWSERINFO (nSessionID IN NUMBER, sBrowser IN VARCHAR2) IS
+    retsessionid NUMBER;
+  BEGIN
+    update SESSIONS set 
+            BROWSERTYPE=sBrowser 
+            WHERE SESSIONS.SESSION_ID=nSessionID;
+  END UPDATEBROWSERINFO;
+--
+--  This proceedure will populate the accessrecords table with the 
+--  data stored in the Full_data_staging table.  Once the data has been
+--  populated, the full_data_staging table will be truncated.
+--
+  PROCEDURE POPULATE_ACCESSRECORDS IS
+    CURSOR myCursor is select * from FULL_DATA_STAGING; 
+    rownumb NUMBER; 
+  BEGIN
+    rownumb:=0;
+    FOR nextRow in myCursor 
+    LOOP
+      rownumb:=rownumb+1;
+      INSERT INTO ACCESSRECORDS (RECORDPK, PAGE_ID, USER_ID, TIME,
+           SESSION_ID, MACHINE_ID, LOADTIME) VALUES 
+           (RECORDPK_SEQ.NEXTVAL, nextRow.PAGEID, nextRow.USREID, 
+            nextRow.TIME, nextRow.SESSIONID, nextRow.MACHINEID, 
+            nextRow.LOADTIME);
+      
+      IF 
+        MOD(rownumb,500) = 0
+      THEN
+        commit;
+      END IF;
+      --dbms_output.put_line('Finished Commit');
+    END LOOP;
+      commit;
+  END POPULATE_ACCESSRECORDS;
+
+--
+--  This procedure will delete the data from full data staging,
+--  Furthermore it will do it 500 elements at a time so that 
+--  You don't exceed your rollback segment size. 
+--
+  PROCEDURE DELETE_ACCESSRECORDS(sdate VARCHAR2) IS
+    rownumber NUMBER:=500; 
+    commitAmount NUMBER:=500;
+    totalRws NUMBER;
+	currentRows NUMBER :=500;
+	iterations NUMBER :=1;
+	b BOOLEAN :=true;
+  BEGIN
+    totalRws:=0;
+    WHILE b 
+    LOOP
+	  WHILE iterations<1000
+	  LOOP
+      	DELETE from accessrecords where rownum<commitAmount and time<to_date(sdate,'yyyymmdd');
+	  	commit;
+		iterations:=iterations +1;
+	  END LOOP;
+      select count(*) into currentRows from accessrecords where time<to_date(sdate,'yyyymmdd'); 
+
+	  IF 
+	     currentRows>0
+	  THEN
+	     b:=true;
+		 iterations:=1;
+	  ELSE
+		 b:=false;
+      END IF; 
+    END LOOP;
+      commit;
+  END DELETE_ACCESSRECORDS;
+
+--
+--  This procedure will delete the data from full data staging,
+--  Furthermore it will do it 500 elements at a time so that 
+--  You don't exceed your rollback segment size. 
+--
+  PROCEDURE DELETE_FULL_DATA_STAGING IS
+    rownumber NUMBER:=500; 
+    commitAmount NUMBER:=500;
+    totalRws NUMBER;
+  BEGIN
+    SELECT MAX(fds.FDS_PK) INTO totalRws 
+      FROM FULL_DATA_STAGING fds;
+    WHILE rownumber <= totalRws+commitAmount 
+    LOOP
+      DELETE from full_data_staging where FDS_PK<=rownumber;
+      rownumber:=rownumber+commitAmount;
+      commit;
+    END LOOP;
+      commit;
+  END DELETE_FULL_DATA_STAGING;
+--
+--  Get the system time.
+--
+  PROCEDURE GET_TIME(t OUT NUMBER) IS
+  BEGIN
+    SELECT TO_CHAR(SYSDATE,'SSSS') INTO t FROM DUAL;
+  END GET_TIME; 
+  
+--
+--  This procedure fills the DailyLoadTimes table with 
+--  values so that every page has an entry for every machine 
+--  for every day.
+--
+  PROCEDURE ValidateDailyLoadTimes (ddate VARCHAR2) IS
+   -- retpageid NUMBER;
+   -- seq_num NUMBER;
+    nas1 NUMBER;
+    nas3 NUMBER;
+    nas4 NUMBER;
+    CURSOR dltCursor is select * from pages; 
+    
+  BEGIN
+    select machine_id into nas1 from machines where machinename='NAS1';
+    select machine_id into nas3 from machines where machinename='NAS3';
+    select machine_id into nas4 from machines where machinename='NAS4';
+    FOR nextRow in dltCursor 
+    LOOP
+    -- Update each of the three Nas boxes
+      inorupdlt(nextRow.page_ID,ddate,nas1);
+      inorupdlt(nextRow.page_ID,ddate,nas3);
+      inorupdlt(nextRow.page_ID,ddate,nas4);
+    END LOOP;
+    COMMIT;
+
+    RETURN;
+  END ValidateDailyLoadTimes;
+
+  PROCEDURE INORUPDLT(pageid IN NUMBER, ddate IN VARCHAR2, nas in NUMBER) IS
+  seq_numy NUMBER;
+  tempID NUMBER;
+  BEGIN
+    SELECT DAILYLOADTIMES_ID into tempID from dailyloadtimes where
+           page_id=pageid AND 
+           TO_CHAR(day,'YYYYMMDD')=ddate AND
+           machine_id=nas;
+    RETURN;    
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        select DAILYLOADTIMES_ID_SEQ.NEXTVAL into seq_numy from DUAL;
+        INSERT INTO DailyLoadTimes
+               (DAILYLOADTIMES_ID, PAGE_ID,DAY, MACHINE_ID ) VALUES 
+                       (seq_numy,pageid,TO_DATE(ddate,'YYYYMMDD'),nas);
+    RETURN;
+  END INORUPDLT;
+END LOGPARSER;
+/
+show error
