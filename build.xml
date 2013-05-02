@@ -45,6 +45,17 @@
         </fileset>
         <pathelement location="./build/logParser/java"/>
     </path>
+
+    <path id="export_classpath2">
+        <fileset dir="./jars">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="./jars">
+            <include name="**/*.zip"/>
+        </fileset>
+        <pathelement location="./java"/>
+    </path>
+    
     
     <path id="classpath">
         <fileset dir="${logparser.jars}">
@@ -520,7 +531,7 @@
         <mkdir dir="./build/classess"/>
         
         <copy todir="./build" >
-            <fileset dir="./build/logParser/java/"
+            <fileset dir="./java/"
                 includes="**/*.properties,**/*.yml"
             />
         </copy>
@@ -529,10 +540,32 @@
             <fileset dir="./build/classess"
                includes="**/*.class"
              />
-            <fileset dir="./build/logParser/java"
+            <fileset dir="./java"
                includes="**/*.properties,**/*.yml" 
              />
         </jar>
+
+        <copy file="./build/classess/LiveLogParser.jar" overwrite="true" todir="/opt/art/logParser/dist"/>
+
+        <copy todir="/opt/art/logParser/jars" >
+            <fileset dir="./jars" />
+        </copy>
+
+        <copy todir="/opt/art/logParser" overwrite="true">
+            <fileset dir="./"
+               includes="*.sh"/>
+        </copy>
+
+        <copy todir="/opt/art/logParser" overwrite="true">
+            <fileset dir="./"
+               includes="*.xml"/>
+        </copy>
+
+        <copy todir="/opt/art/logParser" overwrite="true">
+            <fileset dir="./build"
+               includes="*.yml *.properties"/>
+        </copy>
+     
     </target>
 
     <target name="clean-old-app" description="removes the old application">
@@ -958,12 +991,12 @@
 
         <mkdir dir="./build/classess"/>
 
-        <javac srcdir="./build/logParser/java" 
+        <javac srcdir="java" 
             destdir="./build/classess" 
             debug="on" 
             optimize="off"  
             excludes="logs/,website/,**/test/**">
-            <classpath refid="export_classpath"/>
+            <classpath refid="export_classpath2"/>
         </javac>
      
     </target>
