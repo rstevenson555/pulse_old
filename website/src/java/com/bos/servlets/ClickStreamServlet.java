@@ -5,9 +5,12 @@ import com.bos.helper.ClickStreamServletHelper;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sf.hibernate.HibernateException;
 import net.sf.hibernate.Session;
 
@@ -96,16 +99,18 @@ public class ClickStreamServlet {
     	
         // Array List to hold collection of ClickElements
         ArrayList<HashMap<String, String>> ClickElements = new ArrayList<HashMap<String, String>>();
-               
+              
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
         Session session = null;
         
         try {
             session = HibernateUtil.currentSession();
             Connection con = session.connection();
             
-            PreparedStatement pstmt = con.prepareStatement(SELECT_PAGE_VIEWS);
+            pstmt = con.prepareStatement(SELECT_PAGE_VIEWS);
             pstmt.setString(1, sessionTXT);
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             boolean hasHtmlID = false; 
             
             while (rs.next()) {
@@ -176,6 +181,16 @@ public class ClickStreamServlet {
             ex.printStackTrace();
         } finally {
             try {
+                pstmt.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                rs.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
                 HibernateUtil.closeSession();
             } catch (HibernateException e) { }
         }
@@ -198,13 +213,13 @@ public class ClickStreamServlet {
     	if (newToTime == null || newToTime.equals("")) newToTime = "23:59:59";
     		
     	if (!selectedDate.isEmpty()) {
-    		searchQuery.append(" and time >= to_timestamp('" + selectedDate + " " + newFromTime + "', 'YYYY-MM-DD HH24:MI:SS')");
-			searchQuery.append(" and time <= to_timestamp('" + selectedDate + " " + newToTime + "', 'YYYY-MM-DD HH24:MI:SS')");    	
+    		searchQuery.append(" and time >= to_timestamp('").append(selectedDate).append(" ").append(newFromTime).append("', 'YYYY-MM-DD HH24:MI:SS')");
+			searchQuery.append(" and time <= to_timestamp('").append(selectedDate).append(" ").append(newToTime).append("', 'YYYY-MM-DD HH24:MI:SS')");    	
     	} else {
-    		searchQuery.append(" and cast(time as TIME) >= '" + newFromTime + "'");
-    		searchQuery.append(" and cast(time as TIME) <= '" + newToTime + "'");
+    		searchQuery.append(" and cast(time as TIME) >= '").append(newFromTime).append("'");
+    		searchQuery.append(" and cast(time as TIME) <= '").append(newToTime).append("'");
     	} 
-    	searchQuery.append(" order by " + orderBy); 
+    	searchQuery.append(" order by ").append(orderBy); 
     	
     	return searchQuery.toString();
     }    
@@ -215,17 +230,18 @@ public class ClickStreamServlet {
     	List<HashMap<String, String>> userSessionsList = new ArrayList<HashMap<String, String>>();
     	HashMap<String, String> userSession = new HashMap<String, String>();
     	Session session = null;    	
-    	    	
+        ResultSet rs = null;
+        PreparedStatement pstmt = null;
     	try {
     		session = HibernateUtil.currentSession();
             Connection con = session.connection();   
             
             // Retrieve number of sessions for this query 
-            PreparedStatement pstmt = con.prepareStatement(buildNumSessionsQuery(queryType));
+            pstmt = con.prepareStatement(buildNumSessionsQuery(queryType));
             if (queryType == SEARCH_SESSIONS_BY_USER)
             	pstmt.setInt(1, userID);
             
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             while (rs.next()) {
             	sessionCount = rs.getInt(1);
             }
@@ -264,6 +280,16 @@ public class ClickStreamServlet {
     	} catch (Exception ex) {
     		ex.printStackTrace();
     	} finally {
+            try {
+                rs.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                pstmt.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
     		try {
                 HibernateUtil.closeSession();
             } catch (HibernateException e) { }
