@@ -4,9 +4,10 @@ import com.bos.arch.HibernateUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sf.hibernate.HibernateException;
 import net.sf.hibernate.Session;
 
@@ -28,21 +29,32 @@ public class ClickStreamServletHelper {
     	String SELECT_SESSION_ID = "select session_id from sessions where sessiontxt=?";
     	int sessionID = -1;
     	Session session = null;
-    	
+    	ResultSet rs = null;
+        PreparedStatement pstmt = null;
     	try {
     		session = HibernateUtil.currentSession();
             Connection con = session.connection(); 
             
 	    	// Run query to retrieve just the session id
-	        PreparedStatement pstmt = con.prepareStatement(SELECT_SESSION_ID);
+	        pstmt = con.prepareStatement(SELECT_SESSION_ID);
 	        pstmt.setString(1, sessiontxt);
-	        ResultSet rs = pstmt.executeQuery();
+	        rs = pstmt.executeQuery();
 	        while (rs.next()) {
 	        	sessionID = rs.getInt(1);
 	        }
     	} catch (Exception ex) {
     		ex.printStackTrace();
     	} finally {
+            try {
+                pstmt.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServletHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                rs.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServletHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
     		try {
                 HibernateUtil.closeSession();
             } catch (HibernateException e) { }
@@ -87,17 +99,19 @@ public class ClickStreamServletHelper {
     	    	" and qpr.recordpk = ar.recordpk" + 
     	    	" and q.queryparameter_id = qpr.queryparameter_id" + 
     	    	" order by h.requestToken";  
-    	
+    	ResultSet rs = null;
+        PreparedStatement pstmt = null;
+
     	Session session = null;
     	try {
     		session = HibernateUtil.currentSession();
             Connection con = session.connection(); 
             
 	    	// Run query to retrieve just the session id
-	        PreparedStatement pstmt = con.prepareStatement(SELECT_QUERY_PARAMS);
+	        pstmt = con.prepareStatement(SELECT_QUERY_PARAMS);
 	        pstmt.setInt(1, sessionID);
 	        pstmt.setString(2, sessiontxt);	        
-	        ResultSet rs = pstmt.executeQuery();
+	        rs = pstmt.executeQuery();
 	        int paramCounter = 0;
             while (rs.next()) {
             	htmlID = rs.getInt("htmlpageresponse_id");
@@ -124,6 +138,16 @@ public class ClickStreamServletHelper {
     	} catch (Exception ex) {
     		ex.printStackTrace();
     	} finally {
+            try {
+                pstmt.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServletHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                rs.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamServletHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
     		try {
                 HibernateUtil.closeSession();
             } catch (HibernateException e) { }
@@ -138,12 +162,12 @@ public class ClickStreamServletHelper {
     	HashMap<Integer, String> records = new HashMap<Integer, String>();
     	StringBuilder queryParamsString = new StringBuilder();
     	Session session = null;
-    	
+    	ResultSet rs1, rs2, rs3 = null;
+        PreparedStatement pstmt1,pstmt2,pstmt3 = null;
+
     	try {
     		session = HibernateUtil.currentSession();
             Connection con = session.connection(); 
-            PreparedStatement pstmt1, pstmt2, pstmt3;
-        	ResultSet rs1, rs2, rs3;
         	int record = 0, queryParameterID = 0;
         	String queryParam = "";
             

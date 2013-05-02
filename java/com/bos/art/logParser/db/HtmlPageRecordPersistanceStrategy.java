@@ -81,6 +81,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
     };
     private static ThreadLocal threadLocalInserts = new ThreadLocal() {
 
+        @Override
         protected synchronized Object initialValue() {
             return new Integer(0);
         }
@@ -141,11 +142,11 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 if ((currentTimePerInsert * 1.05) < timePerInsert && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT)) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
                 } else if ((currentTimePerInsert * .85) > timePerInsert && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
                 }
             }
         } catch (SQLException se) {

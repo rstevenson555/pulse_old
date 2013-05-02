@@ -11,7 +11,10 @@ import com.bos.model.CalendarBean;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import net.sf.hibernate.HibernateException;
@@ -77,16 +80,19 @@ public class ClickStreamPageViewHelper {
         Session session = null;
         Element calendarElement = null;
         Element ClickElements = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        Connection con = null;
         try {
             calendarElement = doc.createElement("Calendar");
             calendarElement.appendChild(createCalendarElement(doc));
             element.appendChild(calendarElement);
             ClickElements = doc.createElement("ClickElements");
             session = HibernateUtil.currentSession();
-            Connection con = session.connection();
-            PreparedStatement pstmt = con.prepareStatement(SELECT_PAGE_VIEWS);
+            con = session.connection();
+            pstmt = con.prepareStatement(SELECT_PAGE_VIEWS);
             pstmt.setString(1, sessionTXT);
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             int recordID=1;
             while (rs.next()) {
                 String HtmlPageResponse_ID = rs.getString("HtmlPageResponse_ID");
@@ -118,10 +124,25 @@ public class ClickStreamPageViewHelper {
             ex.printStackTrace();
         } finally {
             try {
+                rs.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamPageViewHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                pstmt.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamPageViewHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
                 HibernateUtil.closeSession();
             } catch (HibernateException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+            }
+            try {
+                con.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(ClickStreamPageViewHelper.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         element.appendChild(ClickElements);
