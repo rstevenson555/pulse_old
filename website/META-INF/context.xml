@@ -1,6 +1,7 @@
 <Context path="/logparser-website">
     <ResourceLink name="jdbc/mysqldb" global="jdbc/mysqlglobaldb" type="javax.sql.DataSource"/>
     <ResourceLink name="jdbc/postgres" global="jdbc/postgres" type="javax.sql.DataSource"/>
+    <ResourceLink name="jdbc/artdb-omx" global="jdbc/artdb-omx" type="javax.sql.DataSource"/>
     <ResourceLink name="jdbc/oracleStandBydb" global="jdbc/oracleProdStandby" type="javax.sql.DataSource"/>
  
     <!--<Resource name="jdbc/postgres" auth="Container"
@@ -14,3 +15,4 @@
            maxActive="8" maxIdle="4" maxWait="5000"/> -->
     
 </Context>
+
