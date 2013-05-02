@@ -510,7 +510,7 @@
         </jar>
     </target>
 
-    <target name="makejar-from-export" description="Makes a logParser.jar and places it in ./build/classess dir">
+    <target name="makejar-from-export" depends="build-from-exported" description="Makes a logParser.jar and places it in ./build/classess dir">
      
        <!--<copy tofile="./build/omx_collector_config.yml" file="./build/logParser/java/omx_collector_config.yml" overwrite="true" />
         <copy tofile="./build/solutions_collector_config.yml" file="./build/logParser/java/solutions_collector_config.yml" overwrite="true" />
@@ -941,6 +941,20 @@
     </target>
     
     <target name="build-from-export" depends="export">
+
+        <mkdir dir="./build/classess"/>
+
+        <javac srcdir="./build/logParser/java" 
+            destdir="./build/classess" 
+            debug="on" 
+            optimize="off"  
+            excludes="logs/,website/,**/test/**">
+            <classpath refid="export_classpath"/>
+        </javac>
+     
+    </target>
+
+    <target name="build-from-exported" depends="">
 
         <mkdir dir="./build/classess"/>
 
