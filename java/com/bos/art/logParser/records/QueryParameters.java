@@ -67,9 +67,9 @@ public class QueryParameters {
         HashSet<String> set = new HashSet();
         if (queryParameters != null) {
             System.out.println("before: "+queryParameters);
-            if (queryParameters.indexOf('?') > -1) {
-                queryParameters = queryParameters.substring(queryParameters.indexOf('?'));
-            }
+//            if (queryParameters.indexOf('?') > -1) {
+//                queryParameters = queryParameters.substring(queryParameters.indexOf('?'));
+//            }
             if (queryParameters.indexOf(PARAM_MARKER) > -1) {
                 int sep = queryParameters.indexOf(PARAM_MARKER);
                 queryParameters = queryParameters.substring(0, sep) + "&" + queryParameters.substring(sep + 3);
