@@ -93,7 +93,8 @@ public class QueryParameters {
                     seplength = AMP_SEP.length();
                     String currentParameter = queryParameters.substring(0, sep);
                     queryParameters = queryParameters.substring(sep + seplength);
-                    set.add(currentParameter);
+                    if ( !"".equals(currentParameter))
+                        set.add(currentParameter);                
                     start =0;
                 } else {
                     String currentParameter = queryParameters;
@@ -107,8 +108,9 @@ public class QueryParameters {
                     s = s.substring(0, 1024);
                     System.out.println("QueryParam stored as => " + s);
                 }
+   				Integer queryParameterID = getQueryParameterId(s);
+				QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID,recordPK));
             }
-            System.out.println("paramset: " + set);
         }
     }
 
