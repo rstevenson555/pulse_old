@@ -56,31 +56,35 @@ public class QueryParameters {
         return null;
     }
     private static String AMP_SEP = "&";
-    private static String AMP_SEP2 = "#&#";
+    private static String AMP_ESCAPED = "&amp;";
     private static String PARAM_MARKER = "#P#";
 
-    /**
+   
+/**
      * process query parameters, tokenize
      */
     public void processQueryParameters() {
         HashSet<String> set = new HashSet();
         if (queryParameters != null) {
-            if (queryParameters.indexOf('?') > -1) {
-                queryParameters = queryParameters.substring(queryParameters.indexOf('?'));
-            }
+//            if (queryParameters.indexOf('?') > -1) {
+//                queryParameters = queryParameters.substring(queryParameters.indexOf('?'));
+//            }
             if (queryParameters.indexOf(PARAM_MARKER) > -1) {
                 int sep = queryParameters.indexOf(PARAM_MARKER);
                 queryParameters = queryParameters.substring(0, sep) + "&" + queryParameters.substring(sep + 3);
             }
-            int seplength = 1;
+            int seplength = AMP_SEP.length();
+            int sep = 0,asep = 0;
+            int start = 0;
             while (queryParameters != null) {
-                if (queryParameters.indexOf(AMP_SEP) > -1 || queryParameters.indexOf(AMP_SEP2) > -1) {
-                    int sep = queryParameters.indexOf(AMP_SEP2);
-                    seplength = 3;
-                    if (sep == -1) {  //not found, check sep2                        
-                        sep = queryParameters.indexOf(AMP_SEP);
-                        seplength = 1;
+                if ((sep = queryParameters.indexOf(AMP_SEP,start)) > -1 ) {
+                    asep = queryParameters.indexOf(AMP_ESCAPED);
+                    if ( asep == sep) {
+                        // this was a encoded amp and not just a &
+                        start = asep+AMP_ESCAPED.length();
+                        continue; // skip this & because it's an encoded amp;
                     }
+                    seplength = AMP_SEP.length();
                     String currentParameter = queryParameters.substring(0, sep);
                     queryParameters = queryParameters.substring(sep + seplength);
                     set.add(currentParameter);
@@ -92,20 +96,16 @@ public class QueryParameters {
             }
             for (String s : set) {
                 if (s != null && s.length() > 1024) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("QueryParam too long for DB QP => " + s);
-                    }
+                    System.out.println("QueryParam too long for DB QP => " + s);
                     s = s.substring(0, 1024);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("QueryParam stored as => " + s);
-                    }
+                    System.out.println("QueryParam stored as => " + s);
                 }
-
-                Integer queryParameterID = getQueryParameterId(s);
-                QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));
+ 
             }
         }
     }
+
+
     private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
 
     private Integer getQueryParameterId(String s) {
