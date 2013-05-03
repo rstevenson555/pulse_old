@@ -66,9 +66,10 @@ public class QueryParameters {
     public void processQueryParameters() {
         HashSet<String> set = new HashSet();
         if (queryParameters != null) {
-//            if (queryParameters.indexOf('?') > -1) {
-//                queryParameters = queryParameters.substring(queryParameters.indexOf('?'));
-//            }
+            System.out.println("before: "+queryParameters);
+            if (queryParameters.indexOf('?') > -1) {
+                queryParameters = queryParameters.substring(queryParameters.indexOf('?'));
+            }
             if (queryParameters.indexOf(PARAM_MARKER) > -1) {
                 int sep = queryParameters.indexOf(PARAM_MARKER);
                 queryParameters = queryParameters.substring(0, sep) + "&" + queryParameters.substring(sep + 3);
@@ -100,8 +101,8 @@ public class QueryParameters {
                     s = s.substring(0, 1024);
                     System.out.println("QueryParam stored as => " + s);
                 }
- 
             }
+            System.out.println("paramset: " + set);
         }
     }
 
