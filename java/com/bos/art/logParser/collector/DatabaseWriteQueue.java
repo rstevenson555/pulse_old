@@ -28,12 +28,10 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     private long totalWriteTime;
     protected static boolean unloadDB = true;
     //private static final int MAX_DB_QUEUE_SIZE = 300000;
-    private static final int MAX_DB_QUEUE_SIZE = 20000;
+    private static final int MAX_DB_QUEUE_SIZE = 100000;
     private static long fullCount = 0;
     private static long writeCount = 0;
     // guards for boundaries
-    //private Mutex notAllEmpty = new Mutex();
-    //private Mutex notAllFull = new Mutex();
     
     private DatabaseWriteQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
@@ -47,7 +45,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     public void addLast(Object o) {
 
             boolean success = dequeue.offer(o);
-            if (!success && (fullCount++ % 10000) == 0) {
+            if (!success && (fullCount++ % 100) == 0) {
                 logger.error("DatbaseWriteQueue is full, throwing out messages");
             }
     }
