@@ -16,3 +16,4 @@ ActiveRecord::Base.establish_connection(
 )
 
 result = ActiveRecord::Base.connection.execute("delete from sessions where inserttime < (now() - interval '2 weeks')")
+result = ActiveRecord::Base.connection.execute("delete from users where lastmodtime < (now() - interval '12 weeks')")
