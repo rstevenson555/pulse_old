@@ -12,7 +12,6 @@ import com.bos.art.logParser.records.PageRecordEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import org.apache.log4j.Logger;
 
 /**
