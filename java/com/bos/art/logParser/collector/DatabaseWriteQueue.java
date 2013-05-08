@@ -27,7 +27,8 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     private int objectsWritten;
     private long totalWriteTime;
     protected static boolean unloadDB = true;
-    private static final int MAX_DB_QUEUE_SIZE = 300000;
+    //private static final int MAX_DB_QUEUE_SIZE = 300000;
+    private static final int MAX_DB_QUEUE_SIZE = 5000;
     private static long fullCount = 0;
     private static long writeCount = 0;
     // guards for boundaries
@@ -44,33 +45,18 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
 
     public void addLast(Object o) {
-        //try {
-//            if ( dequeue.size()<dequeue.capacity()-2) {
-//                notAllFull.acquire();
-//            }
 
             boolean success = dequeue.offer(o);
             if (!success && (fullCount++ % 10000) == 0) {
                 logger.error("DatbaseWriteQueue is full, throwing out messages");
             }
-
-            //notAllEmpty.release();
-        /*} catch (InterruptedException e) {
-            logger.error("Interrupted Exception adding to the Database Write Queue: ", e);
-            e.printStackTrace();
-        } */
     }
 
     public Object removeFirst() {
         try {
-            // if empty wait until someone puts something in
-//            if ( dequeue.size()==0) {
-//                notAllEmpty.acquire();
-//            }
 
             Object o = dequeue.take();
 
-            //notAllFull.release();
             return o;
         } catch (InterruptedException e) {
             logger.error("Interrupted Exception taking from the Database Write Queue: ", e);

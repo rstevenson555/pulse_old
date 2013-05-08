@@ -25,7 +25,8 @@ public class MessageUnloader extends java.lang.Thread {
     private long writeTime = System.currentTimeMillis();
     private static MessageUnloader instance = new MessageUnloader();
     private int failCount = 0;
-    private int MESSAGE_QUEUE_SIZE = 300000;
+    //private int MESSAGE_QUEUE_SIZE = 300000;
+    private int MESSAGE_QUEUE_SIZE = 5000;
     
     static public MessageUnloader getInstance() {
         return instance;

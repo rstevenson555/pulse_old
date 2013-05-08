@@ -32,8 +32,6 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
-    //private Mutex notAllEmpty = new Mutex();
-    //private Mutex notAllFull = new Mutex();
 
     private static final int BATCH_INSERT_SIZE = 500;
     private final static int MAXBATCHINSERTSIZE = 5000;
@@ -44,7 +42,10 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static double timePerInsert = 5000.0;
 
     protected static boolean unloadDB = true;
-    private static final int MAX_DB_QUEUE_SIZE = 200000;
+    //private static final int MAX_DB_QUEUE_SIZE = 200000;
+    // QUEUE SIZE
+    private static final int MAX_DB_QUEUE_SIZE = 5000;
+    
     private QueryParameterWriteQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
