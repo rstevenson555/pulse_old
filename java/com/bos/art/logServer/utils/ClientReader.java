@@ -259,7 +259,7 @@ public class ClientReader implements Runnable {
                             
                             // filter 
                             StringBuilder builder = new StringBuilder();
-                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
+                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken()).append(pre.getInstance());
                             String buffer = builder.toString();
                                                 
                             synchronized(ulock) {
@@ -320,7 +320,7 @@ public class ClientReader implements Runnable {
                 // filter 
                 StringBuilder builder = new StringBuilder();
                 //builder.append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
-                builder.append("ExternalEventTiming").append(exttiming.getClassification()).append(exttiming.getLoadTime()).append(exttiming.getTime());
+                builder.append("ExternalEventTiming").append(exttiming.getClassification()).append(exttiming.getLoadTime()).append(exttiming.getTime()).append(exttiming.getInstance());
                 String buffer = builder.toString();
 
                 synchronized(ulock) {
