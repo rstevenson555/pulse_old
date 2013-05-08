@@ -255,8 +255,25 @@ public class ClientReader implements Runnable {
                             }
                         } else {
                             PageRecordEvent pre = event.retrievePageRecordEvent();
-
                             pre.copyFrom(event);
+                            
+                            // filter 
+                            StringBuilder builder = new StringBuilder();
+                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
+                            String buffer = builder.toString();
+                                                
+                            synchronized(ulock) {
+                                if (uniqueRecord.get(buffer)!=null) {
+                                    //logger.info("found user: " + buffer);
+
+                                    return;
+                                } else {
+                                    //logger.info("not found user: " + buffer);
+
+                                    uniqueRecord.put(buffer,new Object());
+                                }                           
+                            }
+                            
                             add(pre);
                         }
                     } else {
@@ -272,7 +289,7 @@ public class ClientReader implements Runnable {
                     if (!timing.getBegin()) {
                         // need to filter dups
                         StringBuilder builder = new StringBuilder();
-                        builder.append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
+                        builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
                         String buffer = builder.toString();
                                                 
                         synchronized(ulock) {
@@ -299,6 +316,24 @@ public class ClientReader implements Runnable {
 
                 exttiming.copyFrom(timing);
                 exttiming.copyFrom(event);
+                
+                // filter 
+                StringBuilder builder = new StringBuilder();
+                //builder.append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
+                builder.append("ExternalEventTiming").append(exttiming.getClassification()).append(exttiming.getLoadTime()).append(exttiming.getTime());
+                String buffer = builder.toString();
+
+                synchronized(ulock) {
+                    if (uniqueRecord.get(buffer)!=null) {
+                        //logger.info("found user: " + buffer);
+
+                        return;
+                    } else {
+                        //logger.info("not found user: " + buffer);
+
+                        uniqueRecord.put(buffer,new Object());
+                    }                           
+                }
                                 
                 // this is to ensure that we only process end type messages
                 if (!exttiming.getBegin()) {
@@ -311,6 +346,24 @@ public class ClientReader implements Runnable {
 
             accumulator.copyFrom(timing);
             accumulator.copyFrom(event);
+            
+            // filter 
+            StringBuilder builder = new StringBuilder();
+            //builder.append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
+            builder.append("AccumulatorEventTiming").append(accumulator.getTime()).append(accumulator.getClassification()).append(accumulator.getValue()).append(accumulator.getInstance());
+            String buffer = builder.toString();
+
+            synchronized(ulock) {
+                if (uniqueRecord.get(buffer)!=null) {
+                    //logger.info("found user: " + buffer);
+
+                    return;
+                } else {
+                    //logger.info("not found user: " + buffer);
+
+                    uniqueRecord.put(buffer,new Object());
+                }                           
+            }
             
             // this is to ensure that we only process end type messages
             if (!accumulator.getBegin()) {
