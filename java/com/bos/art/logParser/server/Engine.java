@@ -204,6 +204,8 @@ public class Engine {
         Properties props = new Properties();
 
         props.put("logAbandoned", "true");
+        props.put("poolPreparedStatements","true");
+        props.put("maxOpenPreparedStatements", "100");
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, props);
 
         // connectionFactory.
@@ -214,6 +216,8 @@ public class Engine {
         //
         PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, connectionPool, null,
                 null, false, true);
+        
+         ObjectPool connectionPoolFactory = new GenericObjectPool(poolableConnectionFactory);
 
         // poolableConnectionFactory.set
         //
@@ -224,7 +228,7 @@ public class Engine {
         //
         // ...and register our pool with it.
         //
-        driver.registerPool("art-db-pool", connectionPool);
+        driver.registerPool("art-db-pool", connectionPoolFactory);
 
     }
 
