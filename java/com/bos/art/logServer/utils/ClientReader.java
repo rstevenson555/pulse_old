@@ -261,7 +261,8 @@ public class ClientReader implements Runnable {
                             StringBuilder builder = new StringBuilder();
                             builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken()).append(pre.getInstance());
                             String buffer = builder.toString();
-                                                
+                            System.out.println("pagerecordevent: "+builder.toString());
+                            
                             synchronized(ulock) {
                                 if (uniqueRecord.get(buffer)!=null) {
                                     //logger.info("found user: " + buffer);
@@ -290,7 +291,7 @@ public class ClientReader implements Runnable {
                     if (!timing.getBegin()) {
                         // need to filter dups
                         builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
-                        System.out.println(builder.toString());
+                        //System.out.println(builder.toString());
                         String buffer = builder.toString();
                                                 
                         synchronized(ulock) {
@@ -308,7 +309,7 @@ public class ClientReader implements Runnable {
 
                     // this is to ensure that we only process end type messages
                     if (!timing.getBegin() ) {
-                        System.out.println("adding: " + builder.toString());
+                        //System.out.println("adding: " + builder.toString());
                         add(timing);
                     }
                 }
