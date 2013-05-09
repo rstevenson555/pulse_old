@@ -286,9 +286,9 @@ public class ClientReader implements Runnable {
                     UserRequestTiming timing = event.retrieveTimingEvent();
                     timing.copyFrom(event);
              
+                    StringBuilder builder = new StringBuilder();
                     if (!timing.getBegin()) {
                         // need to filter dups
-                        StringBuilder builder = new StringBuilder();
                         builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
                         System.out.println(builder.toString());
                         String buffer = builder.toString();
@@ -308,6 +308,7 @@ public class ClientReader implements Runnable {
 
                     // this is to ensure that we only process end type messages
                     if (!timing.getBegin() ) {
+                        System.out.println("adding: " + builder.toString());
                         add(timing);
                     }
                 }
