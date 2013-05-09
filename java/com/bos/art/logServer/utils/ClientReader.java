@@ -292,17 +292,17 @@ public class ClientReader implements Runnable {
                         builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
                         String buffer = builder.toString();
                                                 
-                        synchronized(ulock) {
-                            if (uniqueRecord.get(buffer)!=null) {
-                                //logger.info("found user: " + buffer);
-
-                                return;
-                            } else {
-                                //logger.info("not found user: " + buffer);
-
-                                uniqueRecord.put(buffer,new Object());
-                            }                           
-                        }
+//                        synchronized(ulock) {
+//                            if (uniqueRecord.get(buffer)!=null) {
+//                                //logger.info("found user: " + buffer);
+//
+//                                return;
+//                            } else {
+//                                //logger.info("not found user: " + buffer);
+//
+//                                uniqueRecord.put(buffer,new Object());
+//                            }                           
+//                        }
                     }
 
                     // this is to ensure that we only process end type messages
