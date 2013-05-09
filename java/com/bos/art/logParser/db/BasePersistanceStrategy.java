@@ -40,7 +40,7 @@ public abstract class BasePersistanceStrategy {
     public static final String FK_INSTANCES_INSERT = "insert into Instances (InstanceName) values (?)";
     public static final String FK_SESSIONS_INSERT = "insert into Sessions (IPAddress, sessionTXT, browserType, User_ID ) values (?,?,?,?)";
     public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams) values (?)";
-    public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where queryParams=?";
+    public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where MD5(queryParams)=MD5(?)";
     public static final String FK_USERS_INSERT = "insert into Users (userName) values (?)";
     public static final String FK_USERS_SELECT = "select User_ID from Users where userName = ?";
     public static final String FK_CONTEXTS_INSERT = "insert into Contexts (ContextName) values (?)";
@@ -53,8 +53,8 @@ public abstract class BasePersistanceStrategy {
 
     protected int contextRead;
     protected int contextWrite;
-    public static HashMap databaseMisHashtable = new HashMap();
-    public static HashMap databaseMisXRef = new HashMap();
+    public static Map<String,Integer> databaseMisHashtable = new HashMap<String,Integer>();
+    public static Map<String,String> databaseMisXRef = new HashMap<String,String>();
     
     protected static final Logger logger = (Logger) Logger.getLogger(BasePersistanceStrategy.class.getName());
     public static final int DATABASE_MISS_THRESHOLD = 1000000;
