@@ -60,14 +60,14 @@ public class ViewOnlineReportingTrendingGraph extends BaseAction {
         
         
         if(selectedDate != null && !selectedDate.equals("")) {
-        	StringBuffer b = new StringBuffer(selectedDate);
-        	StringBuffer s = b.insert(4,'-');
-        	StringBuffer b2 = new StringBuffer(s.toString());
-        	StringBuffer s2 = b2.insert(7,'-');
+        	StringBuilder b = new StringBuilder(selectedDate);
+        	StringBuilder s = b.insert(4,'-');
+        	StringBuilder b2 = new StringBuilder(s.toString());
+        	StringBuilder s2 = b2.insert(7,'-');
         	
         } else {
         	Calendar calendar = Calendar.getInstance();
-         	StringBuffer todaysDate = new StringBuffer(); 
+         	StringBuilder todaysDate = new StringBuilder(); 
          	todaysDate.append(calendar.get(Calendar.DAY_OF_MONTH));
          	todaysDate.append(calendar.get(Calendar.MONTH));
          	todaysDate.append(calendar.get(Calendar.YEAR));
