@@ -290,6 +290,7 @@ public class ClientReader implements Runnable {
                         // need to filter dups
                         StringBuilder builder = new StringBuilder();
                         builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
+                        System.out.println(builder.toString());
                         String buffer = builder.toString();
                                                 
                         synchronized(ulock) {
