@@ -7,11 +7,10 @@
 package com.bos.art.logParser.collector;
 
 
-import java.io.Serializable;
-import org.apache.log4j.Logger;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
-
+import java.io.Serializable;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.apache.log4j.Logger;
 
 /**
  * @author I0360D3
@@ -28,7 +27,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     private long totalWriteTime;
     protected static boolean unloadDB = true;
     //private static final int MAX_DB_QUEUE_SIZE = 300000;
-    private static final int MAX_DB_QUEUE_SIZE = 100000;
+    private static final int MAX_DB_QUEUE_SIZE = 10000;
     private static long fullCount = 0;
     private static long writeCount = 0;
     // guards for boundaries
