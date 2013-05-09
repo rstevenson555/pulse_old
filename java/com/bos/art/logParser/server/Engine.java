@@ -228,7 +228,7 @@ public class Engine {
         //
         // ...and register our pool with it.
         //
-        driver.registerPool("art-db-pool", connectionPoolFactory);
+        driver.registerPool("art-db-pool", connectionPool);
 
     }
 
