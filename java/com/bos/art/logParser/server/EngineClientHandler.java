@@ -7,22 +7,17 @@
 package com.bos.art.logParser.server;
 
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.EOFException;
-import java.io.ObjectInputStream;
-import java.io.DataInputStream;
-import java.net.Socket;
-
-import org.apache.log4j.Logger;
-
 import com.bos.art.logParser.collector.LiveLogPriorityQueue;
+import com.bos.art.logParser.records.AccumulatorEventTiming;
 import com.bos.art.logParser.records.ExternalEventTiming;
 import com.bos.art.logParser.records.ILiveLogPriorityQueueMessage;
-import com.bos.art.logParser.records.PageRecordEvent;
 import com.bos.art.logParser.records.SystemTask;
-import com.bos.art.logParser.records.AccumulatorEventTiming;
+import java.io.BufferedInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.Socket;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -34,8 +29,8 @@ import com.bos.art.logParser.records.AccumulatorEventTiming;
 public class EngineClientHandler implements Runnable {
     private Socket incoming;
     private int counter;
-
     private static final Logger logger = (Logger) Logger.getLogger(EngineClientHandler.class.getName());
+    
     public EngineClientHandler(Socket i, int c) {
         incoming = i;
         counter = c;
