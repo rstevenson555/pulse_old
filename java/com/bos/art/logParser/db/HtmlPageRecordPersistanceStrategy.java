@@ -247,7 +247,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where sessiontxt = ?");
                 sessionpsmt.setString(1,String.valueOf(experience));
                 sessionpsmt.setString(2,pre.getSessionId() );
-                sessionpsmt.executeQuery();
+                sessionpsmt.executeUpdate();
                 sessionpsmt.close();
             }
             //			requestType, requestToken, userServiceTime
