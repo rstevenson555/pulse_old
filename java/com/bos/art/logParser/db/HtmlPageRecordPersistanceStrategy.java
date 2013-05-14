@@ -226,12 +226,14 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             int error = 10;
             int order = 20;     
             
-            if (pagehtml.indexOf("We're sorry")!=-1)                
-                experience |= error;
-            if (pagehtml.indexOf("Sorry unexpected")!=-1)
-                experience |= error;
-            if ( pagehtml.indexOf("Thank you for your order")!=-1)
-                experience |= order;
+            if ( pagehtml !=null) {
+                if ( pagehtml.indexOf("We're sorry")!=-1)                
+                    experience |= error;
+                if (pagehtml.indexOf("Sorry unexpected")!=-1)
+                    experience |= error;
+                if ( pagehtml.indexOf("Thank you for your order")!=-1)
+                    experience |= order;
+            }
                                
             pstmt.setString(9, pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
