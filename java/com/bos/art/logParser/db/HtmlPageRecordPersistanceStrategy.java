@@ -219,7 +219,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setString(6, pre.getSessionId());
             pstmt.setInt(7, requestToken);
             pstmt.setInt(8, requestTokenCount);
-            pstmt.setString(9, encodedText);
+            pstmt.setString(9, new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText)));
             pstmt.setInt(10, fk.fkInstanceID);
 
             blockInsert(pstmt);

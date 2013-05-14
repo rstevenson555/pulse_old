@@ -42,7 +42,9 @@ public class QueryParameters {
     private String decode(String s) {
         if (s != null) {
             try {
-                byte[] decodeBA = Base64.decodeBase64(s.getBytes());
+                //byte[] decodeBA = Base64.decodeBase64(s.getBytes());
+                //return new String(decodeBA);
+                byte[] decodeBA = com.bos.art.logParser.tools.Base64.decodeFast(s);
                 return new String(decodeBA);
             } catch (Exception e) {
                 return s;
