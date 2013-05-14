@@ -117,8 +117,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                     + "requestTokenCount , "
                     + "encodedPage, " 
                     + "Instance_ID" 
+                    + "experience" 
                     + ") " 
-                    + " values (?,?,?,?,?,?,?,?,?,?)");
+                    + " values (?,?,?,?,?,?,?,?,?,?,?)");
             threadLocalCon.set(con);
             threadLocalPstmt.set(ps);
         } catch (Exception e) {
@@ -219,10 +220,33 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setString(6, pre.getSessionId());
             pstmt.setInt(7, requestToken);
             pstmt.setInt(8, requestTokenCount);
-            pstmt.setString(9, new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText)));
+            String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
+            
+            int experience = 0;
+            int error = 10;
+            int order = 20;     
+            
+            if (pagehtml.indexOf("We're sorry")!=-1)                
+                experience |= error;
+            if (pagehtml.indexOf("Sorry unexpected")!=-1)
+                experience |= error;
+            if ( pagehtml.indexOf("Thank you for your order")!=-1)
+                experience |= order;
+                               
+            pstmt.setString(9, pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
+            pstmt.setString(11, String.valueOf(experience));
 
             blockInsert(pstmt);
+            
+            if ( experience != 0) {
+                // update session
+                PreparedStatement sessionpsmt = con.prepareStatement("update sessions set experience = ? where sessiontxt = ?");
+                sessionpsmt.setString(1,String.valueOf(experience));
+                sessionpsmt.setString(2,pre.getSessionId() );
+                sessionpsmt.executeQuery();
+                sessionpsmt.close();
+            }
             //			requestType, requestToken, userServiceTime
         } catch (SQLException se) {
             logger.error("Exception", se);
