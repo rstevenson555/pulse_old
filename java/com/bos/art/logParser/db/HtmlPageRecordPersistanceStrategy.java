@@ -116,7 +116,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                     + "requestToken , "
                     + "requestTokenCount , "
                     + "encodedPage, " 
-                    + "Instance_ID" 
+                    + "Instance_ID, " 
                     + "experience" 
                     + ") " 
                     + " values (?,?,?,?,?,?,?,?,?,?,?)");
