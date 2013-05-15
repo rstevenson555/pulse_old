@@ -300,7 +300,31 @@ public abstract class BasePersistanceStrategy {
                 queryParameter = queryParameter.substring(0,equalSign);
                 queryParameter += "=wiped";
             }
-        }       
+        }    
+        if ( (start = queryParameter.indexOf("creditCardNumber"))!=-1) {
+            // now find the equal sign
+            equalSign = queryParameter.indexOf('=', start);
+            if (equalSign !=-1) {
+                queryParameter = queryParameter.substring(0,equalSign);
+                queryParameter += "=wiped";
+            }
+        }
+        if ( (start = queryParameter.indexOf("giftCard"))!=-1) {
+            // now find the equal sign
+            equalSign = queryParameter.indexOf('=', start);
+            if (equalSign !=-1) {
+                queryParameter = queryParameter.substring(0,equalSign);
+                queryParameter += "=wiped";
+            }
+        }
+        if ( (start = queryParameter.indexOf("giftCardNo"))!=-1) {
+            // now find the equal sign
+            equalSign = queryParameter.indexOf('=', start);
+            if (equalSign !=-1) {
+                queryParameter = queryParameter.substring(0,equalSign);
+                queryParameter += "=wiped";
+            }
+        }
 
         bindParams.add(queryParameter);
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
