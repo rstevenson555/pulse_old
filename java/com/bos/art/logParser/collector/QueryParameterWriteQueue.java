@@ -42,10 +42,10 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static double timePerInsert = 5000.0;
 
     protected static boolean unloadDB = true;
-    //private static final int MAX_DB_QUEUE_SIZE = 200000;
+    private static final int MAX_DB_QUEUE_SIZE = 200000;
     // QUEUE SIZE
     //private static final int MAX_DB_QUEUE_SIZE = 5000;
-    private static final int MAX_DB_QUEUE_SIZE = 50000;
+    //private static final int MAX_DB_QUEUE_SIZE = 50000;
     
     private QueryParameterWriteQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);

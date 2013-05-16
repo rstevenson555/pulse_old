@@ -221,17 +221,19 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
     
     private int binaryTreeSearch(String foreignKeyValue, String foreignKeyName, AccessRecordsForeignKeys fk) {
         if (foreignKeyName.equals(ForeignKeyStore.FK_SESSIONS_SESSION_ID)) {
+            Date now = new Date();
             SessionDataClass sdc = new SessionDataClass();
             sdc.firstRequestDate = fk.eventTime;
             sdc.lastRequestDate = fk.eventTime;
-            sdc.touchDate = new java.util.Date();
+            sdc.touchDate = now;
             sdc.sessionTXT = foreignKeyValue;
             sdc.Context_ID = fk.fkContextID;
             return binaryTreeSearch(sdc, foreignKeyName);
         } else if (foreignKeyName.equals(ForeignKeyStore.FK_QUERY_PARAMETER_ID)) {
+            Date now = new Date();
             QueryParamClass qpc = new QueryParamClass();
-            qpc.entryDate = new java.util.Date();
-            qpc.lastTouchDate = new java.util.Date();
+            qpc.entryDate = now;
+            qpc.lastTouchDate = now;
             qpc.queryParam = foreignKeyValue;
             return binaryTreeSearch(qpc, foreignKeyName);
         } else {
@@ -272,8 +274,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             return iForeignKey;
         } else {
             if (o instanceof QueryParamClass) {
-                boolean statechange = false;
-                StringBuilder sb = new StringBuilder();
+                //boolean statechange = false;
+                //StringBuilder sb = new StringBuilder();
                 QueryParamClass qpcTree = (QueryParamClass) o;
                 qpcTree.lastTouchDate = new java.util.Date();
                 qpcTree.touchCount++;
@@ -298,7 +300,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         int startUserID = foreignKeyValue.indexOf(USERID);
         String ip = foreignKeyValue.substring(startIPAddress + IPADDRESS.length(), startBrowserType);
         String browser = foreignKeyValue.substring(startBrowserType + BROWSER.length(), startUserID);
-        String sessiontxt = foreignKeyValue.substring(0, startIPAddress);
+        //String sessiontxt = foreignKeyValue.substring(0, startIPAddress);
         int userID = Integer.parseInt(foreignKeyValue.substring(startUserID + 8));
         String sessionTxtKeyValue = sessionData.sessionTXT.substring(0, startBrowserType);
         Object o = tm.get(sessionTxtKeyValue);
@@ -430,7 +432,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
 
         @Override
         public String toString() {
-            String databaseMisKey = (String) BasePersistanceStrategy.databaseMisXRef.get(key);
+            String databaseMisKey = (String) BasePersistanceStrategy.databaseMisXRef.get(key); 
             Integer i = null;
             int consecutiveDatabaseMisses = 0;
             if (databaseMisKey != null) {

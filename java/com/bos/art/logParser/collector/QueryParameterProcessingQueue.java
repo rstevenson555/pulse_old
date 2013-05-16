@@ -27,8 +27,8 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private int objectsProcessed;
     private volatile long totalSysTime;
     protected static boolean unloadDB = true;
-    //private static final int MAX_DB_QUEUE_SIZE = 200000;
-    private static final int MAX_DB_QUEUE_SIZE = 7000;
+    private static final int MAX_DB_QUEUE_SIZE = 200000;
+    //private static final int MAX_DB_QUEUE_SIZE = 50000;
     
     private QueryParameterProcessingQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
