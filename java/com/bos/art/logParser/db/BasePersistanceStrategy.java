@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
  * To change the template for this generated type comment go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-public abstract class BasePersistanceStrategy {
+public abstract class BasePersistanceStrategy { 
     public static HashMap sequenceNameHashMap = null;
     public static final String FK_BRANCH_INSERT = "insert into Branches (branchName) values (?)";
     public static final String FK_BRANCH_SELECT = "select Branch_Tag_ID from Branches where branchName = ?";
@@ -282,10 +282,10 @@ public abstract class BasePersistanceStrategy {
 
          */
         
-        int start = 0,equalSign;
+        //int start = 0,equalSign;
         
 
-        if ( (start = queryParameter.indexOf("Password"))!=-1) {
+/*        if ( (start = queryParameter.indexOf("Password"))!=-1) {
             // now find the equal sign
             equalSign = queryParameter.indexOf('=', start);
             if (equalSign !=-1) {
@@ -325,7 +325,7 @@ public abstract class BasePersistanceStrategy {
                 queryParameter += "=wiped";
             }
         }
-
+*/
         bindParams.add(queryParameter);
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }

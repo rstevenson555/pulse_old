@@ -44,7 +44,8 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     protected static boolean unloadDB = true;
     //private static final int MAX_DB_QUEUE_SIZE = 200000;
     // QUEUE SIZE
-    private static final int MAX_DB_QUEUE_SIZE = 5000;
+    //private static final int MAX_DB_QUEUE_SIZE = 5000;
+    private static final int MAX_DB_QUEUE_SIZE = 50000;
     
     private QueryParameterWriteQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
@@ -81,7 +82,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
         /*if (dequeue instanceof BoundedLinkedQueue) {
@@ -91,10 +92,10 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         //}
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
-        sb.append("\n\tObjects Popped              :  " + objectsRemoved);
-        sb.append("\n\tObjects Written             :  " + objectsWritten);
+        sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
+        sb.append("\n\tObjects Written             :  ").append(objectsWritten);
         if (objectsWritten > 1000) {
-            sb.append("\n\tWrite Time millis per 1000  :  " + totalWriteTime / (objectsWritten / 1000));
+            sb.append("\n\tWrite Time millis per 1000  :  ").append(totalWriteTime / (objectsWritten / 1000));
         } else {
             sb.append("\n\tWrite Time millis per 1000  :  0");
         }
