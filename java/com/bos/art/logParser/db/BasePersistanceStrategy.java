@@ -329,7 +329,7 @@ public abstract class BasePersistanceStrategy {
                 queryParameter = queryParameter.substring(0,equalSign);
                 queryParameter += "=wiped";
             }
-        }
+        } 
         * //insert into QueryParameters (queryParams,queryparams_key,value_hash) values (?,?,?)
 */
         
