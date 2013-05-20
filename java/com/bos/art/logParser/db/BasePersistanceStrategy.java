@@ -334,8 +334,15 @@ public abstract class BasePersistanceStrategy {
 */
         
         int equals = queryParameter.indexOf("=");
-        String queryValue = queryParameter.substring(equals+1);
-        String queryKey = queryParameter.substring(0,equals);
+        String queryValue = "";
+        String queryKey = "";
+        
+        if ( equals!=-1) {
+            queryValue = queryParameter.substring(equals+1);
+            queryKey = queryParameter.substring(0,equals);
+        } else {
+            queryKey = queryParameter;
+        }
 
         List insertBindParams = Arrays.asList(queryValue,queryKey,md5(queryParameter));               
         List selectBindParams = Arrays.asList(md5(queryParameter));        
