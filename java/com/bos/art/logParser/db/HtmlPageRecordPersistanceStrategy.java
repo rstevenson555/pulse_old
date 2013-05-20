@@ -11,7 +11,9 @@ import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.PageRecordEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 
 /**
@@ -165,6 +167,33 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * (non-Javadoc) @see
      * com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
      */
+    private int read_session_experience(Connection con,String sessiontxt)
+    {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = con.prepareStatement("select experience from sessions where sessiontxt = ?");
+            stmt.setString(1,sessiontxt);
+            rs = stmt.executeQuery();
+            if ( rs.next()) {
+                String exp = rs.getString(1);
+                if ( exp !=null) {
+                    return Integer.parseInt(exp.trim());
+                }
+            }
+            return 0;        
+        }catch (SQLException ex) {
+            java.util.logging.Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                stmt.close();
+                rs.close();
+            } catch (SQLException ex) {
+                java.util.logging.Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return 0;
+    }
 
     public boolean writeToDatabase(ILiveLogParserRecord record) {
         PageRecordEvent pre = (PageRecordEvent) record;
@@ -204,8 +233,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         fk.fkBranchTagID =
                 ForeignKeyStore.getInstance().getForeignKey(fk, branchName, ForeignKeyStore.FK_BRANCH_TAG_ID, this);
 
-
-        Connection con = null;
+        
         int requestTokenCount = pre.getRequestTokenCount();
         int requestToken = pre.getRequestToken();
         String encodedText = pre.getEncodedPage();
@@ -223,7 +251,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setInt(8, requestTokenCount);
             String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
             
-            int experience = 0;
+            int experience = read_session_experience((Connection)threadLocalCon.get(),pre.getSessionId());
             int error = 10;
             int order = 20;     
             
