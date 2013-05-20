@@ -343,6 +343,10 @@ public abstract class BasePersistanceStrategy {
         } else {
             queryKey = queryParameter;
         }
+        if ( queryKey.length()>=50 ) {
+        logger.warn(queryValue);
+        logger.warn(queryKey);
+        }
 
         List insertBindParams = Arrays.asList(queryValue,queryKey,md5(queryParameter));               
         List selectBindParams = Arrays.asList(md5(queryParameter));        
