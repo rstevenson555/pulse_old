@@ -86,14 +86,14 @@ public class QueryParameters {
                     String currentParameter = queryParameters.substring(0, sep);
                     queryParameters = queryParameters.substring(sep + seplength);
                     if (!"".equals(currentParameter)) {
-                        stringSet.append(currentParameter);
+                        stringSet.append(currentParameter).append("||||");
                         set.add(currentParameter);
                     }
                     start = 0;
                 } else {
                     String currentParameter = queryParameters;
                     queryParameters = null;
-                    stringSet.append(currentParameter);
+                    stringSet.append(currentParameter).append("||||");
                     set.add(currentParameter);
                 }
             }
