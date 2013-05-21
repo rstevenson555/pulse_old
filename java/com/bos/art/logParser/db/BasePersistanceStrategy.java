@@ -274,7 +274,8 @@ public abstract class BasePersistanceStrategy {
             
     }
     
-    protected int insertQueryParameter(String queryParameter) {
+    //protected int insertQueryParameter(String queryParameter) {
+    protected int insertQueryParameter(String queryParameters) {
         String sqlSelect = FK_QUERY_PARAMETERS_SELECT;
         String sqlInsert = FK_QUERY_PARAMETERS_INSERT;
         
@@ -333,26 +334,24 @@ public abstract class BasePersistanceStrategy {
         * //insert into QueryParameters (queryParams,queryparams_key,value_hash) values (?,?,?)
 */
         
-        int equals = queryParameter.indexOf("=");
-        String queryValue = "";
-        String queryKey = "";
-        
-        if ( equals!=-1) {
-            queryValue = queryParameter.substring(equals+1);
-            queryKey = queryParameter.substring(0,equals);
-        } else {
-            queryKey = queryParameter;
-        }
-//        if ( queryKey.length()>=50 ) {
-//        logger.warn(queryValue);
-//        logger.warn(queryKey);
+//        int equals = queryParameter.indexOf("=");
+//        String queryValue = "";
+//        String queryKey = "";
+//        
+//        if ( equals!=-1) {
+//            queryValue = queryParameter.substring(equals+1);
+//            queryKey = queryParameter.substring(0,equals);
+//        } else {
+//            queryKey = queryParameter;
 //        }
-
-        String md5_str = md5(queryParameter);
+//
+          String md5_str = md5(queryParameters);
+//        
+//        List insertBindParams = Arrays.asList(queryValue,queryKey,md5_str);               
+//        List selectBindParams = Arrays.asList(md5_str); 
+        List insertBindParams = Arrays.asList(queryParameters,"",md5_str);
+        List selectBindParams = Arrays.asList(md5_str);
         
-        List insertBindParams = Arrays.asList(queryValue,queryKey,md5_str);               
-        List selectBindParams = Arrays.asList(md5_str);        
-       
         return insertForeignKey(sqlSelect, selectBindParams, sqlInsert, insertBindParams);
     }
     

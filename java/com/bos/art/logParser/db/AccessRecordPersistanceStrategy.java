@@ -242,9 +242,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         fk.fkBranchTagID =
             ForeignKeyStore.getInstance().getForeignKey(fk, branchName, ForeignKeyStore.FK_BRANCH_TAG_ID, this);
         //String queryParameters = ((UserRequestTiming)record).getQueryParams();
-                        
         
-        Connection con = null;
         String qParam = ((UserRequestTiming)record).getQueryParams();
         int requestType = ((UserRequestTiming)record).getRequestType();
         long requestEndTime = ((UserRequestTiming)record).getRequestEndTime();
@@ -266,7 +264,6 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
             pstmt.setInt(6, fk.fkContextID);
             pstmt.setInt(7, fk.fkAppID);
             pstmt.setInt(8, fk.fkBranchTagID);
-            //pstmt.setString(9, sdfMySQLDate.format(record.getEventTime().getTime()));
             pstmt.setTimestamp(9, new java.sql.Timestamp( record.getEventTime().getTime().getTime() ));
             pstmt.setInt(10, record.getLoadTime());
             pstmt.setInt(11, requestType);
