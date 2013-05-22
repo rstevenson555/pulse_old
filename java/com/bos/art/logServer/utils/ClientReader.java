@@ -11,6 +11,8 @@ import java.util.Stack;
 import javax.xml.parsers.SAXParser;
 import org.apache.commons.digester.Digester;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -256,10 +258,12 @@ public class ClientReader implements Runnable {
                         } else {
                             PageRecordEvent pre = event.retrievePageRecordEvent();
                             pre.copyFrom(event);
+                            System.out.println("eventtime: " +pre.getEventTime());
+                            System.out.println("time: " + pre.getTime());
                             
                             // filter 
                             StringBuilder builder = new StringBuilder();
-                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken()).append(pre.getInstance());
+                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId())./*append(pre.getTime()).append(pre.getRequestToken()).*/append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
                             String buffer = builder.toString();
                             
                             synchronized(ulock) {
