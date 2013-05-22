@@ -258,8 +258,10 @@ public class ClientReader implements Runnable {
                         } else {
                             PageRecordEvent pre = event.retrievePageRecordEvent();
                             pre.copyFrom(event);
-                            System.out.println("eventtime: " +pre.getEventTime());
-                            System.out.println("time: " + pre.getTime());
+                            // time format;  02:38:33 PM
+                            // eventtime is a gregorianCalendar
+                            //System.out.println("eventtime: " +pre.getEventTime());
+                            //System.out.println("time: " + pre.getTime());
                             
                             // filter 
                             StringBuilder builder = new StringBuilder();
