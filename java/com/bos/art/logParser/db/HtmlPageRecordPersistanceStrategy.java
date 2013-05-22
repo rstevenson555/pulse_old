@@ -186,8 +186,10 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             java.util.logging.Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
-                stmt.close();
-                rs.close();
+                if ( stmt!=null) 
+                    stmt.close();
+                if ( rs!=null)
+                    rs.close();
             } catch (SQLException ex) {
                 java.util.logging.Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
             }
