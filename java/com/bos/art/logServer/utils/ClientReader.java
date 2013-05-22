@@ -13,6 +13,7 @@ import org.apache.commons.digester.Digester;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -232,6 +233,7 @@ public class ClientReader implements Runnable {
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
     }
+    private static DateTimeFormatter timeformat  = DateTimeFormat.forPattern("HH:mm:ss a");
 
     /**
      * because of the structure of our xml, timing msg and external timing msg are members of UserRequestEventDesc, then
@@ -263,9 +265,12 @@ public class ClientReader implements Runnable {
                             //System.out.println("eventtime: " +pre.getEventTime());
                             //System.out.println("time: " + pre.getTime());
                             
+                            DateTime strippedTime = timeformat.parseDateTime(pre.getTime());
+                            strippedTime = strippedTime.withSecondOfMinute(0);
+    
                             // filter 
                             StringBuilder builder = new StringBuilder();
-                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId())./*append(pre.getTime()).append(pre.getRequestToken()).*/append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
+                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(strippedTime.toString())./*append(pre.getTime()).append(pre.getRequestToken()).*/append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
                             String buffer = builder.toString();
                             
                             synchronized(ulock) {
