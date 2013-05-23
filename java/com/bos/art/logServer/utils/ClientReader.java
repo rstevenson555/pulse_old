@@ -270,7 +270,7 @@ public class ClientReader implements Runnable {
     
                             // filter 
                             StringBuilder builder = new StringBuilder();
-                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId())./*append(pre.getTime()).append(pre.getRequestToken()).*/append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
+                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken()).append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
                             String buffer = builder.toString();
                             
                             synchronized(ulock) {
