@@ -162,6 +162,32 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             resetThreadLocalPstmt();
         }
     }
+
+    /**
+     * determine the user - "experience" level
+     * @param pagehtml
+     * @param experience
+     * @return 
+     */
+    private int determine_experience(String pagehtml, int experience) {
+        int error = 10;
+        int order = 20;
+        int four_0_four = 30;
+        int no_search_results = 40;
+        if ( pagehtml !=null) {
+            if ( pagehtml.indexOf("We're sorry")!=-1)                
+                experience |= error;
+            if (pagehtml.indexOf("Sorry unexpected")!=-1)
+                experience |= error;
+            if ( pagehtml.indexOf("Thank you for your order")!=-1)
+                experience |= order;
+            if ( pagehtml.indexOf("we couldn't find that page")!=-1)
+                experience |= four_0_four;
+            if (pagehtml.indexOf("did not return any results")!=-1) 
+                experience |= no_search_results;
+        }
+        return experience;
+    }
     //private static final SimpleDateFormat sdfMySQLDate = new SimpleDateFormat("yyyyMMddHHmmss");
     /*
      * (non-Javadoc) @see
@@ -176,10 +202,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             stmt.setString(1,sessiontxt);
             rs = stmt.executeQuery();
             if ( rs.next()) {
-                String exp = rs.getString(1);
-                if ( exp !=null) {
-                    return Integer.parseInt(exp.trim());
-                }
+                return rs.getInt(1);
             }
             return 0;        
         }catch (SQLException ex) {
@@ -254,17 +277,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
             
             int experience = read_session_experience((Connection)threadLocalCon.get(),pre.getSessionId());
-            int error = 10;
-            int order = 20;     
-            
-            if ( pagehtml !=null) {
-                if ( pagehtml.indexOf("We're sorry")!=-1)                
-                    experience |= error;
-                if (pagehtml.indexOf("Sorry unexpected")!=-1)
-                    experience |= error;
-                if ( pagehtml.indexOf("Thank you for your order")!=-1)
-                    experience |= order;
-            }
+            experience = determine_experience(pagehtml, experience);
                                
             pstmt.setString(9, pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
@@ -273,14 +286,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             blockInsert(pstmt);
             
             if ( experience != 0) {
-                // update session
-                PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where sessiontxt = ?");
-                sessionpsmt.setString(1,String.valueOf(experience));
-                sessionpsmt.setString(2,pre.getSessionId() );
-                sessionpsmt.executeUpdate();
-                sessionpsmt.close();
+                update_experience(experience, pre);
             }
-            //			requestType, requestToken, userServiceTime
         } catch (SQLException se) {
             logger.error("Exception", se);
             resetThreadLocalPstmt();
@@ -289,5 +296,20 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             //  Removed because of Thread Local.
         }
         return true;
+    }
+
+    /**
+     * update the experience field
+     * @param experience
+     * @param pre
+     * @throws SQLException 
+     */
+    private void update_experience(int experience, PageRecordEvent pre) throws SQLException {
+        // update session
+        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where sessiontxt = ?");
+        sessionpsmt.setInt(1,experience);
+        sessionpsmt.setString(2,pre.getSessionId() );
+        sessionpsmt.executeUpdate();
+        sessionpsmt.close();
     }
 }
