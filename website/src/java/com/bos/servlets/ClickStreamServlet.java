@@ -70,20 +70,20 @@ public class ClickStreamServlet {
         " sessionstarttime <= ?  order by sessionstarttime desc ) as uu ";
     
     private String SESSIONS_BY_ADVANCED_QUERY = "select u.username, s.sessiontxt, s.sessionstarttime, s.sessionendtime, s.sessionhits, s.sessionduration, s.browsertype,s.experience from sessions s, " +
-                 " queryparamrecords qpr,accessrecords ar,users u " +               
+                 " /*queryparamrecords qpr,*/accessrecords ar,users u " +               
                 " where ar.session_id = s.session_id " +
                //" and qpr.queryparameter_id in ( select queryparameter_id from queryparameters q where 	q.queryparams like ?)	"+
-                " and qpr.queryparameter_id in (select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?) "+
+                //" and qpr.queryparameter_id in (select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?) "+
                 " and s.user_id = u.user_id " +
                 " and s.sessionstarttime >= ? and sessionstarttime <= ? " +
                 " and ar.recordpk in (#RECORDPARAMS#)  "+
                 " group by u.username,s.sessiontxt, s.sessionstarttime, s.sessionendtime, s.sessionhits,s.sessionduration, s.browsertype,s.experience ";
     
     private String SESSIONS_COUNT_BY_ADVANCED_QUERY = "select count(s.*) from sessions s, " +
-                 " queryparamrecords qpr,accessrecords ar " +               
+                 " /*queryparamrecords qpr,*/accessrecords ar " +               
                 " where ar.session_id = s.session_id " +
                 //" and qpr.queryparameter_id in ( select queryparameter_id from queryparameters q where 	q.queryparams like ?)	"+
-                " and qpr.queryparameter_id in (select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?) "+
+                //" and qpr.queryparameter_id in (select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?) "+
                 " and s.sessionstarttime >= ? and sessionstarttime <= ? " +
                 " and ar.recordpk in (#RECORDPARAMS#)  "+
                 " group by s.sessiontxt, s.sessionstarttime, s.sessionendtime, s.sessionhits,s.sessionduration, s.browsertype,s.experience";
@@ -236,14 +236,14 @@ public class ClickStreamServlet {
             pstmtcount.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
             pstmtcount.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
         } else if ( queryType == SEARCH_SESSIONS_BY_ADVANCED) {
+            //pstmtcount.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
+            //pstmtcount.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
+
+            //pstmtcount.setString(3, "%"+StringEscapeUtils.unescapeHtml4(advancedSearchString)+"%"); // query param search
             pstmtcount.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
             pstmtcount.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
-
-            pstmtcount.setString(3, "%"+StringEscapeUtils.unescapeHtml4(advancedSearchString)+"%"); // query param search
-            pstmtcount.setTimestamp(4, new java.sql.Timestamp(selectedStartTime.getTime()));
-            pstmtcount.setTimestamp(5, new java.sql.Timestamp(selectedEndTime.getTime()));
             // recordpk in clause           
-            int cc = 6;
+            int cc = 3;
             for(String param:recordpks) {
                 pstmtcount.setInt(cc++,Integer.parseInt(param));
             }
@@ -355,7 +355,7 @@ public class ClickStreamServlet {
                 ClickElement.put("requestToken", requestToken);
                 ClickElement.put("pageName", pageName);
                 ClickElement.put("requestTokenCount", requestTokenCount);
-                System.out.println("HtmlPageResponse_IDL :"+HtmlPageResponse_ID);
+                //System.out.println("HtmlPageResponse_IDL :"+HtmlPageResponse_ID);
                 ClickElement.put("queryParams", queryParamsMap.get(HtmlPageResponse_ID+"|"+recordpk));
 
                 // Add single ClickElement to collection of all ClickElements 
@@ -536,13 +536,13 @@ System.out.println("Unescape: " + StringEscapeUtils.unescapeHtml4(advancedSearch
                     pstmt.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
                 } else if (queryType == SEARCH_SESSIONS_BY_ADVANCED) {
                     if ( allQuestions.length()>0) {
+                        //pstmt.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
+                        //pstmt.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
+                        //pstmt.setString(3, "%"+StringEscapeUtils.unescapeHtml4(advancedSearchString)+"%"); // query param search
                         pstmt.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
                         pstmt.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
-                        pstmt.setString(3, "%"+StringEscapeUtils.unescapeHtml4(advancedSearchString)+"%"); // query param search
-                        pstmt.setTimestamp(4, new java.sql.Timestamp(selectedStartTime.getTime()));
-                        pstmt.setTimestamp(5, new java.sql.Timestamp(selectedEndTime.getTime()));
                         // recordpk in clause           
-                        int cc = 6;
+                        int cc = 3;
                         for(String param:recordpks) {
                             pstmt.setInt(cc++,Integer.parseInt(param));
                         }
