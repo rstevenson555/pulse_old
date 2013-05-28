@@ -134,7 +134,7 @@ public class ClickStreamServletHelper {
                 String recordpk = rs.getString("recordpk");
                 html_key = String.valueOf(htmlID) + "|" + recordpk;
                 //System.out.println("htmlID: " + html_key);
-                System.out.println("queryparams: " + rs.getString("queryparams"));
+                //System.out.println("queryparams: " + rs.getString("queryparams"));
                 String []queryparams = rs.getString("queryparams").split("\\|\\|\\|\\|");                    
 
                 List<String> lqp = Arrays.asList(queryparams);
