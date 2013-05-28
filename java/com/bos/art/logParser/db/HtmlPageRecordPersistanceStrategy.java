@@ -170,10 +170,10 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * @return 
      */
     private int determine_experience(String pagehtml, int experience) {
-        int error = 10;
-        int order = 20;
-        int four_0_four = 30;
-        int no_search_results = 40;
+        int error = 1;
+        int order = 2<<1;
+        int four_0_four = 2<<2;
+        int no_search_results = 2<<3;
         if ( pagehtml !=null) {
             if ( pagehtml.indexOf("We're sorry")!=-1)                
                 experience |= error;
