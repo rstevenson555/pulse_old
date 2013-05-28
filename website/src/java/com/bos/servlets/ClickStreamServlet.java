@@ -570,7 +570,7 @@ System.out.println("Unescape: " + StringEscapeUtils.unescapeHtml4(advancedSearch
                         String hits = String.valueOf(rs.getInt("sessionhits"));
                         String duration = String.valueOf(rs.getInt("sessionduration"));
                         String browsertype = rs.getString("browsertype");
-                        String experience = rs.getString("experience");
+                        int experience = rs.getInt("experience");
 
                         // Truncate milliseconds
                         startTime = startTime.split("\\.")[0];
@@ -582,7 +582,7 @@ System.out.println("Unescape: " + StringEscapeUtils.unescapeHtml4(advancedSearch
                         userSession.put("sessionhits", hits);
                         userSession.put("sessionduration", duration);
                         userSession.put("browsertype", browsertype);
-                        userSession.put("experience", experience);
+                        userSession.put("experience", String.valueOf(experience));
 
                         userSessionsList.add(userSession);
                         //System.out.println("build userSession " + userSession);
@@ -816,6 +816,7 @@ System.out.println("Unescape: " + StringEscapeUtils.unescapeHtml4(advancedSearch
                 DateTime dt_starttime = new DateTime(starttime.getTime());
                 String str_starttime = datetime_format.print(dt_starttime);
                 customerData.put("Session Start Time",str_starttime);
+                customerData.put("Session Id",sessionid);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
