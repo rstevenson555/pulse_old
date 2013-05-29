@@ -68,13 +68,14 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                         + "Page_ID    , "
                         + "Time       , "
                         + "sessionTXT , "
+                        + "session_id , "
                         + "requestToken , "
                         + "requestTokenCount , "
                         + "encodedPage, "
                         + "Instance_ID, "
                         + "experience "
                         + " ) "
-                        + " values (?,?,?,?,?,?,?,?,?,?,?)");
+                        + " values (?,?,?,?,?,?,?,?,?,?,?,?)");
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
@@ -116,13 +117,14 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                     + "Page_ID    , "
                     + "Time       , "
                     + "sessionTXT , "
+                    + "session_id , "
                     + "requestToken , "
                     + "requestTokenCount , "
                     + "encodedPage, " 
                     + "Instance_ID, " 
                     + "experience" 
                     + ") " 
-                    + " values (?,?,?,?,?,?,?,?,?,?,?)");
+                    + " values (?,?,?,?,?,?,?,?,?,?,?,?)");
             threadLocalCon.set(con);
             threadLocalPstmt.set(ps);
         } catch (Exception e) {
@@ -193,13 +195,13 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * (non-Javadoc) @see
      * com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
      */
-    private int read_session_experience(Connection con,String sessiontxt)
+    private int read_session_experience(Connection con,int session_id)
     {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = con.prepareStatement("select experience from sessions where sessiontxt = ?");
-            stmt.setString(1,sessiontxt);
+            stmt = con.prepareStatement("select experience from sessions where session_id = ?");
+            stmt.setInt(1,session_id);
             rs = stmt.executeQuery();
             if ( rs.next()) {
                 return rs.getInt(1);
@@ -258,6 +260,12 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         fk.fkBranchTagID =
                 ForeignKeyStore.getInstance().getForeignKey(fk, branchName, ForeignKeyStore.FK_BRANCH_TAG_ID, this);
 
+        fk.fkSessionID =
+            ForeignKeyStore.getInstance().getForeignKey(
+                fk,
+                pre.getSessionId(),
+                ForeignKeyStore.FK_SESSIONS_SESSION_ID,
+                this);
         
         int requestTokenCount = pre.getRequestTokenCount();
         int requestToken = pre.getRequestToken();
@@ -272,21 +280,22 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setInt(4, fk.fkPageID);
             pstmt.setTimestamp(5, new java.sql.Timestamp(record.getEventTime().getTime().getTime()));
             pstmt.setString(6, pre.getSessionId());
-            pstmt.setInt(7, requestToken);
-            pstmt.setInt(8, requestTokenCount);
+            pstmt.setInt(7,fk.fkSessionID);
+            pstmt.setInt(8, requestToken);
+            pstmt.setInt(9, requestTokenCount);
             String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
             
-            int experience = read_session_experience((Connection)threadLocalCon.get(),pre.getSessionId());
+            int experience = read_session_experience((Connection)threadLocalCon.get(),fk.fkSessionID);
             experience = determine_experience(pagehtml, experience);
                                
-            pstmt.setString(9, pagehtml);
-            pstmt.setInt(10, fk.fkInstanceID);
-            pstmt.setString(11, String.valueOf(experience));
+            pstmt.setString(10, pagehtml);
+            pstmt.setInt(11, fk.fkInstanceID);
+            pstmt.setString(12, String.valueOf(experience));
 
             blockInsert(pstmt);
             
             if ( experience != 0) {
-                update_experience(experience, pre);
+                update_experience(experience, pre, fk.fkSessionID);
             }
         } catch (SQLException se) {
             logger.error("Exception", se);
@@ -304,11 +313,11 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * @param pre
      * @throws SQLException 
      */
-    private void update_experience(int experience, PageRecordEvent pre) throws SQLException {
+    private void update_experience(int experience, PageRecordEvent pre,int session_id) throws SQLException {
         // update session
-        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where sessiontxt = ?");
+        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where session_id = ?");
         sessionpsmt.setInt(1,experience);
-        sessionpsmt.setString(2,pre.getSessionId() );
+        sessionpsmt.setInt(2,session_id );
         sessionpsmt.executeUpdate();
         sessionpsmt.close();
     }
