@@ -729,12 +729,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             pstmt.setInt(9, sdc.sessionID);
             pstmt.execute();
             pstmt.close();
-            
-            if(sdc.persistOneMinuteSession) {
-                update_html_page_response(con,sdc.sessionTXT,sdc.sessionID,sdc.firstRequestDate);
-                sdc.persistOneMinuteSession = false;
-            }
-            
+                        
         } catch (SQLException se) {
             // TODO Logger
             se.printStackTrace();
