@@ -764,10 +764,16 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         DateTime timeoffset = new DateTime(starttime);
         timeoffset = timeoffset.minusMinutes(1);
                 
-        System.out.println("update_html_page_response: " + sessiontxt + " " +sessionid + " " +timeoffset);
+        //System.out.println("update_html_page_response: " + sessiontxt + " " +sessionid + " " +timeoffset);
         PreparedStatement sessionpsmt = (con).prepareStatement("update htmlpageresponse set session_id = ? where sessiontxt = ? and time >= ?");
         sessionpsmt.setInt(1,sessionid);
-        sessionpsmt.setString(2,sessiontxt);
+        int pos = 0;
+        String session = "";
+        if ( (pos = sessiontxt.indexOf("#IPADDRESS#"))!=-1) {
+            session = sessiontxt.substring(0,pos);
+            System.out.println("session: " + session);
+        }
+        sessionpsmt.setString(2,session);
         sessionpsmt.setTimestamp(3,new Timestamp(timeoffset.toDate().getTime()));
         int rows = sessionpsmt.executeUpdate();
         System.out.println("updated htmlpageresponse rows: " + rows);
