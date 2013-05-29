@@ -267,7 +267,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         try {
             PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
             
-            fk.fkSessionID = get_last_session_id(pre.getSessionId());
+            fk.fkSessionID = 0;//get_last_session_id(pre.getSessionId());
 
             pstmt.setInt(1, fk.fkBranchTagID);
             pstmt.setInt(2, fk.fkMachineID);

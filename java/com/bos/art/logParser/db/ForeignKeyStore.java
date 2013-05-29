@@ -14,10 +14,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -719,13 +721,15 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             }
             pstmt.setInt(3, sdc.User_ID);
             pstmt.setInt(4, sdc.Context_ID);
-            pstmt.setTimestamp(5, new java.sql.Timestamp(sdc.firstRequestDate.getTime()));
-            pstmt.setTimestamp(6, new java.sql.Timestamp(sdc.lastRequestDate.getTime()));
+            pstmt.setTimestamp(5, new Timestamp(sdc.firstRequestDate.getTime()));
+            pstmt.setTimestamp(6, new Timestamp(sdc.lastRequestDate.getTime()));
             pstmt.setInt(7, sdc.touchCount);
             pstmt.setInt(8, (int) duration);
             pstmt.setInt(9, sdc.sessionID);
             pstmt.execute();
             pstmt.close();
+            
+            update_html_page_response(con,sdc.sessionTXT,sdc.sessionID,sdc.firstRequestDate);
         } catch (SQLException se) {
             // TODO Logger
             se.printStackTrace();
@@ -745,6 +749,27 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 }
             }
         }
+    }
+    
+    /**
+     * update the session_id with the proper value
+     * @param con
+     * @param sessiontxt
+     * @param sessionid
+     * @param starttime
+     * @throws SQLException 
+     */
+    private void update_html_page_response(Connection con,String sessiontxt, int sessionid, Date starttime) throws SQLException
+    {        
+        DateTime timeoffset = new DateTime(starttime);
+        timeoffset = timeoffset.minusMinutes(1);
+                
+        PreparedStatement sessionpsmt = (con).prepareStatement("update htmlpageresponse set session_id = ? where sessiontxt = ? and time >= ?");
+        sessionpsmt.setInt(1,sessionid);
+        sessionpsmt.setString(2,sessiontxt);
+        sessionpsmt.setTimestamp(3,new Timestamp(timeoffset.toDate().getTime()));
+        sessionpsmt.executeUpdate();
+        sessionpsmt.close();
     }
     /*
      * private void broadcast(SessionDataBean sessionBean){
