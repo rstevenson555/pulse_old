@@ -548,6 +548,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 if (o instanceof SessionDataClass) {
                     SessionDataClass sdc = (SessionDataClass) o;
                     if (sdc.lastRequestDate.after(oneMinDate)) {
+                        sdc.persistOneMinuteSession = true;
                         allPersistableObjects.add(sdc);
                         incrementOneMinSessions(sdc, htSessionCounts);
                         incrementFiveMinSessions(sdc, htSessionCounts);
@@ -729,7 +730,9 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             pstmt.execute();
             pstmt.close();
             
-            update_html_page_response(con,sdc.sessionTXT,sdc.sessionID,sdc.firstRequestDate);
+            if(sdc.persistOneMinuteSession) 
+                update_html_page_response(con,sdc.sessionTXT,sdc.sessionID,sdc.firstRequestDate);
+            
         } catch (SQLException se) {
             // TODO Logger
             se.printStackTrace();
@@ -842,6 +845,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         public String browserType;
         public int User_ID;
         public int Context_ID;
+        public boolean persistOneMinuteSession = false;
     }
 
     private class CounterClass implements Serializable {
