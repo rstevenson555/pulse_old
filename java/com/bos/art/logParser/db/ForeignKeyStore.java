@@ -771,12 +771,12 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         String session = "";
         if ( (pos = sessiontxt.indexOf("#IPADDRESS#"))!=-1) {
             session = sessiontxt.substring(0,pos);
-            System.out.println("session: " + session);
+            //System.out.println("session: " + session);
         }
         sessionpsmt.setString(2,session);
         sessionpsmt.setTimestamp(3,new Timestamp(timeoffset.toDate().getTime()));
         int rows = sessionpsmt.executeUpdate();
-        System.out.println("updated htmlpageresponse rows: " + rows);
+        //System.out.println("updated htmlpageresponse rows: " + rows);
         sessionpsmt.close();
     }
     /*
