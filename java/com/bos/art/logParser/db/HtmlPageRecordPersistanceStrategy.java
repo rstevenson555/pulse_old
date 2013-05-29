@@ -259,13 +259,6 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         String branchName = pre.getBranchName();
         fk.fkBranchTagID =
                 ForeignKeyStore.getInstance().getForeignKey(fk, branchName, ForeignKeyStore.FK_BRANCH_TAG_ID, this);
-
-        fk.fkSessionID =
-            ForeignKeyStore.getInstance().getForeignKey(
-                fk,
-                pre.getSessionId(),
-                ForeignKeyStore.FK_SESSIONS_SESSION_ID,
-                this);
         
         int requestTokenCount = pre.getRequestTokenCount();
         int requestToken = pre.getRequestToken();
@@ -273,6 +266,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
 
         try {
             PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
+            
+            fk.fkSessionID = get_last_session_id(pre.getSessionId());
 
             pstmt.setInt(1, fk.fkBranchTagID);
             pstmt.setInt(2, fk.fkMachineID);
@@ -307,6 +302,21 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         return true;
     }
 
+    private int get_last_session_id(String sessiontxt) throws SQLException {
+        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("select session_id from sessions where sessiontxt = ? order by sessionstarttime desc limit 1");
+        sessionpsmt.setString(1,sessiontxt);
+        ResultSet rs = sessionpsmt.executeQuery();
+        int session_id = 0;
+        if ( rs.next()) {
+            session_id = rs.getInt(1);
+        }
+        if ( rs!=null)
+            rs.close();
+        if ( sessionpsmt!=null) 
+            sessionpsmt.close();
+        
+        return session_id;
+    }
     /**
      * update the experience field
      * @param experience

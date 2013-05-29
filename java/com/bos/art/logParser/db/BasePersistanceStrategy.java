@@ -236,7 +236,7 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
-    protected int selectLastInsert(Connection con, String seqName) throws SQLException {
+    static public int selectLastInsert(Connection con, String seqName) throws SQLException {
         PreparedStatement pstmt2 = con.prepareStatement(SELECT_CURRVAL);
 
         pstmt2.setString(1, seqName);
