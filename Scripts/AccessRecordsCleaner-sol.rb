@@ -44,7 +44,8 @@ class AccessRecordsCleaner
     end
     
     def has_next
-        return @current_record_pk < @max_record_pk
+        return @current_record_pk < @max_record_pk unless(@max_record_pk.nil?)
+        return false
     end
 
     def next
