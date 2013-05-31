@@ -169,7 +169,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * @param experience
      * @return 
      */
-    private int determine_experience(String pagehtml, int experience) {
+    private int determineUserExperience(String pagehtml, int experience) {
         int error = 1;
         int order = 1<<1;
         int four_0_four = 1<<2;
@@ -248,8 +248,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setInt(8, requestTokenCount);
             String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
             
-            int experience = read_session_experience((Connection)threadLocalCon.get(),pre.getSessionId());
-            experience = determine_experience(pagehtml, experience);
+            int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());
+            experience = determineUserExperience(pagehtml, experience);
                                
             pstmt.setString(9, pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
@@ -258,7 +258,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             blockInsert(pstmt);
             
             if ( experience != 0) {
-                update_experience(experience, pre);
+                updateSessionUserExperience(experience, pre);
             }
         } catch (SQLException se) {
             logger.error("Exception", se);
@@ -269,29 +269,19 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         }
         return true;
     }
-
-    private int get_last_session_id(String sessiontxt) throws SQLException {
-        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("select session_id from sessions where sessiontxt = ? order by sessionstarttime desc limit 1");
-        sessionpsmt.setString(1,sessiontxt);
-        ResultSet rs = sessionpsmt.executeQuery();
-        int session_id = 0;
-        if ( rs.next()) {
-            session_id = rs.getInt(1);
-        }
-        if ( rs!=null)
-            rs.close();
-        if ( sessionpsmt!=null) 
-            sessionpsmt.close();
-        
-        return session_id;
-    }
     
-    private int read_session_experience(Connection con,String sessiontxt)
+    /**
+     * read the user experience from session
+     * @param con
+     * @param sessiontxt
+     * @return 
+     */
+    private int readSessionUserExperience(Connection con,String sessiontxt)
     {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = con.prepareStatement("select experience from sessions where sessiontxt = ? order by sessionstarttime desc limit 1");
+            stmt = con.prepareStatement("select experience from sessions where session_id = (select max(session_id) from sessions where sessiontxt = ? )");
             stmt.setString(1,sessiontxt);
             rs = stmt.executeQuery();
             if ( rs.next()) {
@@ -319,9 +309,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * @param pre
      * @throws SQLException 
      */
-    private void update_experience(int experience, PageRecordEvent pre) throws SQLException {
+    private void updateSessionUserExperience(int experience, PageRecordEvent pre) throws SQLException {
         // update session
-        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where session_id = (select session_id from sessions where sessiontxt = ? order by sessionstarttime desc limit 1)");
+        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where session_id = (select max(session_id) from sessions where sessiontxt = ? )");
         sessionpsmt.setInt(1,experience);
         sessionpsmt.setString(2,pre.getSessionId() );
         sessionpsmt.executeUpdate();
