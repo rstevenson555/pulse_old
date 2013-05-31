@@ -8,9 +8,9 @@ require 'active_record'
 ActiveRecord::Base.establish_connection(
     :adapter=> "jdbc",
     :driver=> "org.postgresql.Driver",
-    :url=> "jdbc:postgresql://prod-art-db1:5432/artdb",
+    :url=> "jdbc:postgresql://prod-art-db1:5432/artdb-omx",
     :host => "prod-art-db1",
-    :database=> "artdb",
+    :database=> "artdb-omx",
     :username => "artadmin",
     :password => "abc123"
 )
