@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
  */
 public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
-    private final static int MAXBATCHINSERTSIZE = 2500;
+    private final static int MAXBATCHINSERTSIZE = 750;
     private final static int INCREMENT_AMOUNT = 20;
     private final static int MINBATCHINSERTSIZE = 400;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
