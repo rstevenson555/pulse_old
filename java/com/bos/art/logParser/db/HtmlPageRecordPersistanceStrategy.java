@@ -25,7 +25,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
 
     private final static int MAXBATCHINSERTSIZE = 5000;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 200;
+    private final static int MINBATCHINSERTSIZE = 400;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
     private static HtmlPageRecordPersistanceStrategy instance;
