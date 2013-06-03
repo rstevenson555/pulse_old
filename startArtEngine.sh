@@ -4,7 +4,7 @@ export PATH=$JAVA_HOME/bin:$CATALINA_HOME/bin:$PATH
 nohup ant start-prodArtEngine-sol -logfile ArtEngine.log 1> temp.out 2> error.out &
 #/etc/init.d/artEnine
 sleep 2
-#./art.sh begin_command_mode
+./art.sh begin_command_mode
 ./art.sh loadstatunit=com.bos.art.logParser.statistics.AccessRecordsDailyStats
 ./art.sh loadstatunit=com.bos.art.logParser.statistics.AccessRecordsDailyPageStats
 ./art.sh loadstatunit=com.bos.art.logParser.statistics.AccessRecordsMinuteStats
@@ -19,4 +19,4 @@ sleep 2
 ./art.sh STARTQUERYPARAMPROCESSOR 
 ./art.sh STARTQUERYPARAMUNLOADER
 ./art.sh STARTQUERYPARAMCLEANER
-#./art.sh end_command_mode
+./art.sh end_command_mode
