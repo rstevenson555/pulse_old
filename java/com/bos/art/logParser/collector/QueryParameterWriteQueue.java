@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.joda.time.DateTime;
 
 
 /**
@@ -100,12 +101,25 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         return sb.toString();
     }
 
+    private DateTime now = null;
+    private DateTime oneMinute = new DateTime().plusMinutes(1);
+    private long recordsPerMinute = 0;
+
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
      */
     @Override
     public void run() {
         while (unloadDB) {
+            
+            now = new DateTime();
+            recordsPerMinute++;
+
+            if ( now.isAfter(oneMinute)) {
+                logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
+                oneMinute = now.plusMinutes(1);
+                recordsPerMinute = 0;
+            }
             if (logger.isInfoEnabled()) {
                 if (objectsRemoved % 10000 == 0) {
                     logger.info(toString());

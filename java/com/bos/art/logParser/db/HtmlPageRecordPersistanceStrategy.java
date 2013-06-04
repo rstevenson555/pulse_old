@@ -15,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 /**
  * @author I0360D3
@@ -193,10 +194,22 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * (non-Javadoc) @see
      * com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
      */    
+    private DateTime now = null;
+    private DateTime oneMinute = new DateTime().plusMinutes(1);
+    private long recordsPerMinute = 0;
+    
     public boolean writeToDatabase(ILiveLogParserRecord record) {
         PageRecordEvent pre = (PageRecordEvent) record;
         AccessRecordsForeignKeys fk = pre.obtainForeignKeys();
-
+        now = new DateTime();
+        recordsPerMinute++;
+        
+        if ( now.isAfter(oneMinute)) {
+            logger.warn("HtmlPageRecordPersistanceStrategy records per minute: " + (recordsPerMinute));
+            oneMinute = now.plusMinutes(1);
+            recordsPerMinute = 0;
+        }
+        
         fk.fkContextID =
                 ForeignKeyStore.getInstance().getForeignKey(
                 fk,
