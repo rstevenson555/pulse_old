@@ -235,12 +235,17 @@ public class ClientReader implements Runnable {
     }
     private static DateTimeFormatter timeformat  = DateTimeFormat.forPattern("HH:mm:ss a");
 
+    private DateTime now = null;
+    private DateTime pagesMinute = new DateTime().plusMinutes(1);
+    private long pagesPerMinute = 0;
+    
     /**
      * because of the structure of our xml, timing msg and external timing msg are members of UserRequestEventDesc, then
      * after each element is completed we turn those attribute members in top-level object and copy the child data into the
      * higher level objects
      */
     public void setNextEvent(UserRequestEventDesc event) {
+        now = new DateTime();
         if (event.retrieveArtAccumulator() == null) {
             if (event.retrieveExternalTiming() == null) {
                 if (event.retrieveTimingEvent() == null) {
@@ -281,6 +286,13 @@ public class ClientReader implements Runnable {
                                 } else {
                                     //logger.info("not found user: " + buffer);
 
+                                    pagesPerMinute++;
+                                    if ( now.isAfter(pagesMinute)) {
+                                        
+                                        logger.info("Pages Per minute: " + (pagesPerMinute));
+                                        pagesMinute = now.plusMinutes(1);
+                                        pagesPerMinute = 0;
+                                    }
                                     uniqueRecord.put(buffer,new Object());
                                 }                           
                             }
