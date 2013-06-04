@@ -131,9 +131,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         }
     }
 
-    private long batch = 0;
-    private DateTime batchOneMinute = new DateTime().plusMinutes(1);
-    private DateTime batchNow = new DateTime();
+    private static long batch = 0;
+    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private static DateTime batchNow = new DateTime();
     
     public void blockInsert(PreparedStatement pstmt) {
         try {

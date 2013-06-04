@@ -101,9 +101,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         return sb.toString();
     }
 
-    private DateTime now = null;
-    private DateTime oneMinute = new DateTime().plusMinutes(1);
-    private long recordsPerMinute = 0;
+    private static DateTime now = null;
+    private static DateTime oneMinute = new DateTime().plusMinutes(1);
+    private static long recordsPerMinute = 0;
 
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
@@ -224,9 +224,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         }
     }
 
-    private long batch = 0;
-    private DateTime batchOneMinute = new DateTime().plusMinutes(1);
-    private DateTime batchNow = new DateTime();
+    private static long batch = 0;
+    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private static DateTime batchNow = new DateTime();
 
     public void blockInsert(PreparedStatement pstmt) {
         try {
