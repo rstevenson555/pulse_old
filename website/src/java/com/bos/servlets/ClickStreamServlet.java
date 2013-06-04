@@ -30,6 +30,7 @@ public class ClickStreamServlet {
     String fromTime = null;
     String toTime = null;
     String userID = null;
+    String sessionStart = null;
     int sessionID = -1;
     private int sessionCount = 0;
     private List clickStream = null;
@@ -38,17 +39,17 @@ public class ClickStreamServlet {
     private static final int SEARCH_SESSIONS_BY_USER = 1;
     private static final int SEARCH_SESSIONS_BY_ALL = 2;
     private static final int SEARCH_SESSIONS_BY_ADVANCED = 3;
-    private String PAGES_BY_HTML_QUERY = "select  /*distinct*/ ar.recordpk,ar.requestToken,h1.HtmlPageResponse_ID, h1.requestTokenCount,pp.pageName,ar.time "+
+    
+    private String PAGES_BY_HTML_QUERY = "select  ar.recordpk,ar.requestToken,h1.HtmlPageResponse_ID, h1.requestTokenCount,pp.pageName,ar.time "+
         " from queryparamrecords qpr,pages pp,queryparameters q ,accessrecords ar 	    	 "+
-        " left outer join htmlpageresponse h1 on(ar.page_id = h1.page_id and h1.sessiontxt = ?) "+
-        " where session_id = ? and "+
+        " left outer join htmlpageresponse h1 on(ar.page_id = h1.page_id and h1.sessiontxt = ? and ar.requestToken = h1.requesttoken and h1.time>= ? and h1.time<=?) "+
+        " where ar.session_id = ? and "+
         " qpr.recordpk = ar.recordpk and "+
         " ar.page_id = pp.page_id and "+
-        " q.queryparameter_id = qpr.queryparameter_id and "+
-        " ar.requesttoken = h1.requesttoken and "+
-        " h1.encodedpage is not null and " +
-        " h1.time >= ? and h1.time <= ? "+
-        //" group by  ar.recordpk,h1.requestToken, h1.requestTokenCount, h1.HtmlPageResponse_ID,pp.pageName    "+
+        " q.queryparameter_id = qpr.queryparameter_id  "+
+        //" ar.requesttoken = h1.requesttoken and "+
+        //" h1.encodedpage is not null and " +
+        //" h1.time >= ? and h1.time <= ? "+
         " order by ar.requestToken ";
             
     private String PAGES_BY_ACCESS_RECORDS_QUERY = "select distinct ar.recordpk, ar.page_id, p.pageName, ar.time "
@@ -58,40 +59,38 @@ public class ClickStreamServlet {
             + " and ar.time >= ? and ar.time <= ? "
             + " order by ar.recordpk ";
     
-    private String SESSIONS_BY_USER_QUERY =  "select sessiontxt, sessionstarttime, sessionendtime, sessionhits, sessionduration, browsertype, experience "+
+    private String SESSIONS_BY_USER_QUERY =  "select sessiontxt, session_id, sessionstarttime, sessionendtime, sessionhits, sessionduration, browsertype, experience "+
             " from sessions where user_id=(select user_id from users where username=?) and sessionstarttime >= ? and sessionstarttime <= ? order by sessionstarttime desc ";
     private String SESSIONS_COUNT_BY_USER_QUERY = "select count(*) "+
             " from sessions where user_id=(select user_id from users where username=?) and sessionstarttime >= ? and sessionstarttime <= ? group by sessionstarttime order by sessionstarttime desc ";
     
-    private String SESSIONS_BY_ALL_QUERY = "select u.username, sessiontxt, sessionstarttime, sessionendtime, sessionhits, sessionduration, browsertype,experience from sessions, "+
+    private String SESSIONS_BY_ALL_QUERY = "select u.username, sessiontxt, session_id, sessionstarttime, sessionendtime, sessionhits, sessionduration, browsertype,experience from sessions, "+
                                         " users u where true and sessions.user_id = u.user_id and sessionstarttime >= ? and sessionstarttime <= ? order by sessionstarttime desc ";
     private String SESSIONS_COUNT_BY_ALL_QUERY = " select count(uu.username) from (select u.username, sessiontxt, sessionstarttime, sessionendtime, sessionhits, sessionduration, browsertype,experience from sessions, "+
       " users u where true and sessions.user_id = u.user_id and sessionstarttime >= ? and "+
         " sessionstarttime <= ?  order by sessionstarttime desc ) as uu ";
     
-    private String SESSIONS_BY_ADVANCED_QUERY = "select u.username, s.sessiontxt, s.sessionstarttime, s.sessionendtime, s.sessionhits, s.sessionduration, s.browsertype,s.experience from sessions s, " +
-                 " /*queryparamrecords qpr,*/accessrecords ar,users u " +               
+    private String SESSIONS_BY_ADVANCED_QUERY = "select u.username, s.sessiontxt, s.session_id,s.sessionstarttime, s.sessionendtime, s.sessionhits, s.sessionduration, s.browsertype,s.experience from sessions s, " +
+                " accessrecords ar,users u " +               
                 " where ar.session_id = s.session_id " +
-               //" and qpr.queryparameter_id in ( select queryparameter_id from queryparameters q where 	q.queryparams like ?)	"+
-                //" and qpr.queryparameter_id in (select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?) "+
                 " and s.user_id = u.user_id " +
                 " and s.sessionstarttime >= ? and sessionstarttime <= ? " +
-                " and ar.recordpk in (#RECORDPARAMS#)  "+
-                " group by u.username,s.sessiontxt, s.sessionstarttime, s.sessionendtime, s.sessionhits,s.sessionduration, s.browsertype,s.experience ";
+                " and ar.recordpk in (#RECORDPARAMS#)  ";
     
     private String SESSIONS_COUNT_BY_ADVANCED_QUERY = "select count(s.*) from sessions s, " +
-                 " /*queryparamrecords qpr,*/accessrecords ar " +               
+                " accessrecords ar " +               
                 " where ar.session_id = s.session_id " +
-                //" and qpr.queryparameter_id in ( select queryparameter_id from queryparameters q where 	q.queryparams like ?)	"+
-                //" and qpr.queryparameter_id in (select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?) "+
                 " and s.sessionstarttime >= ? and sessionstarttime <= ? " +
                 " and ar.recordpk in (#RECORDPARAMS#)  "+
                 " group by s.sessiontxt, s.sessionstarttime, s.sessionendtime, s.sessionhits,s.sessionduration, s.browsertype,s.experience";
-    private static String QUERY_RECORDPKS_FOR_QUERYPARAM = "select recordpk from queryparamrecords where queryparameter_id in(select q.queryparameter_id from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?)";
+    
+    private static String QUERY_RECORDPKS_FOR_QUERYPARAM = "select recordpk from queryparamrecords where queryparameter_id in(select q.queryparameter_id "+
+            " from queryparameters q where q.queryparameter_id in (select qpr2.queryparameter_id from queryparamrecords qpr2,accessrecords ar2 where "+
+            " ar2.recordpk = qpr2.recordpk and ar2.time >=? and ar2.time <=?) and q.queryparams like ?)";
         
     public static final int MAX_SESSION_ROWS = 100;
 
-    public ClickStreamServlet(String selectedDate, String sessionTXT, String advancedSearch,String userID, String fromTime, String toTime, String sessionOffset) {
+    public ClickStreamServlet(String selectedDate, String sessionTXT, String sessionStart,String advancedSearch,String userID, String fromTime, String toTime, String sessionOffset) {
         this.selectedDate = selectedDate;
         this.sessionTXT = sessionTXT;
         this.fromTime = fromTime;
@@ -99,6 +98,8 @@ public class ClickStreamServlet {
         this.sessionOffset = sessionOffset;
         this.advancedSearchString = advancedSearch;
         this.userID = userID;
+        this.sessionStart = sessionStart;
+        System.out.println("sessionStart: " + sessionStart);
 
         initialize();
     }
@@ -167,6 +168,8 @@ public class ClickStreamServlet {
         }
     }
 
+        private static final DateTimeFormatter fdf  = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+
     /**
      * return the session id from the sessiontxt
      * @param con
@@ -175,12 +178,23 @@ public class ClickStreamServlet {
      */
     private int getSessionId(Connection con) throws SQLException {
         // get the session id
-        PreparedStatement pstmt2 = con.prepareStatement("select session_id from sessions where sessiontxt = ?");
-        pstmt2.setString(1,sessionTXT);
+        PreparedStatement pstmt2 = null;
+        if (!StringUtils.isEmpty(sessionStart)) {
+            DateTime sessionStartDateTime = fdf.parseDateTime(sessionStart);
+
+            pstmt2 = con.prepareStatement("select session_id from sessions where sessiontxt = ? and sessionStartTime=?");
+            pstmt2.setString(1,sessionTXT);
+            pstmt2.setTimestamp(2, new Timestamp(sessionStartDateTime.toDate().getTime()));
+        } else {
+
+            pstmt2 = con.prepareStatement("select max(session_id) as session_id from sessions where sessiontxt = ? ");
+            pstmt2.setString(1,sessionTXT);
+        }
         ResultSet rs4 = pstmt2.executeQuery();        
         int sessionid = 0;
         if ( rs4.next()) {
             sessionid = rs4.getInt("session_id");
+            System.out.println("getSessionId: " + sessionid);
         }
         try {
             rs4.close();
@@ -236,10 +250,6 @@ public class ClickStreamServlet {
             pstmtcount.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
             pstmtcount.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
         } else if ( queryType == SEARCH_SESSIONS_BY_ADVANCED) {
-            //pstmtcount.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
-            //pstmtcount.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
-
-            //pstmtcount.setString(3, "%"+StringEscapeUtils.unescapeHtml4(advancedSearchString)+"%"); // query param search
             pstmtcount.setTimestamp(1, new java.sql.Timestamp(selectedStartTime.getTime()));
             pstmtcount.setTimestamp(2, new java.sql.Timestamp(selectedEndTime.getTime()));
             // recordpk in clause           
@@ -259,8 +269,9 @@ public class ClickStreamServlet {
     private void initialize() {
         //buildStartEndDate();
         
-        if (!sessionTXT.isEmpty()) {
-            ClickStreamServletHelper cssh = new ClickStreamServletHelper(sessionTXT);
+        // get click stream if sessiontxt is ! empty
+        if (!StringUtils.isEmpty(sessionTXT)) {
+            ClickStreamServletHelper cssh = new ClickStreamServletHelper(sessionTXT,sessionStart);
             sessionID = cssh.getSessionID();
             
             System.out.println("sessionID: " +sessionID);
@@ -333,14 +344,15 @@ public class ClickStreamServlet {
             pstmt = con.prepareStatement(PAGES_BY_HTML_QUERY);
             pstmt.setString(1, sessionTXT);
             System.out.println("pages query: " + PAGES_BY_HTML_QUERY);
+            
             int sessionid = getSessionId(con);
             
-            pstmt.setInt(2, sessionid);
-            System.out.println(sessionid);
+            pstmt.setInt(4, sessionid);
+            System.out.println("buildClickStream: " + sessionid);
             System.out.println(selectedStartTime);
             System.out.println(selectedEndTime);
-            pstmt.setTimestamp(3, new java.sql.Timestamp(this.selectedStartTime.getTime()));
-            pstmt.setTimestamp(4, new java.sql.Timestamp(this.selectedEndTime.getTime()));
+            pstmt.setTimestamp(2, new java.sql.Timestamp(this.selectedStartTime.getTime()));
+            pstmt.setTimestamp(3, new java.sql.Timestamp(this.selectedEndTime.getTime()));
             rs = pstmt.executeQuery();
             boolean hasHtmlID = false;
 
@@ -797,7 +809,8 @@ System.out.println("Unescape: " + StringEscapeUtils.unescapeHtml4(advancedSearch
             session = HibernateUtil.currentSession();
             con = session.connection();
             
-            pstmt = con.prepareStatement("select *,u.username from sessions s,users u where s.sessiontxt = ? and s.user_id = u.user_id");
+            //pstmt = con.prepareStatement("select *,u.username from sessions s,users u where s.sessiontxt = ? and s.user_id = u.user_id");
+            pstmt = con.prepareStatement("select *,u.username from sessions s,users u where s.user_id = u.user_id and s.session_id = (select max(session_id) from sessions where sessiontxt = ? )");
             pstmt.setString(1,sessionid);
             //System.out.println("sessionid: " + sessionid);
                           
