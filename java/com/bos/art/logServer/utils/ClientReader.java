@@ -234,6 +234,11 @@ public class ClientReader implements Runnable {
         c.set(Calendar.SECOND, 0);
     }
     private static DateTimeFormatter timeformat  = DateTimeFormat.forPattern("HH:mm:ss a");
+
+    private static DateTime now = null;
+    private static DateTime pagesMinute = new DateTime().plusMinutes(1);
+    private static DateTime arMinute = new DateTime().plusMinutes(1);
+    private static long pagesPerMinute = 0,arPerMinute = 0;
     
     /**
      * because of the structure of our xml, timing msg and external timing msg are members of UserRequestEventDesc, then
@@ -241,6 +246,7 @@ public class ClientReader implements Runnable {
      * higher level objects
      */
     public void setNextEvent(UserRequestEventDesc event) {
+        now = new DateTime();
         if (event.retrieveArtAccumulator() == null) {
             if (event.retrieveExternalTiming() == null) {
                 if (event.retrieveTimingEvent() == null) {
@@ -281,6 +287,13 @@ public class ClientReader implements Runnable {
                                 } else {
                                     //logger.info("not found user: " + buffer);
 
+                                    pagesPerMinute++;
+                                    if ( now.isAfter(pagesMinute)) {
+                                        
+                                        logger.info("Pages Per minute: " + (pagesPerMinute));
+                                        pagesMinute = now.plusMinutes(1);
+                                        pagesPerMinute = 0;
+                                    }
                                     uniqueRecord.put(buffer,new Object());
                                 }                           
                             }
@@ -311,6 +324,13 @@ public class ClientReader implements Runnable {
                             } else {
                                 //logger.info("not found user: " + buffer);
 
+                                arPerMinute++;
+                                if ( now.isAfter(arMinute)) {
+
+                                    logger.info("AccessRecords Per minute: " + (arPerMinute));
+                                    arMinute = now.plusMinutes(1);
+                                    arPerMinute = 0;
+                                }
                                 uniqueRecord.put(buffer,new Object());
                             }                           
                         }
