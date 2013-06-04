@@ -4,6 +4,7 @@ require 'java'
 require 'rubygems'
 require '../jars/postgresql-9.2-1002.jdbc4.jar'
 require 'active_record'
+require 'benchmark'
 
 ActiveRecord::Base.establish_connection(
     :adapter=> "jdbc",
@@ -15,6 +16,8 @@ ActiveRecord::Base.establish_connection(
     :password => "abc123"
 )
 
-result = ActiveRecord::Base.connection.execute("delete from sessions where inserttime < (now() - interval '4 weeks')")
-result = ActiveRecord::Base.connection.execute("delete from users where lastmodtime < (now() - interval '12 weeks')")
-result = ActiveRecord::Base.connection.execute("delete from htmlpageresponse where time < (now() - interval '1 weeks')")
+Benchmark.bm(25) do |x|
+    x.report("delete from sessions") { result = ActiveRecord::Base.connection.execute("delete from sessions where inserttime < (now() - interval '4 weeks')") ; puts "deleted #{result} records" }
+    x.report("delete from users") { result = ActiveRecord::Base.connection.execute("delete from users where lastmodtime < (now() - interval '12 weeks')"); puts "deleted #{result} records" }
+    x.report("delete from htmlpageresponse") { result = ActiveRecord::Base.connection.execute("delete from htmlpageresponse where time < (now() - interval '1 weeks')"); puts "deleted #{result} records"  }
+end
