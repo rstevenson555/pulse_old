@@ -29,7 +29,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
     private static final String IPADDRESS = "#IPADDRESS#";
     private final static int MAXBATCHINSERTSIZE = 5000;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 800;
+    private final static int MINBATCHINSERTSIZE = 600;
     private static final String USERID = "#USERID#";
     private static int lastBatchInsertSize = MINBATCHINSERTSIZE;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
@@ -167,11 +167,11 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
                 if ( ((currentTimePerInsert <= timePerInsert) && (currentBatchInsertSize < MAXBATCHINSERTSIZE-INCREMENT_AMOUNT))) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    //logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
                 } else if ( (currentTimePerInsert * .65) > timePerInsert && (currentBatchInsertSize > MINBATCHINSERTSIZE+INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    //logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
                 }
                 if ( icount % 100000 == 0) {
                     logger.warn("AccessRecordPersistanceStrategy currentBatchInsertSize is-> : " + currentBatchInsertSize);
