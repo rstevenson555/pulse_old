@@ -23,6 +23,7 @@
         <%
            String selectedDate = request.getParameter("selectedDate");
            String sessionTXT = request.getParameter("SessionTxt");
+           String sessionStart = request.getParameter("sessionStart");
            String advancedTXT= request.getParameter("AdvancedTxt");
            String userID = request.getParameter("userid");
            String fromTime = request.getParameter("from");
@@ -32,6 +33,7 @@
            if (advancedTXT == null) advancedTXT = "";
            if (selectedDate == null) selectedDate = "";
            if (sessionTXT == null) sessionTXT = "";
+           if (sessionStart == null) sessionStart = "";
            if (userID == null) userID = "";
            if (fromTime == null) fromTime = "";
            if (toTime == null) toTime = "";
@@ -57,7 +59,7 @@
            System.out.println("fromTime " + fromTime);
            System.out.println("toTime " + toTime);
            
-           ClickStreamServlet css = new ClickStreamServlet(dateAsString, sessionTXT, advancedTXT,userID, fromTime, toTime, sessionOffset);
+           ClickStreamServlet css = new ClickStreamServlet(dateAsString, sessionTXT, sessionStart, advancedTXT,userID, fromTime, toTime, sessionOffset);
            List clickElements = css.getClickStream();
            
            if (!userID.isEmpty() || searchAllSessions) 
@@ -196,7 +198,7 @@
                                <th>Browser</th>
                                <th>Views</th>
                                <th>Status</th>
-                               <th>Order</th>
+                               <!--<th>Order</th>-->
                            </tr>
                        </tbody>
                        <%   HashMap<String,String> userSession = null;
@@ -208,7 +210,7 @@
                                 <tr>
                                     <td><%= offset + i + 1 %></td>
                                     <% if (searchAllSessions) { %><td><%= userSession.get("user_id") %></td> <% } %>
-                                    <td><a href="javascript:setSessionTxt('<%= sessionTxt %>')"><%= sessionTxt %></a></td>
+                                    <td><a href="javascript:setSessionTxt('<%= sessionTxt %>','<%= userSession.get("starttime") %>')"><%= sessionTxt %></a></td>
                                     <td><%= userSession.get("starttime") %></td>
                                     <% String browser = "";
                                       browser = (userSession.get("browsertype")!=null)?userSession.get("browsertype"):"";
@@ -218,11 +220,12 @@
                                     %>
                                     <td><%= browser %></td>
                                     <td><%= userSession.get("sessionhits") %></td>
+                                    <td>
                                     <%                                    
-                                    int error = 10;
-                                    int order = 20;
-                                    int four_0_four = 30;
-                                    int no_search_results = 40;
+                                    int error = 1;
+                                    int order = 1<<1;
+                                    int four_0_four = 1<<2;
+                                    int no_search_results = 1<<3;
                                     int experience = 0;
                                     String img = null;
 
@@ -231,41 +234,40 @@
                                         experience = Integer.parseInt(expstr.trim());
                                     }
                                     if ( (experience & error) == error) {
-                                        img = "<img src='images/reddot.png' style='width:25px;'></img>";
+                                        img = "<img src='images/reddot.png' style='width:20px;'></img><br/>";
                                     } else {
                                         img = "&nbsp;";
                                     }    
                                     
                                     %>
                                     <!-- red dot -->
-                                    <td><%= img %></td>                                    
+                                    <%= img %>                                
                                     
                                     <%
                                     if (( experience & order) == order) {
-                                        //img = "<img src='images/dollarsign.png' style='width:20px;'></img>";
-                                        img = "<span style='font-size:18pt;font-weight:bold;color:lightgreen'>$</span>";
+                                        img = "<span style='font-size:18pt;font-weight:bold;color:lightgreen'>$</span><br/>";
                                     } else {
                                         img = "&nbsp;";
                                     }
                                                                        
                                     %>                                    
                                     <!-- dollar sign -->
-                                    <td><%= img %></td>    
+                                    <%= img %>  
                                     
                                     <%
                                     if (( experience & four_0_four) == four_0_four) {
-                                        img = "<span style='font-size:18pt;font-weight:bold;color:lightgreen'>404</span>";
+                                        img = "<span style='font-size:18pt;font-weight:bold;color:#FF1919'>404</span><br/>";
                                     } else {
                                         img = "&nbsp;";
                                     }
                                                                        
                                     %>                                    
                                     <!-- 404 sign -->
-                                    <td><%= img %></td>    
+                                    <%= img %> 
                                     
                                     <%
                                     if (( experience & no_search_results) == no_search_results) {
-                                        img = "<img src='images/no-search-results.png' style='width:25px;'></img>";
+                                        img = "<img src='images/no-search-results.png' style='width:20px;'></img><br/>";
 
                                     } else {
                                         img = "&nbsp;";
@@ -273,7 +275,8 @@
                                                                        
                                     %>                                    
                                     <!-- 404 sign -->
-                                    <td><%= img %></td>    
+                                    <%= img %>
+                                    </td>
                                 </tr>
                             </tbody>
                          <% } %>
@@ -380,7 +383,12 @@
                                         //use key and value
                                         customerInfoHTML += "<tbody class='" + (((i++)%2 == 0)?"one":"two") + "'><tr>";
                                         customerInfoHTML += "<td class='queryNameCell'>" + key + "</td>";
-                                        customerInfoHTML += "<td>" + value + "</td>";    
+                                        if ( key.equals("IP Address")) {
+                                        //whois.arin.net?queryinput=5.104.241.178   
+                                            customerInfoHTML += "<td><a target='_blank' href='http://whois.arin.net?queryinput=" + value + "'>" + value + "</a></td>";                                                
+                                        } else {
+                                            customerInfoHTML += "<td>" + value + "</td>";    
+                                        }
                                         customerInfoHTML += "</tr></tbody>";                                
                                     }                                
                                 }
@@ -424,9 +432,10 @@
                                     <input type="button" id="submitBtn" value="Submit" class="submitSearch greenBtn">                           
                                     <input type="button" id="resetBtn" onClick="javascript:parent.location='ClickStreamPageView.jsp';return false;" value="Reset" class="greenBtn">                           
                                 </fieldset>
-                                <input type="hidden" id="selectedDate" name="selectedDate" value="<%= selectedDate %>"/>
+                                <input type="hidden" id="selectedDate" name="selectedDate" value="<%= selectedDate %>"/>                                
                                 <input type="hidden" id="fromTime" name="from" value="<%= StringEscapeUtils.unescapeJava(fromTime) %>"/>
                                 <input type="hidden" id="toTime" name="to" value="<%= StringEscapeUtils.unescapeJava(toTime) %>"/>
+                                <input type="hidden" id="sessionStartTime" name="sessionStart" value="<%= StringEscapeUtils.unescapeJava(sessionStart) %>"/>
                             </form>
                         </div>
                     </div>                               
@@ -480,6 +489,8 @@
                                                     elemStr = ((String) clickElement.get("queryParams"));
                                                     if ( elemStr!=null) {
                                                         elemStr = elemStr.replaceAll("&amp;","#amp;");
+                                                        elemStr = elemStr.replaceAll("quot;","#quot;");
+
                                                         elemStr = elemStr.replaceAll("\"","#quot;");
                                                     }
                                                     //System.out.println(elemStr);
@@ -492,13 +503,20 @@
                                                     <%= pageName %>
                                                 </a>
                                                 <% } else { %>
-                                                    <a href="http://www.officemax.com/<%= pageName %>"
+                                                    <!--<a href="http://www.officemax.com/<%= pageName %>"
                                                        id="pagelink" 
                                                        onClick="setIndex(<%= i %>)" 
                                                        target="htmlpageviewframe"
                                                        data-queryparams="<%= elemStr %>">
                                                         <%= pageName %>
-                                                    </a>
+                                                    </a>-->
+                                                        <a href="./iview.web?nocontent=true"
+                                                           id="pagelink" 
+                                                            onClick="setIndex(<%= i %>)" 
+                                                            target="htmlpageviewframe"
+                                                            data-queryparams="<%= elemStr %>">
+                                                            <%= pageName %>
+                                                        </a>
                                                 <% }%>
                                             </div>
                                         </td>
@@ -832,10 +850,12 @@
                             // has header. in it so skip it
                             continue;
                         }
+                        if ( key == "")
+                            continue;
                         // if key has header. skip it
                         //query[2] = query[2].replace("#amp;","&amp;");
                         // Build a table row for each query parameter            		
-                        var value = paramArray[i].substring(equal+1,paramArray[i].length);
+                        var value = paramArray[i].substring(equal+1,paramArray[i].length);                        
                         value = value.replace(/#amp;/g,"&amp;");
                         value = value.replace(/#quot;/g,"\"");
                         
@@ -893,7 +913,10 @@
                         }
                         key = key.replace("header.cookie.","");
                         key = key.replace("header.","");
-                        
+
+                        if ( key == "")
+                            continue;
+
                         var value = paramArray[i].substring(equal+1,paramArray[i].length);
                         //query[2] = query[2].replace("#amp;","&amp;");
                         value = value.replace(/#amp;/g,"&amp;");
@@ -1000,8 +1023,9 @@
             });
             // End search form code
             
-            function setSessionTxt(sessionid) {
+            function setSessionTxt(sessionid,sessionStart) {
             	$('#sessionid').val(sessionid);
+                $('#sessionStartTime').val(sessionStart);
             	$('#selectedDate').val('');
             	$('#fromTime').val('');
             	$('#toTime').val('');
