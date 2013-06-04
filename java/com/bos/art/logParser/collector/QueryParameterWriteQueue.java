@@ -34,9 +34,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private int objectsWritten;
     private long totalWriteTime;
 
-    private final static int MAXBATCHINSERTSIZE = 650;
+    private final static int MAXBATCHINSERTSIZE = 1500;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 400;
+    private final static int MINBATCHINSERTSIZE = 800;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
 
@@ -224,30 +224,45 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         }
     }
 
+    private long batch = 0;
+    private DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private DateTime batchNow = new DateTime();
+
     public void blockInsert(PreparedStatement pstmt) {
         try {
             pstmt.addBatch();
             Integer count = (Integer) threadLocalInserts.get();
             int icount = count.intValue() + 1;
 
+            batchNow = new DateTime();
+            
             threadLocalInserts.set(new Integer(icount));
             if (icount % currentBatchInsertSize == 0) {
                 long startTime = System.currentTimeMillis();
 
                 pstmt.executeBatch();
+                batch++;
+
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double) elapsed / (double) currentBatchInsertSize;
 
                 if (((currentTimePerInsert <= timePerInsert) && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT))) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + " time per insert: " + timePerInsert);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + " time per insert: " + timePerInsert + " elapsed: " + elapsed);
                 } else if ((currentTimePerInsert * .65) > timePerInsert
                         && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert+ " elapsed: " + elapsed);
                 }
+                if(batchNow.isAfter(batchOneMinute)) {
+                    logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch));
+
+                    batchOneMinute = batchNow.plusMinutes(1);
+                    batch = 0;
+                }
+
                 if (icount % 100000 == 0) {
                     logger.warn("QueryParameterWriteQueue currentBatchInsertSize is-> : " + currentBatchInsertSize);
                 }
