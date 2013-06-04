@@ -131,26 +131,40 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         }
     }
 
+    private long batch = 0;
+    private DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private DateTime batchNow = new DateTime();
+    
     public void blockInsert(PreparedStatement pstmt) {
         try {
             pstmt.addBatch();
             Integer count = (Integer) threadLocalInserts.get();
             int icount = count.intValue() + 1;
             threadLocalInserts.set(new Integer(icount));
+            batchNow = new DateTime();
+            
             if (icount % currentBatchInsertSize == 0) {
-                long startTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();                
                 pstmt.executeBatch();
+                batch++;
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double) elapsed / (double) currentBatchInsertSize;
 
                 if ((currentTimePerInsert * 1.05) < timePerInsert && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT)) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert);
+                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert + " elapsed: " + elapsed );
+                    
                 } else if ((currentTimePerInsert * .85) > timePerInsert && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert);
+                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert+ " elapsed: " + elapsed );
+                }
+                if(batchNow.isAfter(batchOneMinute)) {
+                    logger.warn("HtmlPageRecordPersistanceStrategy " + " batch per minute: " + (batch));
+
+                    batchOneMinute = batchNow.plusMinutes(1);
+                    batch = 0;
                 }
             }
         } catch (SQLException se) {
