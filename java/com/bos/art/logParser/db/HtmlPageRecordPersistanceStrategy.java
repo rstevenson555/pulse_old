@@ -146,11 +146,11 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 if ((currentTimePerInsert * 1.05) < timePerInsert && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT)) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert);
                 } else if ((currentTimePerInsert * .85) > timePerInsert && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert);
                 }
             }
         } catch (SQLException se) {

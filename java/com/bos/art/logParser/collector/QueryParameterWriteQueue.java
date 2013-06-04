@@ -241,12 +241,12 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 if (((currentTimePerInsert <= timePerInsert) && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT))) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + " time per insert: " + timePerInsert);
                 } else if ((currentTimePerInsert * .65) > timePerInsert
                         && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert);
                 }
                 if (icount % 100000 == 0) {
                     logger.warn("QueryParameterWriteQueue currentBatchInsertSize is-> : " + currentBatchInsertSize);
