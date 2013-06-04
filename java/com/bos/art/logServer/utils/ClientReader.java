@@ -241,7 +241,6 @@ public class ClientReader implements Runnable {
      * higher level objects
      */
     public void setNextEvent(UserRequestEventDesc event) {
-        now = new DateTime();
         if (event.retrieveArtAccumulator() == null) {
             if (event.retrieveExternalTiming() == null) {
                 if (event.retrieveTimingEvent() == null) {
