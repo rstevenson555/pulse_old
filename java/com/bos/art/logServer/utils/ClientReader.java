@@ -237,7 +237,8 @@ public class ClientReader implements Runnable {
 
     private DateTime now = null;
     private DateTime pagesMinute = new DateTime().plusMinutes(1);
-    private long pagesPerMinute = 0;
+    private DateTime arMinute = new DateTime().plusMinutes(1);
+    private long pagesPerMinute = 0,arPerMinute = 0;
     
     /**
      * because of the structure of our xml, timing msg and external timing msg are members of UserRequestEventDesc, then
@@ -323,6 +324,13 @@ public class ClientReader implements Runnable {
                             } else {
                                 //logger.info("not found user: " + buffer);
 
+                                arPerMinute++;
+                                if ( now.isAfter(arMinute)) {
+
+                                    logger.info("AccessRecords Per minute: " + (arPerMinute));
+                                    arMinute = now.plusMinutes(1);
+                                    arPerMinute = 0;
+                                }
                                 uniqueRecord.put(buffer,new Object());
                             }                           
                         }
