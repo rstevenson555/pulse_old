@@ -243,6 +243,13 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 pstmt.executeBatch();
                 batch++;
 
+                if(batchNow.isAfter(batchOneMinute)) {
+                    logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
+
+                    batchOneMinute = batchNow.plusMinutes(1);
+                    batch = 0;
+                }
+                
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double) elapsed / (double) currentBatchInsertSize;
 
@@ -256,12 +263,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                     timePerInsert = currentTimePerInsert;
                     logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert+ " elapsed: " + elapsed);
                 }
-                if(batchNow.isAfter(batchOneMinute)) {
-                    logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch));
-
-                    batchOneMinute = batchNow.plusMinutes(1);
-                    batch = 0;
-                }
+                
 
                 if (icount % 100000 == 0) {
                     logger.warn("QueryParameterWriteQueue currentBatchInsertSize is-> : " + currentBatchInsertSize);

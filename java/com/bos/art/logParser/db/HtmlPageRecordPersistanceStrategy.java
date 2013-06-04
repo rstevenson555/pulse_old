@@ -147,6 +147,14 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 long startTime = System.currentTimeMillis();                
                 pstmt.executeBatch();
                 batch++;
+                
+                if(batchNow.isAfter(batchOneMinute)) {
+                    logger.warn("HtmlPageRecordPersistanceStrategy " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
+
+                    batchOneMinute = batchNow.plusMinutes(1);
+                    batch = 0;
+                }
+                
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double) elapsed / (double) currentBatchInsertSize;
 
@@ -160,12 +168,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                     timePerInsert = currentTimePerInsert;
                     logger.warn("HtmlPageRecordPersistanceStrategy currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert+ " elapsed: " + elapsed );
                 }
-                if(batchNow.isAfter(batchOneMinute)) {
-                    logger.warn("HtmlPageRecordPersistanceStrategy " + " batch per minute: " + (batch));
-
-                    batchOneMinute = batchNow.plusMinutes(1);
-                    batch = 0;
-                }
+                
             }
         } catch (SQLException se) {
             logger.error("Exception", se);
