@@ -71,12 +71,15 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
             if ( hidden>=0) {
                 Document doc = Jsoup.parse(this.encodedPage); 
                 Elements inputElements = doc.select("input[type=hidden]");
+                boolean changed = false;
                 for(Element input:inputElements) {
                     if (!input.attr("value").equals("")) {
                         input.attr("value", "wiped");
+                        changed = true;
                     }        		
                 }
-                this.encodedPage = doc.toString();
+                if ( changed) 
+                    this.encodedPage = doc.toString();                
             } else {
                 return;
             }
