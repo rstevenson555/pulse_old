@@ -76,6 +76,7 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
                         input.attr("value", "wiped");
                     }        		
                 }
+                this.encodedPage = doc.toString();
             } else {
                 return;
             }
