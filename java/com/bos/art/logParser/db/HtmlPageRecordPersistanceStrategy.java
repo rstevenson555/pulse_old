@@ -26,7 +26,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
 
     private final static int MAXBATCHINSERTSIZE = 1000;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 460;
+    private final static int MINBATCHINSERTSIZE = 860;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
     private static HtmlPageRecordPersistanceStrategy instance;
@@ -263,7 +263,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         
         int requestTokenCount = pre.getRequestTokenCount();
         int requestToken = pre.getRequestToken();
-        String encodedText = pre.getEncodedPage();
+        String nonEncodedText = pre.getEncodedPage();
 
         try {
             PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
@@ -276,7 +276,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setString(6, pre.getSessionId());            
             pstmt.setInt(7, requestToken);
             pstmt.setInt(8, requestTokenCount);
-            String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
+            //String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
+            String pagehtml = nonEncodedText;
             
             int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());
             experience = determineUserExperience(pagehtml, experience);
