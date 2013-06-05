@@ -9,6 +9,12 @@ package com.bos.art.logParser.records;
 
 import com.bos.art.logParser.db.HtmlPageRecordPersistanceStrategy;
 import com.bos.art.logParser.db.PersistanceStrategy;
+import com.bos.art.logServer.utils.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  * @author I0360D3
@@ -57,8 +63,25 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
 		return encodedPage;
 	}
 	public void setEncodedPage(String encodedPage) {
-		this.encodedPage = encodedPage;
+        if ( StringUtils.isEmpty(pageName)) {
+            this.encodedPage = encodedPage;
+        } else {
+            this.encodedPage = new String(Base64.decodeFast(encodedPage));
+            int hidden = this.encodedPage.indexOf("hidden");
+            if ( hidden>=0) {
+                Document doc = Jsoup.parse(this.encodedPage); 
+                Elements inputElements = doc.select("input[type=hidden]");
+                for(Element input:inputElements) {
+                    if (!input.attr("value").equals("")) {
+                        input.attr("value", "wiped");
+                    }        		
+                }
+            } else {
+                return;
+            }
+        }
 	}
+    
 	public String getPageName() {
 		return pageName;
 	}
