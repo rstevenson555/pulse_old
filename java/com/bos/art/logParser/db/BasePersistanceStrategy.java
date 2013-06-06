@@ -40,7 +40,7 @@ public abstract class BasePersistanceStrategy {
     public static final String FK_INSTANCES_SELECT = "select Instance_ID from Instances where InstanceName = ?";
     public static final String FK_INSTANCES_INSERT = "insert into Instances (InstanceName) values (?)";
     public static final String FK_SESSIONS_INSERT = "insert into Sessions (IPAddress, sessionTXT, browserType, User_ID ) values (?,?,?,?)";
-    public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams,queryparams_key,value_hash) values (?,?,?)";
+    public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams,value_hash) values (?,?)";
     //public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where MD5(queryParams)=MD5(?)";
     public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where value_hash=?";
     public static final String FK_USERS_INSERT = "insert into Users (userName) values (?)";
@@ -349,7 +349,7 @@ public abstract class BasePersistanceStrategy {
 //        
 //        List insertBindParams = Arrays.asList(queryValue,queryKey,md5_str);               
 //        List selectBindParams = Arrays.asList(md5_str); 
-        List insertBindParams = Arrays.asList(queryParameters,"",md5_str);
+        List insertBindParams = Arrays.asList(queryParameters,md5_str);
         List selectBindParams = Arrays.asList(md5_str);
         
         return insertForeignKey(sqlSelect, selectBindParams, sqlInsert, insertBindParams);
