@@ -1184,13 +1184,13 @@ span.deleteicon span {
 	border-top: none !important;
 	width: 30em;
 	border-radius: 0px 0px 5px 5px !important;
-	max-height: 600px;
+	max-height: 150px;
 	overflow-y: auto; 
 }
 
 .queryParamsTableFrame {
 	width: 30em;
-	max-height: 132px;
+	max-height: 149px;
 	overflow-y: auto; 
 }
 
