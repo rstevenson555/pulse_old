@@ -13,17 +13,26 @@
         <res-ref-name>jdbc/mysqlglobaldb</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>
-    </resource-ref> -->
+    </resource-ref> -->    
     <resource-ref>
-        <description>Postgres Datasource</description>
-        <res-ref-name>jdbc/postgres</res-ref-name>
+        <description>Oracle Standby</description>
+        <res-ref-name>jdbc/oracleStandBydb</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>
        <res-sharing-scope>Shareable</res-sharing-scope>
     </resource-ref>
+    
     <resource-ref>
-        <description>Oracle Standby</description>
-        <res-ref-name>jdbc/oracleStandBydb</res-ref-name>
+        <description>Postgres OMX Datasource</description>
+        <res-ref-name>jdbc/artdb-omx</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+       <res-sharing-scope>Shareable</res-sharing-scope>
+   </resource-ref>
+
+    <resource-ref>
+        <description>Postgres B2B Datasource</description>
+        <res-ref-name>jdbc/artdb</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>
        <res-sharing-scope>Shareable</res-sharing-scope>
