@@ -4,7 +4,7 @@ export PATH=$JAVA_HOME/bin:$CATALINA_HOME/bin:$PATH
 nohup ant start-prodArtEngine-omx -logfile ArtEngine-omx.log 1> temp.out 2> error.out &
 #/etc/init.d/artEnine
 sleep 2
-#./art-omx.sh begin_command_mode
+./art-omx.sh begin_command_mode
 ./art-omx.sh loadstatunit=com.bos.art.logParser.statistics.AccessRecordsDailyStats
 ./art-omx.sh loadstatunit=com.bos.art.logParser.statistics.AccessRecordsDailyPageStats
 ./art-omx.sh loadstatunit=com.bos.art.logParser.statistics.AccessRecordsMinuteStats
@@ -19,4 +19,4 @@ sleep 2
 ./art-omx.sh STARTQUERYPARAMPROCESSOR 
 ./art-omx.sh STARTQUERYPARAMUNLOADER
 ./art-omx.sh STARTQUERYPARAMCLEANER
-#./art-omx.sh end_command_mode
+./art-omx.sh end_command_mode

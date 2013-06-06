@@ -69,16 +69,19 @@ public class HtmlPageHelper {
 		}
 		
         HtmlPageHelperResponse response = new HtmlPageHelperResponse();
-        response.setPage(decode(decode(encodedPage)));
+        response.setPage(decode(encodedPage));
         response.setContextName(contextName);
 		//return decode(encodedPage);		
         return response;
         
     }
     
+    // don't have to decode anymore because the page is not encoded
     private String decode(String ep){
-    	byte[] ba = ep.getBytes();
-    	byte[] baDecoded = Base64.decodeBase64(ba);
-    	return new String(baDecoded);
+    	//byte[] ba = ep.getBytes();
+    	//byte[] baDecoded = Base64.decodeBase64(ba); 
+        //byte[] baDecoded = com.bos.art.logParser.tools.Base64.decodeFast(ep);
+    	return ep;
     }
 }
+

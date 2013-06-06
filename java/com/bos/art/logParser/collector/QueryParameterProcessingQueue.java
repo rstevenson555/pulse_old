@@ -28,6 +28,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private volatile long totalSysTime;
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 200000;
+    //private static final int MAX_DB_QUEUE_SIZE = 50000;
     
     private QueryParameterProcessingQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
@@ -41,16 +42,12 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     }
 
     public void addLast(Object o) {
-        //try {
             
             boolean success = dequeue.offer(o);
             if (!success) {
                 logger.error("Failed adding to the QueryParameterProcessingQueue Queue: ");
             }
             
-//        } catch (InterruptedException e) {
-//            logger.error("Interrupted Exception adding to the Database Write Queue: ", e);
-//        }
     }
 
     public Object removeFirst() {

@@ -2,20 +2,18 @@ package com.bos.art.logServer.utils;
 
 import com.bos.art.logParser.records.*;
 import com.bos.art.logServer.Queues.MessageUnloader;
-import com.bos.cache.factory.impl.AgeExpiringFactory;
-import com.bos.cache.impl.MRUCache;
 import java.io.*;
 import java.net.Socket;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import javax.xml.parsers.SAXParser;
 import org.apache.commons.digester.Digester;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -235,13 +233,20 @@ public class ClientReader implements Runnable {
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
     }
+    private static DateTimeFormatter timeformat  = DateTimeFormat.forPattern("HH:mm:ss a");
 
+    private static DateTime now = null;
+    private static DateTime pagesMinute = new DateTime().plusMinutes(1);
+    private static DateTime arMinute = new DateTime().plusMinutes(1);
+    private static long pagesPerMinute = 0,arPerMinute = 0;
+    
     /**
      * because of the structure of our xml, timing msg and external timing msg are members of UserRequestEventDesc, then
      * after each element is completed we turn those attribute members in top-level object and copy the child data into the
      * higher level objects
      */
     public void setNextEvent(UserRequestEventDesc event) {
+        now = new DateTime();
         if (event.retrieveArtAccumulator() == null) {
             if (event.retrieveExternalTiming() == null) {
                 if (event.retrieveTimingEvent() == null) {
@@ -260,8 +265,39 @@ public class ClientReader implements Runnable {
                             }
                         } else {
                             PageRecordEvent pre = event.retrievePageRecordEvent();
-
                             pre.copyFrom(event);
+                            // time format;  02:38:33 PM
+                            // eventtime is a gregorianCalendar
+                            //System.out.println("eventtime: " +pre.getEventTime());
+                            //System.out.println("time: " + pre.getTime());
+                            
+                            DateTime strippedTime = timeformat.parseDateTime(pre.getTime());
+                            strippedTime = strippedTime.withSecondOfMinute(0);
+    
+                            // filter 
+                            StringBuilder builder = new StringBuilder();
+                            builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken()).append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
+                            String buffer = builder.toString();
+                            
+                            synchronized(ulock) {
+                                if (uniqueRecord.get(buffer)!=null) {
+                                    //logger.info("found user: " + buffer);
+
+                                    return;
+                                } else {
+                                    //logger.info("not found user: " + buffer);
+
+                                    pagesPerMinute++;
+                                    if ( now.isAfter(pagesMinute)) {
+                                        
+                                        logger.info("Pages Per minute: " + (pagesPerMinute));
+                                        pagesMinute = now.plusMinutes(1);
+                                        pagesPerMinute = 0;
+                                    }
+                                    uniqueRecord.put(buffer,new Object());
+                                }                           
+                            }
+                            
                             add(pre);
                         }
                     } else {
@@ -274,10 +310,10 @@ public class ClientReader implements Runnable {
                     UserRequestTiming timing = event.retrieveTimingEvent();
                     timing.copyFrom(event);
              
+                    StringBuilder builder = new StringBuilder();
                     if (!timing.getBegin()) {
                         // need to filter dups
-                        StringBuilder builder = new StringBuilder();
-                        builder.append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
+                        builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
                         String buffer = builder.toString();
                                                 
                         synchronized(ulock) {
@@ -288,6 +324,13 @@ public class ClientReader implements Runnable {
                             } else {
                                 //logger.info("not found user: " + buffer);
 
+                                arPerMinute++;
+                                if ( now.isAfter(arMinute)) {
+
+                                    logger.info("AccessRecords Per minute: " + (arPerMinute));
+                                    arMinute = now.plusMinutes(1);
+                                    arPerMinute = 0;
+                                }
                                 uniqueRecord.put(buffer,new Object());
                             }                           
                         }
@@ -304,6 +347,24 @@ public class ClientReader implements Runnable {
 
                 exttiming.copyFrom(timing);
                 exttiming.copyFrom(event);
+                
+                // filter 
+                StringBuilder builder = new StringBuilder();
+                //builder.append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
+                builder.append("ExternalEventTiming").append(exttiming.getClassification()).append(exttiming.getLoadTime()).append(exttiming.getTime()).append(exttiming.getInstance());
+                String buffer = builder.toString();
+
+                synchronized(ulock) {
+                    if (uniqueRecord.get(buffer)!=null) {
+                        //logger.info("found user: " + buffer);
+
+                        return;
+                    } else {
+                        //logger.info("not found user: " + buffer);
+
+                        uniqueRecord.put(buffer,new Object());
+                    }                           
+                }
                                 
                 // this is to ensure that we only process end type messages
                 if (!exttiming.getBegin()) {
@@ -316,6 +377,24 @@ public class ClientReader implements Runnable {
 
             accumulator.copyFrom(timing);
             accumulator.copyFrom(event);
+            
+            // filter 
+            StringBuilder builder = new StringBuilder();
+            //builder.append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken());
+            builder.append("AccumulatorEventTiming").append(accumulator.getTime()).append(accumulator.getClassification()).append(accumulator.getValue()).append(accumulator.getInstance());
+            String buffer = builder.toString();
+
+            synchronized(ulock) {
+                if (uniqueRecord.get(buffer)!=null) {
+                    //logger.info("found user: " + buffer);
+
+                    return;
+                } else {
+                    //logger.info("not found user: " + buffer);
+
+                    uniqueRecord.put(buffer,new Object());
+                }                           
+            }
             
             // this is to ensure that we only process end type messages
             if (!accumulator.getBegin()) {

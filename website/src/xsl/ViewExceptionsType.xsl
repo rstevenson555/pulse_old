@@ -6,7 +6,7 @@
 <xsl:import href="ViewHistoricalChartsLeftPanel.xsl"    />
 
   <xsl:template match="DashBoard">
-   <a href="/logparser-website/ViewDailySessionSummary.web" title="Return to home page" accesskey="1"><img src="images/ARTlogo.jpg" width="209" alt="ART logo"/></a>
+   <a href="ViewDailySessionSummary.web" title="Return to home page" accesskey="1"><img src="images/ekg.gif" width="209" style="height:155px;" alt="Pulse logo"/>></a>
     <div id="tools">
         <ul id="mainNav" style="display:none;">
             <li><a href="download.html" title="Real time charts of boiseoffice.com performance">Production Environment</a></li>

@@ -14,10 +14,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -221,17 +223,19 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
     
     private int binaryTreeSearch(String foreignKeyValue, String foreignKeyName, AccessRecordsForeignKeys fk) {
         if (foreignKeyName.equals(ForeignKeyStore.FK_SESSIONS_SESSION_ID)) {
+            Date now = new Date();
             SessionDataClass sdc = new SessionDataClass();
             sdc.firstRequestDate = fk.eventTime;
             sdc.lastRequestDate = fk.eventTime;
-            sdc.touchDate = new java.util.Date();
+            sdc.touchDate = now;
             sdc.sessionTXT = foreignKeyValue;
             sdc.Context_ID = fk.fkContextID;
             return binaryTreeSearch(sdc, foreignKeyName);
         } else if (foreignKeyName.equals(ForeignKeyStore.FK_QUERY_PARAMETER_ID)) {
+            Date now = new Date();
             QueryParamClass qpc = new QueryParamClass();
-            qpc.entryDate = new java.util.Date();
-            qpc.lastTouchDate = new java.util.Date();
+            qpc.entryDate = now;
+            qpc.lastTouchDate = now;
             qpc.queryParam = foreignKeyValue;
             return binaryTreeSearch(qpc, foreignKeyName);
         } else {
@@ -272,8 +276,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             return iForeignKey;
         } else {
             if (o instanceof QueryParamClass) {
-                boolean statechange = false;
-                StringBuilder sb = new StringBuilder();
+                //boolean statechange = false;
+                //StringBuilder sb = new StringBuilder();
                 QueryParamClass qpcTree = (QueryParamClass) o;
                 qpcTree.lastTouchDate = new java.util.Date();
                 qpcTree.touchCount++;
@@ -298,7 +302,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         int startUserID = foreignKeyValue.indexOf(USERID);
         String ip = foreignKeyValue.substring(startIPAddress + IPADDRESS.length(), startBrowserType);
         String browser = foreignKeyValue.substring(startBrowserType + BROWSER.length(), startUserID);
-        String sessiontxt = foreignKeyValue.substring(0, startIPAddress);
+        //String sessiontxt = foreignKeyValue.substring(0, startIPAddress);
         int userID = Integer.parseInt(foreignKeyValue.substring(startUserID + 8));
         String sessionTxtKeyValue = sessionData.sessionTXT.substring(0, startBrowserType);
         Object o = tm.get(sessionTxtKeyValue);
@@ -430,7 +434,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
 
         @Override
         public String toString() {
-            String databaseMisKey = (String) BasePersistanceStrategy.databaseMisXRef.get(key);
+            String databaseMisKey = (String) BasePersistanceStrategy.databaseMisXRef.get(key); 
             Integer i = null;
             int consecutiveDatabaseMisses = 0;
             if (databaseMisKey != null) {
@@ -544,6 +548,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 if (o instanceof SessionDataClass) {
                     SessionDataClass sdc = (SessionDataClass) o;
                     if (sdc.lastRequestDate.after(oneMinDate)) {
+                        sdc.persistOneMinuteSession = true;
                         allPersistableObjects.add(sdc);
                         incrementOneMinSessions(sdc, htSessionCounts);
                         incrementFiveMinSessions(sdc, htSessionCounts);
@@ -717,13 +722,14 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             }
             pstmt.setInt(3, sdc.User_ID);
             pstmt.setInt(4, sdc.Context_ID);
-            pstmt.setTimestamp(5, new java.sql.Timestamp(sdc.firstRequestDate.getTime()));
-            pstmt.setTimestamp(6, new java.sql.Timestamp(sdc.lastRequestDate.getTime()));
+            pstmt.setTimestamp(5, new Timestamp(sdc.firstRequestDate.getTime()));
+            pstmt.setTimestamp(6, new Timestamp(sdc.lastRequestDate.getTime()));
             pstmt.setInt(7, sdc.touchCount);
             pstmt.setInt(8, (int) duration);
             pstmt.setInt(9, sdc.sessionID);
             pstmt.execute();
             pstmt.close();
+                        
         } catch (SQLException se) {
             // TODO Logger
             se.printStackTrace();
@@ -743,6 +749,35 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 }
             }
         }
+    }
+    
+    /**
+     * update the session_id with the proper value
+     * @param con
+     * @param sessiontxt
+     * @param sessionid
+     * @param starttime
+     * @throws SQLException 
+     */
+    private void update_html_page_response(Connection con,String sessiontxt, int sessionid, Date starttime) throws SQLException
+    {        
+        DateTime timeoffset = new DateTime(starttime);
+        timeoffset = timeoffset.minusMinutes(1);
+                
+        //System.out.println("update_html_page_response: " + sessiontxt + " " +sessionid + " " +timeoffset);
+        PreparedStatement sessionpsmt = (con).prepareStatement("update htmlpageresponse set session_id = ? where sessiontxt = ? and time >= ?");
+        sessionpsmt.setInt(1,sessionid);
+        int pos = 0;
+        String session = "";
+        if ( (pos = sessiontxt.indexOf("#IPADDRESS#"))!=-1) {
+            session = sessiontxt.substring(0,pos);
+            //System.out.println("session: " + session);
+        }
+        sessionpsmt.setString(2,session);
+        sessionpsmt.setTimestamp(3,new Timestamp(timeoffset.toDate().getTime()));
+        int rows = sessionpsmt.executeUpdate();
+        //System.out.println("updated htmlpageresponse rows: " + rows);
+        sessionpsmt.close();
     }
     /*
      * private void broadcast(SessionDataBean sessionBean){
@@ -807,6 +842,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         public String browserType;
         public int User_ID;
         public int Context_ID;
+        public boolean persistOneMinuteSession = false;
     }
 
     private class CounterClass implements Serializable {

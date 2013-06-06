@@ -14,7 +14,7 @@
 
   <xsl:template match="DashBoard">
 
-   <a href="/logparser-website/ViewDailySessionSummary.web" title="Return to home page" accesskey="1"><img src="images/ARTlogo.jpg" width="209" alt="ART logo"/></a>
+   <a href="ViewDailySessionSummary.web" title="Return to home page" accesskey="1"><img src="images/ekg.gif" width="209" style="height:155px;" alt="Pulse logo"/></a>
 
     <div id="tools">
 
@@ -108,13 +108,13 @@
 
                 <p class="d1">The following are realtime graphs of the Average Page Load Time.</p>
 
-                <img src="/logparser-website/testchart.web?classification=7701&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
+                <img src="testchart.web?classification=7701&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
 
-                <img src="/logparser-website/testchart.web?classification=7702&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
+                <img src="testchart.web?classification=7702&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
 
-                <img src="/logparser-website/testchart.web?classification=7703&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
+                <img src="testchart.web?classification=7703&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
 
-                <img src="/logparser-website/testchart.web?classification=7704&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
+                <img src="testchart.web?classification=7704&amp;start=20040706090000&amp;end=20040706150000" alt="Greetings There" height="225" width="700" />
 
                 <!--
 

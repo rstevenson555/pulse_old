@@ -16,10 +16,11 @@ import org.apache.commons.codec.net.URLCodec;
 import org.jgroups.*;
 //import org.jgroups.blocks.PullPushAdapter;
 import org.jgroups.protocols.*;
-import org.jgroups.protocols.pbcast.FLUSH;
+
 import org.jgroups.protocols.pbcast.GMS;
 import org.jgroups.protocols.pbcast.NAKACK2;
 import org.jgroups.protocols.pbcast.STABLE;
+import org.jgroups.protocols.pbcast.FLUSH;
 import org.jgroups.stack.IpAddress;
 import org.jgroups.stack.ProtocolStack;
 
@@ -35,7 +36,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
     private String mhostApp = null;
     private String localIp = null;
     private static Timer timer = new Timer();
-    //private AppletMessageListener.ConnectionDetector detector = null;
+    //private ConnectionDetector detector = null;
     static private AppletMessageListener instance = new AppletMessageListener();
     private long lastReceive = System.currentTimeMillis();
     private List externalAccessRecordDelegates = new ArrayList();
@@ -43,6 +44,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
     private List queryBeanDelegates = new ArrayList();
     private List chatBeanDelegates = new ArrayList();
     private List memoryStatDelegates = new ArrayList();
+    private List errorStatDelegates = new ArrayList();
     private List sessionDataDelegates = new ArrayList();
     private List userDelegates = new ArrayList();
     private List channelListeners = new ArrayList();
@@ -82,7 +84,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 //                    if (detector != null) {
 //                        detector.interrupt();
 //                    }
-//                    detector = new AppletMessageListener.ConnectionDetector();
+//                    detector = new ConnectionDetector();
 //                    detector.start();
 //                    System.out.println("about to reconnect");
 //                    channel.setReceiver(this);
@@ -101,7 +103,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 //                }
                 return;
             } else {
-//                detector = new AppletMessageListener.ConnectionDetector();
+//                detector = new ConnectionDetector();
 //                detector.start();
             }
 
@@ -121,10 +123,12 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             channel = new JChannel(false);                 // 1
             ProtocolStack stack = new ProtocolStack(); // 2
             channel.setReceiver(this);
-            channel.setProtocolStack(stack);       // 3            
-            
+            channel.setProtocolStack(stack);       // 3
+
+                                    
             InetAddress localinet = InetAddress.getByName(localIp);
             System.out.println("localip name: " + InetAddress.getByName(localIp));
+            
             
             String ipWithoutDots= localIp.replaceAll("\\.","");
             //int bind_port = 8899;
@@ -133,11 +137,12 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
                 bind_port = (int)((System.currentTimeMillis()+Integer.parseInt(ipWithoutDots)) % 60017);
             while(bind_port <1024);
             
+
             TCP tcp = new TCP();
             tcp.setBindToAllInterfaces(false);
             tcp.setEnableBundling(true);
-            tcp.setBindAddress(localinet);      
-            tcp.setBindPort(bind_port);           
+            tcp.setBindAddress(localinet);                         
+            tcp.setBindPort(bind_port);
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
@@ -149,7 +154,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 
             // soltuions
             int server_port = 7800;
-            //int server_port = 8800;
+            //int server_port = 8810;
             IpAddress artServerAddress = new IpAddress(mhost, server_port);
             InetSocketAddress serveraddr = new InetSocketAddress(mhost, server_port);
             List<IpAddress> initialhosts = new ArrayList<IpAddress>();
@@ -158,7 +163,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             //IpAddress laddress = new IpAddress(localIp, bind_port);
             //IpAddress localAddress = new IpAddress(localinet, bind_port);
             IpAddress localAddress = new IpAddress(localinet,bind_port) {
-
+ 
                 @Override
                 public String toString() {
                     //return super.toString();
@@ -176,12 +181,12 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             tcpping.setTimeout(4000);
             //tcpping.setNumPingRequests(1);
             tcpping.setNumInitialMembers(1);
-            
+
             TCPGOSSIP gossip = new TCPGOSSIP();
             ArrayList<InetSocketAddress> slist = new ArrayList<InetSocketAddress>();
             slist.add(serveraddr);
             gossip.setInitialHosts(slist);
-
+            
             System.out.println("initial hosts: " + artServerAddress);
             System.out.println("initial hosts: " + mhost);
 
@@ -197,7 +202,8 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             gms.setViewBundling(true);
             gms.setMaxBundlingTime(1500);
             
-            FD_SOCK fdsock = new FD_SOCK();
+            
+FD_SOCK fdsock = new FD_SOCK();
             fdsock.bind_addr = localinet;
             FD fd = new FD();
             fd.setTimeout(5000);
@@ -218,13 +224,14 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
                     addProtocol(new UNICAST()).                    
                     addProtocol(new STABLE()).
                     addProtocol(gms);
-                    //addProtocol(new FLUSH());                    
+                    //addProtocol(new FLUSH());
 //                    addProtocol(new UFC()).
 //                    addProtocol(new MFC()).
 //                    addProtocol(new FRAG2());
                     
                     
                     //addProtocol(new VIEW_SYNC());
+           
                     
 
             try {
@@ -268,9 +275,6 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
         }
     }
 
-    public void process(Message msg, ErrorStatBean obj) {
-       // throw new UnsupportedOperationException("Not supported yet.");
-    }
 
     /**
      * inner class to try to determine if we are connected to the server if we are not , we drop the connection and try to
@@ -508,7 +512,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 //        //System.out.println("suspect called for: " + suspected_mbr);
 //    }
 
-    @Override
+
     public void viewAccepted(View new_view) {
         //System.out.println("public channel members: " + new_view);
         List<Address> mbrs = new_view.getMembers();
@@ -640,6 +644,11 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
         memoryStatDelegates.remove(delegate);
         memoryStatDelegates.add(delegate);
     }
+    
+     public void setErrorStatDelegate(ErrorStatDelegate delegate) {
+        errorStatDelegates.remove(delegate);
+        errorStatDelegates.add(delegate);
+    }
 
     public void setSessionDataDelegate(SessionDataDelegate delegate) {
         sessionDataDelegates.remove(delegate);
@@ -663,8 +672,8 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
     public void receive(org.jgroups.Message msg) {
         // we don't send null's
        // System.out.println("receive:" + msg);
-        if ( msg == null) {
-            // invalid msg just discard
+        if (msg ==null) {
+            // invalid object, just discard
             return;
         }
         lastReceive = System.currentTimeMillis();
@@ -708,8 +717,8 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
     }
 
     public void process(org.jgroups.Message msg, UserBean bean) {
-        System.out.println("process UserBean  " + bean);
-        System.out.println("process userDelegates.size: " + userDelegates.size());
+System.out.println("process UserBean  " + bean);
+        System.out.println("process userDelegates.size: " + userDelegates.size());        
         for (Iterator iter = userDelegates.iterator(); iter.hasNext();) {
             UserDelegate app = (UserDelegate) iter.next();
             app.didReceiveUserBean(msg, bean);
@@ -744,6 +753,13 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
         for (Iterator iter = memoryStatDelegates.iterator(); iter.hasNext();) {
             MemoryStatDelegate delegate = (MemoryStatDelegate) iter.next();
             delegate.didReceiveMemoryStatBean(msg, bean);
+        }
+    }
+    
+    public void process(org.jgroups.Message msg, ErrorStatBean bean) {
+        for (Iterator iter = errorStatDelegates.iterator(); iter.hasNext();) {
+            ErrorStatDelegate delegate = (ErrorStatDelegate) iter.next();
+            delegate.didReceiveErrorStatBean(msg, bean);
         }
     }
 
@@ -830,7 +846,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 //            detector.interrupt();
 //        }
 //
-//        detector = new AppletMessageListener.ConnectionDetector();
+//        detector = new ConnectionDetector();
 //        detector.start();
 
         for (Iterator iter = channelListeners.iterator(); iter.hasNext();) {
@@ -876,7 +892,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 //            detector.interrupt();
 //        }
 //
-//        detector = new AppletMessageListener.ConnectionDetector();
+//        detector = new ConnectionDetector();
 //        detector.start();
 
 //        for (Iterator iter = channelListeners.iterator(); iter.hasNext();) {
@@ -886,3 +902,4 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 //        }
     }
 }
+

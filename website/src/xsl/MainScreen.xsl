@@ -14,7 +14,8 @@
 
   <xsl:template match="DashBoard">
 
-   <a href="/logparser-website/ViewDailySessionSummary.web" title="Return to home page" accesskey="1"><img src="images/ARTlogo.jpg" width="209" alt="ART logo"/></a>
+   <a href="ViewDailySessionSummary.web" title="Return to home page" accesskey="1">            <img src="images/ekg.gif" width="209" style="height:155px;" alt="Pulse logo"/>
+</a>
 
     <div id="tools">
 

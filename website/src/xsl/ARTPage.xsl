@@ -56,7 +56,7 @@ primary table that provides the header/left/body/right/footer structure
 
 <!-- Sets the head/title element value -->
 <xsl:template name="setHtmlHeadTitle">
-  <title>ART Client - Online statistical reporting</title>
+  <title>Pulse</title>
 </xsl:template>
 
 <xsl:template match="DashBoard">

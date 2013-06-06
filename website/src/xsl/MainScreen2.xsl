@@ -22,7 +22,7 @@
 
 <head>
 
- <title>ART Client - Online statistical reporting for boiseoffice.com</title>
+ <title>Pulse</title>
 
  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
 
@@ -42,7 +42,8 @@
 
 <div id="header">
 
-<a href="/logparser-website/ViewDailySessionSummary.web" title="Return to home page" accesskey="1"><img src="images/ARTlogo.jpg" width="209" alt="ART logo"/></a>
+<a href="ViewDailySessionSummary.web" title="Return to home page" accesskey="1">            <img src="images/ekg.gif" width="209" style="height:155px;" alt="Pulse logo"/>
+</a>
 
  <div id="tools">
 

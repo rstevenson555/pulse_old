@@ -2,7 +2,7 @@
 <html style="height: 100%">
     <head>
         <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-        <title>ART Client - Online statistical reporting</title>
+        <title>Pulse</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta content="Eric Van Geem" name="author">
         <link media="screen" title="default" href="css/default.css" type="text/css" rel="stylesheet">

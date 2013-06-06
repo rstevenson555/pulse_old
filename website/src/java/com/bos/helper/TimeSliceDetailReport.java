@@ -81,7 +81,7 @@ public class TimeSliceDetailReport {
             + " from AccessRecords ar, Contexts cont, Pages page where ar.Time> ? and ar.Time< ? "
             + " and cont.Context_ID=ar.Context_ID and page.Page_ID=ar.Page_ID "
             + " and page.pageName like '%' || ? || '%' and cont.contextName like '%' || ? || '%' "
-            + " group by Hour, cont.contextName, page.pageName order by Hour desc";
+            + " group by Hour, cont.contextName, page.pageName order by Hour desc,count(ar.loadTime) desc";
 
     private static final String HIGH_LINE_DETAIL_QUERY =
             " select cont.contextName,  page.pageName,  avg(ar.loadTime), count(ar.loadTime), "

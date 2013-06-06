@@ -45,6 +45,17 @@
         </fileset>
         <pathelement location="./build/logParser/java"/>
     </path>
+
+    <path id="export_classpath2">
+        <fileset dir="./jars">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="./jars">
+            <include name="**/*.zip"/>
+        </fileset>
+        <pathelement location="./java"/>
+    </path>
+    
     
     <path id="classpath">
         <fileset dir="${logparser.jars}">
@@ -97,7 +108,7 @@
         <java  classname="com.bos.art.logParser.server.Engine"
               fork="true"
               failonerror="true" >
-            <jvmarg line="-server -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9810 -Dcom.sun.management.jmxremote.ssl=false -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -Xmx1536m -Xloggc:omx_gcFile.log"/>
+            <jvmarg line="-server -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9810 -Dcom.sun.management.jmxremote.ssl=false -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -Xmx4096m -Xloggc:omx_gcFile.log"/>
             <classpath>
                 <pathelement location="dist/LiveLogParser.jar"/>
             </classpath>
@@ -320,7 +331,7 @@
               failonerror="true" >
            <!--<jvmarg line="-Xmx128m -XX:NewSize=16m -XX:MaxNewSize=32m"/> -->
            <!--<jvmarg line="-server -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -Xmx1900m -Xms680m -XX:NewSize=32m -XX:MaxNewSize=64m -Xloggc:gcFile.log"/> -->
-            <jvmarg line="-server -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9805 -Dcom.sun.management.jmxremote.ssl=false -Xmx1024m"/>
+            <jvmarg line="-server -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9805 -Dcom.sun.management.jmxremote.ssl=false -Xmx2536m"/>
             <arg value="${param}"/> 
             <arg value="${param2}"/> 
             <classpath>
@@ -508,6 +519,53 @@
                includes="**/*.properties,**/*.yml" 
              />
         </jar>
+    </target>
+
+    <target name="makejar-from-export" depends="build-from-exported" description="Makes a logParser.jar and places it in ./build/classess dir">
+     
+       <!--<copy tofile="./build/omx_collector_config.yml" file="./build/logParser/java/omx_collector_config.yml" overwrite="true" />
+        <copy tofile="./build/solutions_collector_config.yml" file="./build/logParser/java/solutions_collector_config.yml" overwrite="true" />
+        <copy tofile="./build/solutions_log4j.properties" file="./build/logParser/java/solutions_log4j.properties" overwrite="true" />
+        <copy tofile="${logparser.bin}/omx_log4j.properties" file="./java/omx_log4j.properites" overwrite="true" />
+        -->
+        <mkdir dir="./build/classess"/>
+        
+        <copy todir="./build" >
+            <fileset dir="./java/"
+                includes="**/*.properties,**/*.yml"
+            />
+        </copy>
+        <jar destfile="./build/classess/LiveLogParser.jar">
+
+            <fileset dir="./build/classess"
+               includes="**/*.class"
+             />
+            <fileset dir="./java"
+               includes="**/*.properties,**/*.yml" 
+             />
+        </jar>
+
+        <copy file="./build/classess/LiveLogParser.jar" overwrite="true" todir="/opt/art/logParser/dist"/>
+
+        <copy todir="/opt/art/logParser/jars" >
+            <fileset dir="./jars" />
+        </copy>
+
+        <copy todir="/opt/art/logParser" overwrite="true">
+            <fileset dir="./"
+               includes="*.sh"/>
+        </copy>
+
+        <copy todir="/opt/art/logParser" overwrite="true">
+            <fileset dir="./"
+               includes="*.xml"/>
+        </copy>
+
+        <copy todir="/opt/art/logParser" overwrite="true">
+            <fileset dir="./build"
+               includes="*.yml *.properties"/>
+        </copy>
+     
     </target>
 
     <target name="clean-old-app" description="removes the old application">
@@ -925,6 +983,20 @@
             optimize="off"  
             excludes="logs/,website/,**/test/**">
             <classpath refid="export_classpath"/>
+        </javac>
+     
+    </target>
+
+    <target name="build-from-exported" depends="">
+
+        <mkdir dir="./build/classess"/>
+
+        <javac srcdir="java" 
+            destdir="./build/classess" 
+            debug="on" 
+            optimize="off"  
+            excludes="logs/,website/,**/test/**">
+            <classpath refid="export_classpath2"/>
         </javac>
      
     </target>

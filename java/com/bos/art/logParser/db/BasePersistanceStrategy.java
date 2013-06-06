@@ -7,15 +7,16 @@
 package com.bos.art.logParser.db;
 
 
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
@@ -26,7 +27,7 @@ import org.apache.log4j.Logger;
  * To change the template for this generated type comment go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-public abstract class BasePersistanceStrategy {
+public abstract class BasePersistanceStrategy { 
     public static HashMap sequenceNameHashMap = null;
     public static final String FK_BRANCH_INSERT = "insert into Branches (branchName) values (?)";
     public static final String FK_BRANCH_SELECT = "select Branch_Tag_ID from Branches where branchName = ?";
@@ -39,8 +40,9 @@ public abstract class BasePersistanceStrategy {
     public static final String FK_INSTANCES_SELECT = "select Instance_ID from Instances where InstanceName = ?";
     public static final String FK_INSTANCES_INSERT = "insert into Instances (InstanceName) values (?)";
     public static final String FK_SESSIONS_INSERT = "insert into Sessions (IPAddress, sessionTXT, browserType, User_ID ) values (?,?,?,?)";
-    public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams) values (?)";
-    public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where queryParams=?";
+    public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams,value_hash) values (?,?)";
+    //public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where MD5(queryParams)=MD5(?)";
+    public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where value_hash=?";
     public static final String FK_USERS_INSERT = "insert into Users (userName) values (?)";
     public static final String FK_USERS_SELECT = "select User_ID from Users where userName = ?";
     public static final String FK_CONTEXTS_INSERT = "insert into Contexts (ContextName) values (?)";
@@ -49,12 +51,13 @@ public abstract class BasePersistanceStrategy {
     public static final String FK_STACKTRACEROWS_SELECT = "select row_id from StackTraceRows where row_message=?";
     private static final String BROWSER = "#BROWSER#";
     private static final String IPADDRESS = "#IPADDRESS#";
+    private static final String SELECT_CURRVAL = "select currval(?)";
     private static final String USERID = "#USERID#";
 
     protected int contextRead;
     protected int contextWrite;
-    public static HashMap databaseMisHashtable = new HashMap();
-    public static HashMap databaseMisXRef = new HashMap();
+    public static Map<String,Integer> databaseMisHashtable = new HashMap<String,Integer>();
+    public static Map<String,String> databaseMisXRef = new HashMap<String,String>();
     
     protected static final Logger logger = (Logger) Logger.getLogger(BasePersistanceStrategy.class.getName());
     public static final int DATABASE_MISS_THRESHOLD = 1000000;
@@ -148,7 +151,7 @@ public abstract class BasePersistanceStrategy {
                                 String input = String.valueOf(o);
                                 input = StringEscapeUtils.escapeJava(input);
                                 selectValues.set(i, input);
-                                insertValues.set(i, input);
+                                //insertValues.set(i, input);
                                 pstmt.setString(i + 1, input);
                             } else
                                 pstmt.setString(i + 1, String.valueOf(o));
@@ -223,18 +226,18 @@ public abstract class BasePersistanceStrategy {
         }
         return resultValue;
     }
+    
 
     protected int insertContext(String contextValue) {
         String sqlSelect = FK_CONTEXTS_SELECT;
         String sqlInsert = FK_CONTEXTS_INSERT;
-        List bindParams = new ArrayList();
-
-        bindParams.add(contextValue);
+        List bindParams = Arrays.asList(contextValue);
+        
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
-    protected int selectLastInsert(Connection con, String seqName) throws SQLException {
-        PreparedStatement pstmt2 = con.prepareStatement("select currval(?)");
+    static public int selectLastInsert(Connection con, String seqName) throws SQLException {
+        PreparedStatement pstmt2 = con.prepareStatement(SELECT_CURRVAL);
 
         pstmt2.setString(1, seqName);
         ResultSet rs2 = pstmt2.executeQuery();
@@ -251,28 +254,31 @@ public abstract class BasePersistanceStrategy {
     protected int insertUser(String userKey) {
         String sqlSelect = FK_USERS_SELECT;
         String sqlInsert = FK_USERS_INSERT;
-        List bindParams = new ArrayList();
-
-        bindParams.add(userKey);
+        List bindParams = Arrays.asList(userKey);
+        
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
     
     public static void main(String []args) {
         String queryParameter = "ProfileFormHandler.email.lastName=smith";
                         int start = 0,equalSign;
+                        String queryParameter2="";
         if ( (start = queryParameter.indexOf("ProfileFormHandler"))!=-1) {
             // now find the equal sign
             equalSign = queryParameter.indexOf('=', start);
-            queryParameter = queryParameter.substring(0,equalSign);
-            queryParameter += "=wiped";
+            queryParameter2 = queryParameter.substring(0,equalSign);
+            String value =queryParameter.substring(equalSign+1);
+            queryParameter2 += "=wiped";
         }
-    System.out.println("queryParameter: " + queryParameter);
+    System.out.println("queryParameter: " + queryParameter2);
+            
     }
     
-    protected int insertQueryParameter(String queryParameter) {
+    //protected int insertQueryParameter(String queryParameter) {
+    protected int insertQueryParameter(String queryParameters) {
         String sqlSelect = FK_QUERY_PARAMETERS_SELECT;
         String sqlInsert = FK_QUERY_PARAMETERS_INSERT;
-        List bindParams = new ArrayList();
+        
 
         /*
          *       "password": null, \n\
@@ -282,10 +288,10 @@ public abstract class BasePersistanceStrategy {
 
          */
         
-        int start = 0,equalSign;
+        //int start = 0,equalSign;
         
 
-        if ( (start = queryParameter.indexOf("Password"))!=-1) {
+/*        if ( (start = queryParameter.indexOf("Password"))!=-1) {
             // now find the equal sign
             equalSign = queryParameter.indexOf('=', start);
             if (equalSign !=-1) {
@@ -300,10 +306,74 @@ public abstract class BasePersistanceStrategy {
                 queryParameter = queryParameter.substring(0,equalSign);
                 queryParameter += "=wiped";
             }
-        }       
+        }    
+        if ( (start = queryParameter.indexOf("creditCardNumber"))!=-1) {
+            // now find the equal sign
+            equalSign = queryParameter.indexOf('=', start);
+            if (equalSign !=-1) {
+                queryParameter = queryParameter.substring(0,equalSign);
+                queryParameter += "=wiped";
+            }
+        }
+        if ( (start = queryParameter.indexOf("giftCard"))!=-1) {
+            // now find the equal sign
+            equalSign = queryParameter.indexOf('=', start);
+            if (equalSign !=-1) {
+                queryParameter = queryParameter.substring(0,equalSign);
+                queryParameter += "=wiped";
+            }
+        }
+        if ( (start = queryParameter.indexOf("giftCardNo"))!=-1) {
+            // now find the equal sign
+            equalSign = queryParameter.indexOf('=', start);
+            if (equalSign !=-1) {
+                queryParameter = queryParameter.substring(0,equalSign);
+                queryParameter += "=wiped";
+            }
+        } 
+        * //insert into QueryParameters (queryParams,queryparams_key,value_hash) values (?,?,?)
+*/
+        
+//        int equals = queryParameter.indexOf("=");
+//        String queryValue = "";
+//        String queryKey = "";
+//        
+//        if ( equals!=-1) {
+//            queryValue = queryParameter.substring(equals+1);
+//            queryKey = queryParameter.substring(0,equals);
+//        } else {
+//            queryKey = queryParameter;
+//        }
+//
+          String md5_str = md5(queryParameters);
+//        
+//        List insertBindParams = Arrays.asList(queryValue,queryKey,md5_str);               
+//        List selectBindParams = Arrays.asList(md5_str); 
+        List insertBindParams = Arrays.asList(queryParameters,md5_str);
+        List selectBindParams = Arrays.asList(md5_str);
+        
+        return insertForeignKey(sqlSelect, selectBindParams, sqlInsert, insertBindParams);
+    }
+    
+    /**
+     * return a md5 hash
+     * @param str
+     * @return 
+     */
+    private String md5(String str) {
+        try {
+            final MessageDigest messageDigest = MessageDigest.getInstance("MD5");
 
-        bindParams.add(queryParameter);
-        return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
+            messageDigest.reset();
+            messageDigest.update(str.getBytes(Charset.forName("UTF8")));
+            final byte[] resultByte = messageDigest.digest();
+            final String result = new String(Hex.encodeHex(resultByte));                               
+
+            return result;
+        } catch (NoSuchAlgorithmException ex) {
+            java.util.logging.Logger.getLogger(BasePersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
     }
 
     protected int insertStackTraceRow(String queryParameter) {
@@ -318,12 +388,8 @@ public abstract class BasePersistanceStrategy {
 
     protected int insertSession(String sessiontxt, String ip, String browser, int userID) {
         String sqlInsert = FK_SESSIONS_INSERT;
-        List bindParams = new ArrayList();
-
-        bindParams.add(ip);
-        bindParams.add(sessiontxt);
-        bindParams.add(browser);
-        bindParams.add(new Integer(userID));
+        List bindParams = Arrays.asList(ip,sessiontxt,browser,new Integer(userID));
+        
         Connection con = null;
         int resultValue = 0;
 
@@ -349,45 +415,40 @@ public abstract class BasePersistanceStrategy {
     protected int insertInstance(String instanceValue) {
         String sqlSelect = FK_INSTANCES_SELECT;
         String sqlInsert = FK_INSTANCES_INSERT;
-        List bindParams = new ArrayList();
-
-        bindParams.add(instanceValue);
+        List bindParams = Arrays.asList(instanceValue);
+        
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
     
     protected int insertMachine(String machineValue) {
         String sqlSelect = FK_MACHINES_SELECT;
         String sqlInsert = FK_MACHINES_INSERT;
-        List bindParams = new ArrayList();
+        List bindParams = Arrays.asList(machineValue);
 
-        bindParams.add(machineValue);
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
     protected int insertPage(String pageName) {
         String sqlSelect = FK_PAGES_SELECT;
         String sqlInsert = FK_PAGES_INSERT;
-        List bindParams = new ArrayList();
+        List bindParams = Arrays.asList(pageName);
 
-        bindParams.add(pageName);
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
     protected int insertApp(String appName) {
         String sqlSelect = FK_APP_SELECT;
         String sqlInsert = FK_APP_INSERT;
-        List bindParams = new ArrayList();
-
-        bindParams.add(appName);
+        List bindParams = Arrays.asList(appName);
+        
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
     protected int insertBranch(String appName) {
         String sqlSelect = FK_BRANCH_SELECT;
         String sqlInsert = FK_BRANCH_INSERT;
-        List bindParams = new ArrayList();
-
-        bindParams.add(appName);
+        List bindParams = Arrays.asList(appName);
+        
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 

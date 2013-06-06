@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 
 public class MessageUnloader extends java.lang.Thread {
-    private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 16;
+    private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
 
     private LinkedBlockingQueue queue = null;
     private static Logger logger = Logger.getLogger(MessageUnloader.class.getName());
@@ -25,7 +25,8 @@ public class MessageUnloader extends java.lang.Thread {
     private long writeTime = System.currentTimeMillis();
     private static MessageUnloader instance = new MessageUnloader();
     private int failCount = 0;
-    private int MESSAGE_QUEUE_SIZE = 300000;
+    //private int MESSAGE_QUEUE_SIZE = 300000;
+    private int MESSAGE_QUEUE_SIZE = 5000;
     
     static public MessageUnloader getInstance() {
         return instance;
@@ -214,8 +215,10 @@ public class MessageUnloader extends java.lang.Thread {
                     //outputStream.writeObject(event);
                     writeData(outputStream, event);
                     // System.out.println("writing object"+writeCount);
-                    if (++writeCount % 10000 == 0) {
+                    if (++writeCount % 1000 == 0) {
                         outputStream.reset();
+                    }
+                    if ( writeCount % 10000 == 0) {
                         logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
                                 + " millis; leaving [" + queue.size() + "] in the queue");
 
@@ -298,8 +301,10 @@ public class MessageUnloader extends java.lang.Thread {
                 }
                 if (outputStream != null) {
                     writeData(outputStream, event);
-                    if (++writeCount % 10000 == 0) {
+                    if (++writeCount % 1000 == 0) {
                         outputStream.reset();
+                    }
+                    if ( writeCount % 10000 ==0) {
                         logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
                                 + " millis; leaving [" + queue.size() + "] in the queue");
 

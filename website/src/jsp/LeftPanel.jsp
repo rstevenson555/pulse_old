@@ -56,13 +56,14 @@
                 	$('#selectedDate').val(dateText);
                 	
                 	// For click stream page only
-                	if ($('#submitBtn').length == 1)
+                	/*if ($('#submitBtn').length == 1)
                 		$('#submitBtn').click();             
                 	else
                 		window.location.href = date_params_url;
+                        */
                 	// For daily snapshot page only
                 	//$('#hiddenform').submit();
-                    // window.location.href = date_params_url;
+                     window.location.href = date_params_url;
                 } 
             });
             var myDate;
@@ -97,9 +98,9 @@
     <!-- Display ART logo -->
     <div style="margin-bottom:-3px">    
     <span class="fade">
-        <a class="rollover" href="/logparser-website/ViewDailySessionSummary.web" title="Return to home page" accesskey="1">
+        <a class="rollover" href="ViewDailySessionSummary.web" title="Return to home page" accesskey="1">
             <figure class="cube" style="margin: 0px">
-                <img src="images/ARTlogo_front.jpg" class="front" width="206" alt="ART logo"/>
+                <img src="images/ekg.gif" class="front" width="206" style="height:155px;" alt="ART logo"/>
                 <!--[if !IE]> -->
                 <img src="images/ARTlogo_back.jpg" class="back" width="206">
                 <!-- <![endif]-->

@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.joda.time.DateTime;
 
 
 /**
@@ -32,19 +33,19 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
-    //private Mutex notAllEmpty = new Mutex();
-    //private Mutex notAllFull = new Mutex();
 
-    private static final int BATCH_INSERT_SIZE = 500;
-    private final static int MAXBATCHINSERTSIZE = 5000;
+    private final static int MAXBATCHINSERTSIZE = 2000;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 10;
-    private static int lastBatchInsertSize = MINBATCHINSERTSIZE;
+    private final static int MINBATCHINSERTSIZE = 900;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
 
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 200000;
+    // QUEUE SIZE
+    //private static final int MAX_DB_QUEUE_SIZE = 5000;
+    //private static final int MAX_DB_QUEUE_SIZE = 50000;
+    
     private QueryParameterWriteQueue() {
         dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
@@ -80,7 +81,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
         /*if (dequeue instanceof BoundedLinkedQueue) {
@@ -90,15 +91,19 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         //}
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
-        sb.append("\n\tObjects Popped              :  " + objectsRemoved);
-        sb.append("\n\tObjects Written             :  " + objectsWritten);
+        sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
+        sb.append("\n\tObjects Written             :  ").append(objectsWritten);
         if (objectsWritten > 1000) {
-            sb.append("\n\tWrite Time millis per 1000  :  " + totalWriteTime / (objectsWritten / 1000));
+            sb.append("\n\tWrite Time millis per 1000  :  ").append(totalWriteTime / (objectsWritten / 1000));
         } else {
             sb.append("\n\tWrite Time millis per 1000  :  0");
         }
         return sb.toString();
     }
+
+    private static DateTime now = null;
+    private static DateTime oneMinute = new DateTime().plusMinutes(1);
+    private static long recordsPerMinute = 0;
 
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
@@ -106,6 +111,15 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     @Override
     public void run() {
         while (unloadDB) {
+            
+            now = new DateTime();
+            recordsPerMinute++;
+
+            if ( now.isAfter(oneMinute)) {
+                logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
+                oneMinute = now.plusMinutes(1);
+                recordsPerMinute = 0;
+            }
             if (logger.isInfoEnabled()) {
                 if (objectsRemoved % 10000 == 0) {
                     logger.info(toString());
@@ -210,32 +224,49 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         }
     }
 
+    private static long batch = 0;
+    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private static DateTime batchNow = new DateTime();
+
     public void blockInsert(PreparedStatement pstmt) {
         try {
             pstmt.addBatch();
             Integer count = (Integer) threadLocalInserts.get();
             int icount = count.intValue() + 1;
 
+            batchNow = new DateTime();
+            
             threadLocalInserts.set(new Integer(icount));
             if (icount % currentBatchInsertSize == 0) {
                 long startTime = System.currentTimeMillis();
 
                 pstmt.executeBatch();
+                batch++;
+
+                if(batchNow.isAfter(batchOneMinute)) {
+                    logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
+
+                    batchOneMinute = batchNow.plusMinutes(1);
+                    batch = 0;
+                }
+                
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double) elapsed / (double) currentBatchInsertSize;
 
                 if (((currentTimePerInsert <= timePerInsert) && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT))) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    // logger.warn("QueryParameterWriteQueueu currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + " time per insert: " + timePerInsert + " elapsed: " + elapsed);
                 } else if ((currentTimePerInsert * .65) > timePerInsert
                         && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    // logger.warn("QueryParameterWriteQueueu currentBatchInsertSize set to-> : " + currentBatchInsertSize);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert+ " elapsed: " + elapsed);
                 }
+                
+
                 if (icount % 100000 == 0) {
-                    logger.warn("QueryParameterWriteQueueu currentBatchInsertSize is-> : " + currentBatchInsertSize);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize is-> : " + currentBatchInsertSize);
                 }
                 
             }
