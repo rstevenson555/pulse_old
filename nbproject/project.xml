@@ -3,9 +3,11 @@
     <type>org.netbeans.modules.java.j2seproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
-            <name>logParser_b2b</name>
+            <name>logParser_b2c</name>
             <explicit-platform explicit-source-supported="true"/>
             <source-roots>
+                <root id="src.logparser_b2c.dir"/>
+                <root id="src.website.dir"/>
                 <root id="src.Scripts.dir"/>
                 <root id="src.java.dir"/>
                 <root id="src.xsl.dir"/>

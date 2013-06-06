@@ -2,17 +2,25 @@
 
 <jboss-web>
     <display-name>ART Website</display-name>
-    <context-root>logparser-website</context-root>
+    <context-root>omx_art</context-root>
   
-     <resource-ref>
-        <res-ref-name>jdbc/postgres</res-ref-name>
+    <resource-ref>
+        <res-ref-name>jdbc/artdb</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
-        <jndi-name>java:/jdbc/postgres</jndi-name>
+        <jndi-name>java:/artdb</jndi-name>
+    </resource-ref>  
+
+    <resource-ref>
+        <res-ref-name>jdbc/artdb-omx</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <jndi-name>java:/artdb-omx</jndi-name>
     </resource-ref> 
-     <resource-ref>
+    
+    <resource-ref>
         <res-ref-name>jdbc/oracleStandBydb</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <jndi-name>java:/oracleStandBydb</jndi-name>
     </resource-ref> 
+        
 </jboss-web>
 
