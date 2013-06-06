@@ -33,8 +33,8 @@ class AccessRecordsCleaner
 
         # returns an array of 1
         record = @artdb.execute_prepared_query("select a.maxRPK as max_rpk , b.minRPK  as min_rpk, a.maxRPK - b.minRPK as diff from 
-                    (select recordpk as maxRPK from AccessRecords where time < now() - interval '12 days' - interval '12 hours' and time > now() - interval '16 days' - interval '12 hours' order by time desc limit 1) a, 
-                    (select recordpk as minRPK from AccessRecords order by recordpk asc limit 1) b limit 1",AccessRecords,{:all=>true})
+                    (select max(recordpk) as maxRPK from AccessRecords where time < now() - interval '12 days' - interval '12 hours' and time > now() - interval '16 days' - interval '12 hours' ) a, 
+                    (select min(recordpk) as minRPK from AccessRecords ) b limit 1",AccessRecords,{:all=>true})
         
         puts record
         @min_record_pk = record[0].min_rpk
@@ -103,4 +103,5 @@ while(arc.has_next)
     o = arc.next
     puts o
 end
+
 
