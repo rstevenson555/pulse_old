@@ -774,7 +774,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             //System.out.println("session: " + session);
         }
         sessionpsmt.setString(2,session);
-        sessionpsmt.setTimestamp(3,new Timestamp(timeoffset.toDate().getTime()));
+        
+        sessionpsmt.setTimestamp(3,new Timestamp(timeoffset.getMillis()));
         int rows = sessionpsmt.executeUpdate();
         //System.out.println("updated htmlpageresponse rows: " + rows);
         sessionpsmt.close();
