@@ -458,7 +458,9 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
 
                     //System.out.println("armb.90% "+(double)armb.getI90Percentile());
                     Double curr90pct = new Double(((double) armb.getI90Percentile()) / MILLI_RESOLUTION);
+                    i90perc.removeAgedItems(false);
                     i90perc.addOrUpdate(minute, curr90pct);
+                                        
 
                     // ********************************************
 
@@ -471,11 +473,17 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                         pagesServedHashMap[i].put(volumeServedDate, currentMinHashMap);
                     }
                     Double minuteVolume = updateMinuteVolumeData(currentMinHashMap, armb);
-
+                    
                     pagesServed[i].addOrUpdate(minute, minuteVolume);
                     // ********************************************
                 }
 
+            }
+            for(TimeSeries series:pagesServed) {
+                series.removeAgedItems(false);
+            }
+            for(TimeSeries series:averageSeries) {
+                series.removeAgedItems(false);
             }
         } catch (IllegalArgumentException pe) {
             System.out.println("AvgLoadTime.process Error parsing data received " + pe);
