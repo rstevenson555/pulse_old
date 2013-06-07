@@ -2,6 +2,7 @@ package com.bos.art.logParser.records;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Locale;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -137,10 +138,8 @@ public class UserRequestEventDesc implements Serializable, Comparable {
         if (eventTime == null) {
 
             try {                           
-                DateTime dt = sdf.parseDateTime(date + ", " + time);
-                eventTime = Calendar.getInstance();
-                //eventTime.setTime(dt.toDate());
-                eventTime.setTime(dt.toDate());
+                DateTime dt = sdf.parseDateTime(date + ", " + time);                
+                eventTime = dt.toCalendar(Locale.US);
 
             } catch (IllegalArgumentException nfe) {
                 //if we can't parse the message comming down the wire then just set the start date to today's date.
