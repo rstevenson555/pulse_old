@@ -67,9 +67,9 @@ public class QueryParameters {
     public void processQueryParameters() {
         HashSet<String> set = new HashSet();
         StringBuilder stringSet = new StringBuilder();
-        if ( queryParameters.indexOf("rid")>-1) {
-            System.out.println(queryParameters);
-        }
+//        if ( queryParameters.indexOf("rid")>-1) {
+//            System.out.println(queryParameters);
+//        }
         if (queryParameters != null) {
             if (queryParameters.indexOf(PARAM_MARKER) > -1) {
                 int sep = queryParameters.indexOf(PARAM_MARKER);
