@@ -56,8 +56,8 @@ public class StatisticsModule extends TimerTask implements Serializable {
     
 	private StatisticsModule(){
 		statUnits = new CopyOnWriteArrayList();
-        timer = Scheduler.getInstance("timer");        
-        timerClean = Scheduler.getInstance("cleaner");
+        timer = Scheduler.getInstance("timer",Thread.NORM_PRIORITY);        
+        timerClean = Scheduler.getInstance("cleaner",Thread.NORM_PRIORITY);
 //		        
         logger.warn("Scheduling tasks");
 		timerClean.executePeriodically(THREE_MINUTES,new MyRunnable(this) { 
