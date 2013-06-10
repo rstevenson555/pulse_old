@@ -51,6 +51,7 @@ public class QueryParameters {
     }
     private static String AMP_SEP = "&";
     private static String AMP_ESCAPED = "&amp;";
+    private static String QUOTE_ESCAPED = "&quot;";
     private static String PARAM_MARKER = "#P#";
 
     public static void main(String[] args) {
@@ -72,14 +73,22 @@ public class QueryParameters {
                 queryParameters = queryParameters.substring(0, sep) + "&" + queryParameters.substring(sep + 3);
             }
             int seplength = AMP_SEP.length();
-            int sep = 0, asep = 0;
+            int sep = 0, asep = 0,aquote = 0;
             int start = 0;
             while (queryParameters != null) {
                 if ((sep = queryParameters.indexOf(AMP_SEP, start)) > -1) {
                     asep = queryParameters.indexOf(AMP_ESCAPED, start);
+                    // skip a &amp;
                     if (asep == sep) {
                         // this was a encoded amp and not just a &
                         start = asep + AMP_ESCAPED.length();
+                        continue; // skip this & because it's an encoded amp;
+                    }
+                    // skip a &quot; 
+                    aquote = queryParameters.indexOf(QUOTE_ESCAPED, start);
+                    if (aquote == sep) {
+                        // this was a encoded amp and not just a &
+                        start = aquote + QUOTE_ESCAPED.length();
                         continue; // skip this & because it's an encoded amp;
                     }
                     seplength = AMP_SEP.length();
@@ -106,6 +115,7 @@ public class QueryParameters {
         Integer queryParameterID = getQueryParameterId( stringSet.toString() );
         QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));
     }
+    
     private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
 
     /**
