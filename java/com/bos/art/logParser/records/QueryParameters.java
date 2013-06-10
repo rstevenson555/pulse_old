@@ -67,6 +67,9 @@ public class QueryParameters {
     public void processQueryParameters() {
         HashSet<String> set = new HashSet();
         StringBuilder stringSet = new StringBuilder();
+        if ( queryParameters.indexOf("rid")>-1) {
+            System.out.println(queryParameters);
+        }
         if (queryParameters != null) {
             if (queryParameters.indexOf(PARAM_MARKER) > -1) {
                 int sep = queryParameters.indexOf(PARAM_MARKER);
@@ -87,9 +90,9 @@ public class QueryParameters {
                     // skip a &quot; 
                     aquote = queryParameters.indexOf(QUOTE_ESCAPED, start);
                     if (aquote == sep) {
-                        // this was a encoded amp and not just a &
+                        // this was a encoded quot and not just a &
                         start = aquote + QUOTE_ESCAPED.length();
-                        continue; // skip this & because it's an encoded amp;
+                        continue; // skip this & because it's an encoded quot;
                     }
                     seplength = AMP_SEP.length();
                     String currentParameter = queryParameters.substring(0, sep);
