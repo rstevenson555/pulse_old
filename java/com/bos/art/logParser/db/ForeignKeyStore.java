@@ -505,7 +505,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
     }
 
     private void persistSessionData() {
-        logger.warn("persistSessionData");
+        //logger.warn("persistSessionData");
         Map<String,Object> tm = foreignKeyTables.get(ForeignKeyStore.FK_SESSIONS_SESSION_ID);
         List<SessionDataClass> allPersistableObjects = new ArrayList<SessionDataClass>();
         Map<String,CounterClass> htSessionCounts = new HashMap<String,CounterClass>();
@@ -517,21 +517,36 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             java.util.Date tenMinDate;
             java.util.Date thirtyMinDate;
             
-            DateTime now = new DateTime();
+            Calendar removeCalendar;
+            removeCalendar = GregorianCalendar.getInstance();
             
-            oneMinDate = now.minusMinutes(1).toDate();
-            fiveMinDate = now.minusMinutes(5).toDate();
-            tenMinDate = now.minusMinutes(10).toDate();
-            thirtyMinDate = now.minusMinutes(30).toDate();           
-            removeDate = now.minusMinutes(SESSION_REMOVAL_MINUTES).toDate();
+            removeCalendar.setTime(new Date());
+            removeCalendar.add(Calendar.MINUTE, -1);
+            oneMinDate = removeCalendar.getTime();
+            
+            removeCalendar.setTime(new Date());
+            removeCalendar.add(Calendar.MINUTE, -5);
+            fiveMinDate = removeCalendar.getTime();
+            
+            removeCalendar.setTime(new Date());
+            removeCalendar.add(Calendar.MINUTE, -10);
+            tenMinDate = removeCalendar.getTime();
+            
+            removeCalendar.setTime(new Date());
+            removeCalendar.add(Calendar.MINUTE, -30);
+            thirtyMinDate = removeCalendar.getTime();
+            
+            removeCalendar.setTime(new Date());
+            removeCalendar.add(Calendar.MINUTE, -SESSION_REMOVAL_MINUTES);
+            removeDate = removeCalendar.getTime();
             
             List<String> removeKeys = new ArrayList<String>();
 
+            boolean once = true, sdconce = true;
             for(String key:tm.keySet()) {
                 Object o = tm.get(key);
                 if (o instanceof SessionDataClass) {
                     SessionDataClass sdc = (SessionDataClass) o;
-                    
                     if (sdc.lastRequestDate.after(oneMinDate)) {
                         sdc.persistOneMinuteSession = true;
                         allPersistableObjects.add(sdc);
@@ -539,19 +554,15 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                         incrementFiveMinSessions(sdc, htSessionCounts);
                         incrementTenMinSessions(sdc, htSessionCounts);
                         incrementThirtyMinSessions(sdc, htSessionCounts);
-                        
                     } else if (sdc.lastRequestDate.after(fiveMinDate)) {
                         incrementFiveMinSessions(sdc, htSessionCounts);
                         incrementTenMinSessions(sdc, htSessionCounts);
                         incrementThirtyMinSessions(sdc, htSessionCounts);
-                        
                     } else if (sdc.lastRequestDate.after(tenMinDate)) {
                         incrementTenMinSessions(sdc, htSessionCounts);
                         incrementThirtyMinSessions(sdc, htSessionCounts);
-                        
                     } else if (sdc.lastRequestDate.after(thirtyMinDate)) {
                         incrementThirtyMinSessions(sdc, htSessionCounts);
-                        
                     } else if (sdc.lastRequestDate.before(removeDate) && sdc.touchDate.before(removeDate)) {
                         removeKeys.add(key);
                     }
