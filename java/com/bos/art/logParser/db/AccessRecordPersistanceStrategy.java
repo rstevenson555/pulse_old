@@ -24,14 +24,14 @@ import org.apache.log4j.Logger;
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
-    private static final int BATCH_INSERT_SIZE = 500;
+    //private static final int BATCH_INSERT_SIZE = 500;
     private static final String BROWSER = "#BROWSER#";
     private static final String IPADDRESS = "#IPADDRESS#";
     private final static int MAXBATCHINSERTSIZE = 2500;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 1100;
+    private final static int MINBATCHINSERTSIZE = 2100;
     private static final String USERID = "#USERID#";
-    private static int lastBatchInsertSize = MINBATCHINSERTSIZE;
+    //private static int lastBatchInsertSize = MINBATCHINSERTSIZE;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
 
