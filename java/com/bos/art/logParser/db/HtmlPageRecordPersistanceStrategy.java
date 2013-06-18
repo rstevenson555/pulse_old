@@ -197,6 +197,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 experience |= error;
             if (pagehtml.indexOf("Sorry unexpected")!=-1)
                 experience |= error;
+            if (pagehtml.indexOf("There was an error while")!=-1)
+                experience |= error;
             if ( pagehtml.indexOf("Thank you for your order")!=-1)
                 experience |= order;
             if ( pagehtml.indexOf("we couldn't find that page")!=-1)
