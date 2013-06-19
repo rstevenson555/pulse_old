@@ -63,6 +63,11 @@ public abstract class BasePersistanceStrategy {
     public static final int DATABASE_MISS_THRESHOLD = 1000000;
     
     static {
+        initMaps();
+    }
+    
+    private static void initMaps()
+    {
         sequenceNameHashMap = new HashMap();
         sequenceNameHashMap.put(FK_BRANCH_INSERT, "branches_branch_tag_id_seq");
         sequenceNameHashMap.put(FK_APP_INSERT, "apps_app_id_seq");
