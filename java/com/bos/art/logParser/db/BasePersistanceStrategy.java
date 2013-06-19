@@ -125,6 +125,7 @@ public abstract class BasePersistanceStrategy {
             ++contextWrite;
             ResultSet rs = pstmt.getGeneratedKeys();
             resultValue = rs.getInt(1);
+            logger.warn("sequenceval: " + resultValue);
 //            String seqName = (String) sequenceNameHashMap.get(sqlInsert);
 //
 //            if (seqName != null) {
