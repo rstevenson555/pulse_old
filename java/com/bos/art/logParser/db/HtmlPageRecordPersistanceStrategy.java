@@ -137,6 +137,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
     
     public void blockInsert(PreparedStatement pstmt) {
         int icount=0;
+        boolean execBatch = false;
         try {
             pstmt.addBatch();
             Integer count = (Integer) threadLocalInserts.get();
@@ -148,6 +149,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 long startTime = System.currentTimeMillis();                
                 pstmt.executeBatch();
                 batch++;
+                execBatch = true;
                 
                 if(batchNow.isAfter(batchOneMinute)) {
                     logger.warn("HtmlPageRecordPersistanceStrategy " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
@@ -180,7 +182,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
 
             resetThreadLocalPstmt();
         } finally {
-            if (icount % currentBatchInsertSize == 0) {
+            if (execBatch) {
                 resetThreadLocalPstmt();
              }
         }
