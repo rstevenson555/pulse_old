@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 import org.apache.commons.codec.binary.Hex;
@@ -41,7 +42,6 @@ public abstract class BasePersistanceStrategy {
     public static final String FK_INSTANCES_INSERT = "insert into Instances (InstanceName) values (?)";
     public static final String FK_SESSIONS_INSERT = "insert into Sessions (IPAddress, sessionTXT, browserType, User_ID ) values (?,?,?,?)";
     public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams,value_hash) values (?,?)";
-    //public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where MD5(queryParams)=MD5(?)";
     public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where value_hash=?";
     public static final String FK_USERS_INSERT = "insert into Users (userName) values (?)";
     public static final String FK_USERS_SELECT = "select User_ID from Users where userName = ?";
@@ -92,7 +92,7 @@ public abstract class BasePersistanceStrategy {
     }
     
     protected int insertForeignKey(String sqlInsert, List insertValues, Connection con) throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement(sqlInsert);                
+        PreparedStatement pstmt = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS);                
         int resultValue = 0;
 
         try {
@@ -123,11 +123,14 @@ public abstract class BasePersistanceStrategy {
         }
         if (pstmt.executeUpdate() > 0) {
             ++contextWrite;
-            String seqName = (String) sequenceNameHashMap.get(sqlInsert);
-
-            if (seqName != null) {
-                resultValue = selectLastInsert(con, seqName);
-            } 
+            ResultSet rs = pstmt.getGeneratedKeys();
+            resultValue = rs.getInt(1);
+//            String seqName = (String) sequenceNameHashMap.get(sqlInsert);
+//
+//            if (seqName != null) {
+//                resultValue = selectLastInsert(con, seqName);
+//            } 
+            if (rs!=null) rs.close();
         }
         return resultValue;
     }
@@ -424,7 +427,7 @@ public abstract class BasePersistanceStrategy {
         @Override
         protected synchronized Object initialValue() {
             try {
-                return ((Connection)sessionConnection.get()).prepareStatement(FK_SESSIONS_INSERT);
+                return ((Connection)sessionConnection.get()).prepareStatement(FK_SESSIONS_INSERT,Statement.RETURN_GENERATED_KEYS);
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
