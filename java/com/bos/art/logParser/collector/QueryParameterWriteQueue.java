@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
 import org.joda.time.DateTime;
 
 
@@ -137,12 +136,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 if (o instanceof QueryParameters.DBQueryParamRecord) {
                     long sTime = System.currentTimeMillis();	
                     QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
-                    Connection con = null;
-                    PreparedStatement pstmt = null;
+
                     try {
-                        con = ConnectionPoolT.getConnection();
-                        //PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
-                        pstmt = con.prepareStatement( "insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
+                        PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
 
                         pstmt.setInt(1, dbqp.getRecordPK().intValue());
                         pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
@@ -151,20 +147,14 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                         // requestType, requestToken, userServiceTime
                     } catch (SQLException se) {
                         logger.error("Exception", se);
-                        //resetThreadLocalPstmt();
+                        resetThreadLocalPstmt();
                         // return false;
                     }
                     finally {
-                        try {
-                            if (pstmt!=null) pstmt.close();
-                            if (con!=null) pstmt.close();
-                            // Removed because of Thread Local.
-                            long sTime2 = System.currentTimeMillis();	
+                        // Removed because of Thread Local.
+                        long sTime2 = System.currentTimeMillis();	
 
-                            totalWriteTime += (sTime2 - sTime);
-                        } catch (SQLException ex) {
-                            java.util.logging.Logger.getLogger(QueryParameterWriteQueue.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        totalWriteTime += (sTime2 - sTime);
                     }
             
                 } else {
@@ -176,30 +166,30 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         }
     }
 
-//    private static ThreadLocal threadLocalCon = new ThreadLocal() {
-//        @Override
-//        protected synchronized Object initialValue() {
-//            try {
-//                return ConnectionPoolT.getConnection();
-//            } catch (SQLException se) {
-//                logger.error("SQL Exception ", se);
-//            }
-//            return null;
-//        }
-//    };
-//   
-//    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
-//        @Override
-//        protected synchronized Object initialValue() {
-//            try {
-//                return ((Connection) threadLocalCon.get()).prepareStatement(
-//                        "insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
-//            } catch (SQLException se) {
-//                logger.error("SQL Exception ", se);
-//            }
-//            return null;
-//        }
-//    };
+    private static ThreadLocal threadLocalCon = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+   
+    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ((Connection) threadLocalCon.get()).prepareStatement(
+                        "insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
     private static ThreadLocal threadLocalInserts = new ThreadLocal() {
         @Override
         protected synchronized Object initialValue() {
@@ -207,32 +197,32 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         }
     };
 
-//    public void resetThreadLocalPstmt() {
-//        logger.info("Resetting the Pstmt!");
-//        PreparedStatement ps = (PreparedStatement) threadLocalPstmt.get();
-//        Connection con = (Connection) threadLocalCon.get();
-//
-//        try {
-//            try {
-//                if (ps != null) {
-//                    ps.close();
-//                    ps = null;
-//                }
-//                if (con != null) {
-//                    con.close();
-//                    con = null;
-//                }
-//            } catch (SQLException se) {
-//                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
-//            }
-//            con = ConnectionPoolT.getConnection();
-//            ps = con.prepareStatement("insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
-//            threadLocalCon.set(con);
-//            threadLocalPstmt.set(ps);
-//        } catch (Exception e) {
-//            logger.error("Exception ", e);
-//        }
-//    }
+    public void resetThreadLocalPstmt() {
+        logger.info("Resetting the Pstmt!");
+        PreparedStatement ps = (PreparedStatement) threadLocalPstmt.get();
+        Connection con = (Connection) threadLocalCon.get();
+
+        try {
+            try {
+                if (ps != null) {
+                    ps.close();
+                    ps = null;
+                }
+                if (con != null) {
+                    con.close();
+                    con = null;
+                }
+            } catch (SQLException se) {
+                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
+            }
+            con = ConnectionPoolT.getConnection();
+            ps = con.prepareStatement("insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
+            threadLocalCon.set(con);
+            threadLocalPstmt.set(ps);
+        } catch (Exception e) {
+            logger.error("Exception ", e);
+        }
+    }
 
     private static long batch = 0;
     private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
@@ -282,7 +272,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
             }
         } catch (SQLException se) {
             logger.error("Exception", se);
-            //resetThreadLocalPstmt();
+            resetThreadLocalPstmt();
         }
     }
 }
