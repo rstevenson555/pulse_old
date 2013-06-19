@@ -259,7 +259,8 @@ public abstract class BasePersistanceStrategy {
     };
     
     static public int selectLastInsert(Connection con, String seqName) throws SQLException {
-        PreparedStatement pstmt2 = (PreparedStatement)threadLocalCurrValPstmt.get();
+        //PreparedStatement pstmt2 = (PreparedStatement)threadLocalCurrValPstmt.get();
+        PreparedStatement pstmt2 = con.prepareStatement(SELECT_CURRVAL);
         pstmt2.setString(1, seqName);
         
         ResultSet rs = pstmt2.executeQuery();
@@ -269,6 +270,7 @@ public abstract class BasePersistanceStrategy {
             resultVal = rs.getInt(1);
         }
         if (rs!=null) rs.close();
+        if (pstmt2!=null) pstmt2.close();
         return resultVal;
     }
 
