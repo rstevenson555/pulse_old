@@ -178,6 +178,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             }
 
             resetThreadLocalPstmt();
+        } finally {
+            resetThreadLocalPstmt();
         }
     }
 
