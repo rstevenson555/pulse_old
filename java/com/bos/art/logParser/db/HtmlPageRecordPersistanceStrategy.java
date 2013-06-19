@@ -136,10 +136,11 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
     private static DateTime batchNow = new DateTime();
     
     public void blockInsert(PreparedStatement pstmt) {
+        int icount=0;
         try {
             pstmt.addBatch();
             Integer count = (Integer) threadLocalInserts.get();
-            int icount = count.intValue() + 1;
+            icount = count.intValue() + 1;
             threadLocalInserts.set(new Integer(icount));
             batchNow = new DateTime();
             
@@ -179,7 +180,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
 
             resetThreadLocalPstmt();
         } finally {
-            resetThreadLocalPstmt();
+            if (icount % currentBatchInsertSize == 0) {
+                resetThreadLocalPstmt();
+             }
         }
     }
 
