@@ -126,7 +126,7 @@ public abstract class BasePersistanceStrategy {
             ResultSet rs = pstmt.getGeneratedKeys();
             if ( rs.next()) {
                 resultValue = rs.getInt(1);
-                logger.warn("sequenceval: " + resultValue);
+                //logger.warn("sequenceval: " + resultValue);
             }
 //            String seqName = (String) sequenceNameHashMap.get(sqlInsert);
 //
