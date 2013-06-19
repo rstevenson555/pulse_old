@@ -44,44 +44,44 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         return instance;
     }
     private static final Logger logger = (Logger) Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName());
-//    private static ThreadLocal threadLocalCon = new ThreadLocal() {
-//
-//        @Override
-//        protected synchronized Object initialValue() {
-//            try {
-//                return ConnectionPoolT.getConnection();
-//            } catch (SQLException se) {
-//                logger.error("SQL Exception ", se);
-//            }
-//            return null;
-//        }
-//    };
-//    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
-//
-//        @Override
-//        protected synchronized Object initialValue() {
-//            try {
-//                return ((Connection) threadLocalCon.get()).prepareStatement(
-//                        "insert into HtmlPageResponse "
-//                        + "(Branch_ID  , "
-//                        + "Machine_ID , "
-//                        + "Context_ID , "
-//                        + "Page_ID    , "
-//                        + "Time       , "
-//                        + "sessionTXT , "
-//                        + "requestToken , "
-//                        + "requestTokenCount , "
-//                        + "encodedPage, "
-//                        + "Instance_ID, "
-//                        + "experience "
-//                        + " ) "
-//                        + " values (?,?,?,?,?,?,?,?,?,?,?)");
-//            } catch (SQLException se) {
-//                logger.error("SQL Exception ", se);
-//            }
-//            return null;
-//        }
-//    };
+    private static ThreadLocal threadLocalCon = new ThreadLocal() {
+
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
+
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ((Connection) threadLocalCon.get()).prepareStatement(
+                        "insert into HtmlPageResponse "
+                        + "(Branch_ID  , "
+                        + "Machine_ID , "
+                        + "Context_ID , "
+                        + "Page_ID    , "
+                        + "Time       , "
+                        + "sessionTXT , "
+                        + "requestToken , "
+                        + "requestTokenCount , "
+                        + "encodedPage, "
+                        + "Instance_ID, "
+                        + "experience "
+                        + " ) "
+                        + " values (?,?,?,?,?,?,?,?,?,?,?)");
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
     private static ThreadLocal threadLocalInserts = new ThreadLocal() {
 
         @Override
@@ -90,46 +90,46 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         }
     };
 
-//    public void resetThreadLocalPstmt() {
-//        logger.info("Resetting the Pstmt!");
-//        PreparedStatement ps = (PreparedStatement) threadLocalPstmt.get();
-//        Connection con = (Connection) threadLocalCon.get();
-//        try {
-//            try {
-//                if (ps != null) {
-//                    ps.close();
-//                    ps = null;
-//                }
-//                if (con != null) {
-//                    con.close();
-//                    con = null;
-//                }
-//            } catch (SQLException se) {
-//                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
-//            }
-//            con = ConnectionPoolT.getConnection();
-//            ps =
-//                    con.prepareStatement(
-//                    "insert into HtmlPageResponse "
-//                    + "(Branch_ID  , "
-//                    + "Machine_ID , "
-//                    + "Context_ID , "
-//                    + "Page_ID    , "
-//                    + "Time       , "
-//                    + "sessionTXT , "
-//                    + "requestToken , "
-//                    + "requestTokenCount , "
-//                    + "encodedPage, " 
-//                    + "Instance_ID, " 
-//                    + "experience" 
-//                    + ") " 
-//                    + " values (?,?,?,?,?,?,?,?,?,?,?)");
-//            threadLocalCon.set(con);
-//            threadLocalPstmt.set(ps);
-//        } catch (Exception e) {
-//            logger.error("Exception ", e);
-//        }
-//    }
+    public void resetThreadLocalPstmt() {
+        logger.info("Resetting the Pstmt!");
+        PreparedStatement ps = (PreparedStatement) threadLocalPstmt.get();
+        Connection con = (Connection) threadLocalCon.get();
+        try {
+            try {
+                if (ps != null) {
+                    ps.close();
+                    ps = null;
+                }
+                if (con != null) {
+                    con.close();
+                    con = null;
+                }
+            } catch (SQLException se) {
+                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
+            }
+            con = ConnectionPoolT.getConnection();
+            ps =
+                    con.prepareStatement(
+                    "insert into HtmlPageResponse "
+                    + "(Branch_ID  , "
+                    + "Machine_ID , "
+                    + "Context_ID , "
+                    + "Page_ID    , "
+                    + "Time       , "
+                    + "sessionTXT , "
+                    + "requestToken , "
+                    + "requestTokenCount , "
+                    + "encodedPage, " 
+                    + "Instance_ID, " 
+                    + "experience" 
+                    + ") " 
+                    + " values (?,?,?,?,?,?,?,?,?,?,?)");
+            threadLocalCon.set(con);
+            threadLocalPstmt.set(ps);
+        } catch (Exception e) {
+            logger.error("Exception ", e);
+        }
+    }
 
     private static long batch = 0;
     private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
@@ -177,7 +177,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 logger.error("nextException", se.getNextException());
             }
 
-            //resetThreadLocalPstmt();
+            resetThreadLocalPstmt();
         }
     }
 
@@ -266,27 +266,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         int requestTokenCount = pre.getRequestTokenCount();
         int requestToken = pre.getRequestToken();
         String nonEncodedText = pre.getEncodedPage();
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        try {
-            con = ConnectionPoolT.getConnection();
 
-            pstmt = con.prepareStatement("insert into HtmlPageResponse "
-                        + "(Branch_ID  , "
-                        + "Machine_ID , "
-                        + "Context_ID , "
-                        + "Page_ID    , "
-                        + "Time       , "
-                        + "sessionTXT , "
-                        + "requestToken , "
-                        + "requestTokenCount , "
-                        + "encodedPage, "
-                        + "Instance_ID, "
-                        + "experience "
-                        + " ) "
-                        + " values (?,?,?,?,?,?,?,?,?,?,?)");
-            
-            //PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
+        try {
+            PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
                         
             pstmt.setInt(1, fk.fkBranchTagID);
             pstmt.setInt(2, fk.fkMachineID);
@@ -299,7 +281,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             //String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
             String pagehtml = nonEncodedText;
             
-            int experience = readSessionUserExperience(con,pre.getSessionId());
+            int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());
             experience = determineUserExperience(pagehtml, experience);
                                
             pstmt.setString(9, pagehtml);
@@ -309,20 +291,14 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             blockInsert(pstmt);
             
             if ( experience != 0) {
-                updateSessionUserExperience(con,experience, pre);
+                updateSessionUserExperience(experience, pre);
             }
         } catch (SQLException se) {
             logger.error("Exception", se);
-            //resetThreadLocalPstmt();
+            resetThreadLocalPstmt();
             return false;
         } finally {
-            try {
-                //  Removed because of Thread Local.
-                if ( pstmt!=null) pstmt.close();
-                if ( con!=null) con.close();
-            } catch (SQLException ex) {
-                logger.error("Exception closing", ex);
-            }
+            //  Removed because of Thread Local.
         }
         return true;
     }
@@ -366,9 +342,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * @param pre
      * @throws SQLException 
      */
-    private void updateSessionUserExperience(Connection con,int experience, PageRecordEvent pre) throws SQLException {
+    private void updateSessionUserExperience(int experience, PageRecordEvent pre) throws SQLException {
         // update session
-        PreparedStatement sessionpsmt = con.prepareStatement("update sessions set experience = ? where session_id = (select max(session_id) from sessions where sessiontxt = ? )");
+        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where session_id = (select max(session_id) from sessions where sessiontxt = ? )");
         sessionpsmt.setInt(1,experience);
         sessionpsmt.setString(2,pre.getSessionId() );
         sessionpsmt.executeUpdate();
