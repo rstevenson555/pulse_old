@@ -16,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 /**
  * @author I0360D3
@@ -90,66 +91,66 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         return 0;
     }
     //  logParser Stats Unit.
-    private static ThreadLocal threadLocalCon = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ConnectionPoolT.getConnection();
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
-    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ((Connection)threadLocalCon.get()).prepareStatement(
-                    "insert into AccessRecords "
-                        + "(RecordPK, Page_ID,User_ID,Session_ID,Machine_ID,Context_ID,App_ID,Branch_Tag_ID,Time,LoadTime, requestType, requestToken, userServiceTime,Instance_ID) "
-                        + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
+//    private static ThreadLocal threadLocalCon = new ThreadLocal() {
+//        @Override
+//        protected synchronized Object initialValue() {
+//            try {
+//                return ConnectionPoolT.getConnection();
+//            } catch (SQLException se) {
+//                logger.error("SQL Exception ", se);
+//            }
+//            return null;
+//        }
+//    };
+//    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
+//        @Override
+//        protected synchronized Object initialValue() {
+//            try {
+//                return ((Connection)threadLocalCon.get()).prepareStatement(
+//                    "insert into AccessRecords "
+//                        + "(RecordPK, Page_ID,User_ID,Session_ID,Machine_ID,Context_ID,App_ID,Branch_Tag_ID,Time,LoadTime, requestType, requestToken, userServiceTime,Instance_ID) "
+//                        + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+//            } catch (SQLException se) {
+//                logger.error("SQL Exception ", se);
+//            }
+//            return null;
+//        }
+//    };
     private static ThreadLocal threadLocalInserts = new ThreadLocal() {
         @Override
         protected synchronized Object initialValue() {
             return new Integer(0);
         }
     };
-    public void resetThreadLocalPstmt() {
-        logger.info("Resetting the Pstmt!");
-        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
-        Connection con = (Connection)threadLocalCon.get();
-        try {
-            try {
-                if (ps != null) {
-                    ps.close();
-                    ps = null;
-                }
-                if (con != null) {
-                    con.close();
-                    con = null;
-                }
-            } catch (SQLException se) {
-                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
-            }
-            con = ConnectionPoolT.getConnection();
-            ps =
-                con.prepareStatement(
-                    "insert into AccessRecords "
-                        + "(RecordPK, Page_ID,User_ID,Session_ID,Machine_ID,Context_ID,App_ID,Branch_Tag_ID,Time,LoadTime, requestType, requestToken, userServiceTime,Instance_ID) "
-                        + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            threadLocalCon.set(con);
-            threadLocalPstmt.set(ps);
-        } catch (Exception e) {
-            logger.error("Exception ", e);
-        }
-    }
+//    public void resetThreadLocalPstmt() {
+//        logger.info("Resetting the Pstmt!");
+//        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
+//        Connection con = (Connection)threadLocalCon.get();
+//        try {
+//            try {
+//                if (ps != null) {
+//                    ps.close();
+//                    ps = null;
+//                }
+//                if (con != null) {
+//                    con.close();
+//                    con = null;
+//                }
+//            } catch (SQLException se) {
+//                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
+//            }
+//            con = ConnectionPoolT.getConnection();
+//            ps =
+//                con.prepareStatement(
+//                    "insert into AccessRecords "
+//                        + "(RecordPK, Page_ID,User_ID,Session_ID,Machine_ID,Context_ID,App_ID,Branch_Tag_ID,Time,LoadTime, requestType, requestToken, userServiceTime,Instance_ID) "
+//                        + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+//            threadLocalCon.set(con);
+//            threadLocalPstmt.set(ps);
+//        } catch (Exception e) {
+//            logger.error("Exception ", e);
+//        }
+//    }
 
     public void blockInsert(PreparedStatement pstmt) {
         try {
@@ -180,7 +181,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         } catch (SQLException se) {
             logger.error("Exception", se);
             logger.error("NextException ",se.getNextException());
-            resetThreadLocalPstmt();
+            //resetThreadLocalPstmt();
         }
     }
     
@@ -253,9 +254,14 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         //synchronized(initLock){
             recordPK = ++AccessRecordsRecordPK;
         //}
-        
+        Connection con = null;
+        PreparedStatement pstmt = null;
         try {
-            PreparedStatement pstmt = (PreparedStatement)threadLocalPstmt.get();
+            con = ConnectionPoolT.getConnection();
+            //PreparedStatement pstmt = (PreparedStatement)threadLocalPstmt.get();
+            pstmt = con.prepareStatement("insert into AccessRecords "+
+                        "(RecordPK, Page_ID,User_ID,Session_ID,Machine_ID,Context_ID,App_ID,Branch_Tag_ID,Time,LoadTime, requestType, requestToken, userServiceTime,Instance_ID) " +
+                        "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             pstmt.setInt(1, recordPK);
             pstmt.setInt(2, fk.fkPageID);
             pstmt.setInt(3, fk.fkUserID);
@@ -274,16 +280,24 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
             //			requestType, requestToken, userServiceTime
         } catch (SQLException se) {
             logger.error("Exception", se);
-            resetThreadLocalPstmt();
+            //resetThreadLocalPstmt();
             return false;
         } finally {
-            //  Removed because of Thread Local.
+            try {
+                //  Removed because of Thread Local.
+                if (pstmt!=null) pstmt.close();
+                if(con!=null) con.close();
+            } catch (SQLException ex) {
+                logger.error("Exception", ex);
+            }
         }
         if(++globalAccessRecordCounter%10000 == 0){
         	logger.warn("recordPK:"+recordPK+":PageID:"+fk.fkPageID+":UserID:"+fk.fkUserID
         	+":SessionID:"+fk.fkSessionID
         	+":Machine:"+fk.fkMachineID+":AppID:"+fk.fkAppID+":BranchTagID:"+fk.fkBranchTagID+":loadTime:"+record.getLoadTime()+":requestToken:"+requestToken);
         }
+        
+        // now persist the query parameter
         QueryParameterProcessingQueue.getInstance().addLast(new QueryParameters(qParam,recordPK));
         return true;
     }
