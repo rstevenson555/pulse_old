@@ -252,20 +252,8 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
-    private static ThreadLocal threadLocalCurrValPstmt = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ((Connection)sessionConnection.get()).prepareStatement(SELECT_CURRVAL);
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
     
     static public int selectLastInsert(Connection con, String seqName) throws SQLException {
-        //PreparedStatement pstmt2 = (PreparedStatement)threadLocalCurrValPstmt.get();
         PreparedStatement pstmt2 = con.prepareStatement(SELECT_CURRVAL);
         pstmt2.setString(1, seqName);
         
@@ -414,57 +402,57 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
-    private static ThreadLocal sessionConnection = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ConnectionPoolT.getConnection();
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
-    
-    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ((Connection)sessionConnection.get()).prepareStatement(FK_SESSIONS_INSERT,Statement.RETURN_GENERATED_KEYS);
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
-
-     public void resetThreadLocalPstmt() {
-        logger.info("Resetting the Pstmt!");
-        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
-        Connection con = (Connection)sessionConnection.get();
-        try {
-            try {
-                if (ps != null) {
-                    ps.close();
-                    ps = null;
-                }
-                if (con != null) {
-                    con.close();
-                    con = null;
-                }
-            } catch (SQLException se) {
-                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
-            }
-            con = ConnectionPoolT.getConnection();
-            ps =
-                con.prepareStatement(
-                    FK_SESSIONS_INSERT);
-            sessionConnection.set(con);
-            threadLocalPstmt.set(ps);
-        } catch (Exception e) {
-            logger.error("Exception ", e);
-        }
-    }
+//    private static ThreadLocal foreignKeyConnections = new ThreadLocal() {
+//        @Override
+//        protected synchronized Object initialValue() {
+//            try {
+//                return ConnectionPoolT.getConnection();
+//            } catch (SQLException se) {
+//                logger.error("SQL Exception ", se);
+//            }
+//            return null;
+//        }
+//    };
+//    
+//    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
+//        @Override
+//        protected synchronized Object initialValue() {
+//            try {
+//                return ((Connection)foreignKeyConnections.get()).prepareStatement(FK_SESSIONS_INSERT,Statement.RETURN_GENERATED_KEYS);
+//            } catch (SQLException se) {
+//                logger.error("SQL Exception ", se);
+//            }
+//            return null;
+//        }
+//    };
+//
+//     public void resetThreadLocalPstmt() {
+//        logger.info("Resetting the Pstmt!");
+//        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
+//        Connection con = (Connection)foreignKeyConnections.get();
+//        try {
+//            try {
+//                if (ps != null) {
+//                    ps.close();
+//                    ps = null;
+//                }
+//                if (con != null) {
+//                    con.close();
+//                    con = null;
+//                }
+//            } catch (SQLException se) {
+//                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
+//            }
+//            con = ConnectionPoolT.getConnection();
+//            ps =
+//                con.prepareStatement(
+//                    FK_SESSIONS_INSERT);
+//            foreignKeyConnections.set(con);
+//            threadLocalPstmt.set(ps);
+//        } catch (Exception e) {
+//            logger.error("Exception ", e);
+//        }
+//    }
      
     protected int insertSession(String sessiontxt, String ip, String browser, int userID) {
         String sqlInsert = FK_SESSIONS_INSERT;
@@ -472,14 +460,22 @@ public abstract class BasePersistanceStrategy {
         
         Connection con = null;
         int resultValue = 0;
-
+        PreparedStatement pstmt = null;
         try {
-            con = (Connection)sessionConnection.get();
+            con = ConnectionPoolT.getConnection();
+            pstmt = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS);                
             
-            resultValue = insertForeignKeyWithPreparedStatement((PreparedStatement)threadLocalPstmt.get(), sqlInsert, bindParams, con);
+            resultValue = insertForeignKeyWithPreparedStatement(pstmt, sqlInsert, bindParams, con);
         } catch (SQLException se) {
             logger.error("insertSession SQLException", se);
-            resetThreadLocalPstmt();
+            //resetThreadLocalPstmt();
+        } finally {
+            try {
+                if (pstmt!=null) pstmt.close();
+                if (con!=null) con.close();
+            } catch (SQLException ex) {
+                logger.error("insertSession SQLException", ex);
+            }
         }
         return resultValue;
     }
