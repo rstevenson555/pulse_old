@@ -9,7 +9,6 @@
  * Window>Preferences>Java>Code Generation>Code and Comments
 
  */
-
 package com.bos.art.logParser.db;
 
 import java.sql.Connection;
@@ -27,33 +26,30 @@ import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.records.ExternalEventTiming;
 
 import com.bos.art.logParser.records.ILiveLogParserRecord;
+import java.util.logging.Level;
 
 /**
-
- * @author I0360D3
-
  *
-
+ * @author I0360D3
+ *
+ *
+ *
  * Hello World
-
+ *
  * TEST 2
-
+ *
  * To change the template for this generated type comment go to
-
+ *
  * Window>Preferences>Java>Code Generation>Code and Comments
-
+ *
  */
-
 public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
-    protected static final Logger logger = (Logger)Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName());
-
+    protected static final Logger logger = (Logger) Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName());
     private static final int BATCH_INSERT_SIZE = 2;
 
     private ExternalTimingPersistanceStrategy() {
-
     }
-
     private static ExternalTimingPersistanceStrategy instance;
 
     public static ExternalTimingPersistanceStrategy getInstance() {
@@ -67,7 +63,6 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
         return instance;
 
     }
-
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 
         @Override
@@ -75,7 +70,9 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
 
             try {
 
-                return ConnectionPoolT.getConnection();
+                Connection con = ConnectionPoolT.getConnection();
+                con.setAutoCommit(false);                
+                return con;
 
             } catch (SQLException se) {
 
@@ -86,9 +83,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             return null;
 
         }
-
     };
-
     private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
 
         @Override
@@ -96,12 +91,9 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
 
             try {
 
-                return ((Connection)threadLocalCon.get()).prepareStatement(
-
-                    "insert into ExternalAccessRecords "
-
+                return ((Connection) threadLocalCon.get()).prepareStatement(
+                        "insert into ExternalAccessRecords "
                         + "(Machine_ID,App_ID,Classification_ID,Context_ID,Branch_Tag_ID,Time,LoadTime,Instance_ID) "
-
                         + "values (?,?,?,?,?,?,?,?)");
 
             } catch (SQLException se) {
@@ -113,9 +105,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             return null;
 
         }
-
     };
-
     private static ThreadLocal threadLocalInserts = new ThreadLocal() {
 
         @Override
@@ -124,16 +114,15 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             return new Integer(0);
 
         }
-
     };
 
     public void resetThreadLocalPstmt() {
 
         logger.info("Resetting the Pstmt!");
 
-        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
-
-        Connection con = (Connection)threadLocalCon.get();
+        PreparedStatement ps = (PreparedStatement) threadLocalPstmt.get();
+        Connection con = (Connection) threadLocalCon.get();
+        con.setAutoCommit(false);
 
         try {
 
@@ -164,14 +153,10 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             con = ConnectionPoolT.getConnection();
 
             ps =
-
-                con.prepareStatement(
-
+                    con.prepareStatement(
                     "insert into ExternalAccessRecords "
-
-                        + "(Machine_ID,App_ID,Classification_ID,Context_ID,Branch_Tag_ID,Time,LoadTime,Instance_ID) "
-
-                        + "values (?,?,?,?,?,?,?,?)");
+                    + "(Machine_ID,App_ID,Classification_ID,Context_ID,Branch_Tag_ID,Time,LoadTime,Instance_ID) "
+                    + "values (?,?,?,?,?,?,?,?)");
 
             threadLocalCon.set(con);
 
@@ -191,19 +176,26 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
 
             pstmt.addBatch();
 
-            Integer count = (Integer)threadLocalInserts.get();
+            Integer count = (Integer) threadLocalInserts.get();
 
-            int icount = count.intValue()+1;
+            int icount = count.intValue() + 1;
 
             threadLocalInserts.set(new Integer(icount));
 
             if (icount % BATCH_INSERT_SIZE == 0) {
 
                 pstmt.executeBatch();
+                ((Connection) threadLocalCon.get()).commit();
+
 
             }
 
         } catch (SQLException se) {
+            try {
+                ((Connection) threadLocalCon.get()).rollback();
+            } catch (SQLException ex) {
+                java.util.logging.Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             logger.error("Exception", se);
 
@@ -213,72 +205,51 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
 
     }
 
-    /* (non-Javadoc)
-
+    /*
+     * (non-Javadoc)
+     *
      * @see com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
-
+     *
      */
-
     public boolean writeToDatabase(ILiveLogParserRecord record) {
 
-        AccessRecordsForeignKeys fk = ((ExternalEventTiming)record).obtainForeignKeys();
+        AccessRecordsForeignKeys fk = ((ExternalEventTiming) record).obtainForeignKeys();
 
-        ExternalEventTiming eet = ((ExternalEventTiming)record);
+        ExternalEventTiming eet = ((ExternalEventTiming) record);
 
         fk.fkMachineID =
-
-            ForeignKeyStore.getInstance().getForeignKey(
-
+                ForeignKeyStore.getInstance().getForeignKey(
                 fk,
-
                 record.getServerName(),
-
                 ForeignKeyStore.FK_MACHINES_MACHINE_ID,
-
                 this);
 
-        if ( record.getInstance()!=null) {
+        if (record.getInstance() != null) {
             fk.fkInstanceID =
-
-                ForeignKeyStore.getInstance().getForeignKey(
-
+                    ForeignKeyStore.getInstance().getForeignKey(
                     fk,
-
                     record.getInstance(),
-
                     ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-
                     this);
         }
-        
+
         fk.fkAppID =
-
-            ForeignKeyStore.getInstance().getForeignKey(
-
+                ForeignKeyStore.getInstance().getForeignKey(
                 fk,
-
                 record.getAppName(),
-
                 ForeignKeyStore.FK_DEPLOYEDAPPS_APP_ID,
-
                 this);
 
         fk.fkBranchTagID =
-
-            ForeignKeyStore.getInstance().getForeignKey(fk, eet.getBranchName(), ForeignKeyStore.FK_BRANCH_TAG_ID, this);
+                ForeignKeyStore.getInstance().getForeignKey(fk, eet.getBranchName(), ForeignKeyStore.FK_BRANCH_TAG_ID, this);
 
         if (eet.getContext() != null) {
 
             fk.fkContextID =
-
-                ForeignKeyStore.getInstance().getForeignKey(
-
+                    ForeignKeyStore.getInstance().getForeignKey(
                     fk,
-
                     eet.getContext(),
-
                     ForeignKeyStore.FK_CONTEXTS_CONTEXT_ID,
-
                     this);
 
         } else {
@@ -291,7 +262,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
 
         try {
 
-            PreparedStatement pstmt = (PreparedStatement)threadLocalPstmt.get();
+            PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
 
             pstmt.setInt(1, fk.fkMachineID);
 
@@ -306,10 +277,10 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setTimestamp(6, new java.sql.Timestamp(record.getEventTime().getTime().getTime()));
 
             pstmt.setInt(7, eet.getLoadTime());
-            
+
             pstmt.setInt(8, fk.fkInstanceID);
 
-            
+
             blockInsert(pstmt);
 
         } catch (SQLException se) {
@@ -321,14 +292,10 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             return false;
 
         } finally {
-
             //  Removed because of Thread Local.
-
         }
 
         return true;
 
     }
-
 }
-

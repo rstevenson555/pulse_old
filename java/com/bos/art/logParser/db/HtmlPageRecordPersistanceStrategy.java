@@ -191,9 +191,6 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
 
             resetThreadLocalPstmt();
         } finally {
-            if (execBatch) {
-                resetThreadLocalPstmt();
-             }
         }
     }
 
