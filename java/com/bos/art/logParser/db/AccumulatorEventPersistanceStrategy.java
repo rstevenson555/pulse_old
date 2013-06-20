@@ -40,7 +40,7 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
         protected synchronized Object initialValue() {
             try {
                 Connection con = ConnectionPoolT.getConnection();
-                con.setAutoCommit(false);
+                //con.setAutoCommit(false);
                 return con;
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
