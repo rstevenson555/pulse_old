@@ -172,7 +172,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         protected synchronized Object initialValue() {
             try {
                 Connection con =  ConnectionPoolT.getConnection();
-                con.setAutoCommit(false);
+                //con.setAutoCommit(false);
                 return con;
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
@@ -219,7 +219,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
             }
             con = ConnectionPoolT.getConnection();
-            con.setAutoCommit(false);
+            //con.setAutoCommit(false);
                 
             ps = con.prepareStatement("insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
             threadLocalCon.set(con);
@@ -247,7 +247,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
                 pstmt.executeBatch();
                 batch++;
-                ((Connection)threadLocalCon.get()).commit();
+                //((Connection)threadLocalCon.get()).commit();
 
                 if(batchNow.isAfter(batchOneMinute)) {
                     logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
@@ -277,11 +277,11 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 
             }
         } catch (SQLException se) {
-            try {
-                ((Connection)threadLocalCon.get()).rollback();
-            } catch (SQLException ex) {
-                java.util.logging.Logger.getLogger(QueryParameterWriteQueue.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                ((Connection)threadLocalCon.get()).rollback();
+//            } catch (SQLException ex) {
+//                java.util.logging.Logger.getLogger(QueryParameterWriteQueue.class.getName()).log(Level.SEVERE, null, ex);
+//            }
 
             logger.error("Exception", se);
             resetThreadLocalPstmt();

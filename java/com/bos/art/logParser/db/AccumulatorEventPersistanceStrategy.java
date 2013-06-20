@@ -87,7 +87,7 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
                 logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
             }
             con = ConnectionPoolT.getConnection();
-            con.setAutoCommit(false);
+            //con.setAutoCommit(false);
             ps =
                     con.prepareStatement(
                     "insert into AccumulatorEvent "
@@ -108,14 +108,14 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             threadLocalInserts.set(new Integer(icount));
             if (icount % BATCH_INSERT_SIZE == 0) {
                 pstmt.executeBatch();
-                ((Connection)threadLocalCon.get()).commit();
+                //((Connection)threadLocalCon.get()).commit();
             }
         } catch (SQLException se) {
-            try {
-                ((Connection)threadLocalCon.get()).rollback();
-            } catch (SQLException ex) {
-                java.util.logging.Logger.getLogger(AccumulatorEventPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                ((Connection)threadLocalCon.get()).rollback();
+//            } catch (SQLException ex) {
+//                java.util.logging.Logger.getLogger(AccumulatorEventPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+//            }
 
             logger.error("Exception", se);
             logger.error("Next Exception", se.getNextException());

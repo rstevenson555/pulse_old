@@ -71,7 +71,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             try {
 
                 Connection con = ConnectionPoolT.getConnection();
-                con.setAutoCommit(false);                
+                //con.setAutoCommit(false);                
                 return con;
 
             } catch (SQLException se) {
@@ -150,7 +150,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             }
 
             con = ConnectionPoolT.getConnection();
-            con.setAutoCommit(false);
+            //con.setAutoCommit(false);
 
             ps =
                     con.prepareStatement(
@@ -185,17 +185,17 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             if (icount % BATCH_INSERT_SIZE == 0) {
 
                 pstmt.executeBatch();
-                ((Connection) threadLocalCon.get()).commit();
+                //((Connection) threadLocalCon.get()).commit();
 
 
             }
 
         } catch (SQLException se) {
-            try {
-                ((Connection) threadLocalCon.get()).rollback();
-            } catch (SQLException ex) {
-                java.util.logging.Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                ((Connection) threadLocalCon.get()).rollback();
+//            } catch (SQLException ex) {
+//                java.util.logging.Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+//            }
 
             logger.error("Exception", se);
 

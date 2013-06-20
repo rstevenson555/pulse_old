@@ -96,7 +96,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         protected synchronized Object initialValue() {
             try {
                 Connection con = ConnectionPoolT.getConnection();
-                con.setAutoCommit(false);
+                //con.setAutoCommit(false);
                 return con;
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
@@ -164,7 +164,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
             if (icount % currentBatchInsertSize == 0) {
                 long startTime = System.currentTimeMillis();
                 pstmt.executeBatch();
-                ((Connection)threadLocalCon.get()).commit();
+                //((Connection)threadLocalCon.get()).commit();
                 
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double)elapsed / (double)currentBatchInsertSize;
@@ -183,11 +183,11 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
                 }
             }
         } catch (SQLException se) {
-            try {
-                ((Connection)threadLocalCon.get()).rollback();
-            } catch (SQLException ex) {
-                java.util.logging.Logger.getLogger(AccessRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try {
+//                ((Connection)threadLocalCon.get()).rollback();
+//            } catch (SQLException ex) {
+//                java.util.logging.Logger.getLogger(AccessRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+//            }
             logger.error("Exception", se);
             logger.error("NextException ",se.getNextException());
             resetThreadLocalPstmt();
