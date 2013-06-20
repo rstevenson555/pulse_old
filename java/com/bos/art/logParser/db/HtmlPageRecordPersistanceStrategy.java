@@ -49,7 +49,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         @Override
         protected synchronized Object initialValue() {
             try {
-                return ConnectionPoolT.getConnection();
+                Connection conn = ConnectionPoolT.getConnection();
+                conn.setAutoCommit(false);
+                return conn;
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
@@ -108,6 +110,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
             }
             con = ConnectionPoolT.getConnection();
+            con.setAutoCommit(false);
             ps =
                     con.prepareStatement(
                     "insert into HtmlPageResponse "
@@ -150,6 +153,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 pstmt.executeBatch();
                 batch++;
                 execBatch = true;
+                ((Connection)threadLocalCon.get()).commit();
                 
                 if(batchNow.isAfter(batchOneMinute)) {
                     logger.warn("HtmlPageRecordPersistanceStrategy " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
@@ -174,6 +178,11 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 
             }
         } catch (SQLException se) {
+            try {
+                ((Connection)threadLocalCon.get()).rollback();
+            } catch (SQLException ex) {
+                java.util.logging.Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+            }
             logger.error("Exception", se);
 
             if (se.getNextException() != null) {
