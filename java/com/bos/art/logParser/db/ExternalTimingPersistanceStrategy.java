@@ -122,7 +122,6 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
 
         PreparedStatement ps = (PreparedStatement) threadLocalPstmt.get();
         Connection con = (Connection) threadLocalCon.get();
-        con.setAutoCommit(false);
 
         try {
 
@@ -151,6 +150,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             }
 
             con = ConnectionPoolT.getConnection();
+            con.setAutoCommit(false);
 
             ps =
                     con.prepareStatement(
