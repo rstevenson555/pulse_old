@@ -16,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 /**
  * @author I0360D3
@@ -94,7 +95,9 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         @Override
         protected synchronized Object initialValue() {
             try {
-                return ConnectionPoolT.getConnection();
+                Connection con = ConnectionPoolT.getConnection();
+                con.setAutoCommit(false);
+                return con;
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
@@ -161,6 +164,8 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
             if (icount % currentBatchInsertSize == 0) {
                 long startTime = System.currentTimeMillis();
                 pstmt.executeBatch();
+                ((Connection)threadLocalCon.get()).commit();
+                
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double)elapsed / (double)currentBatchInsertSize;
 
@@ -178,6 +183,11 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
                 }
             }
         } catch (SQLException se) {
+            try {
+                ((Connection)threadLocalCon.get()).rollback();
+            } catch (SQLException ex) {
+                java.util.logging.Logger.getLogger(AccessRecordPersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
+            }
             logger.error("Exception", se);
             logger.error("NextException ",se.getNextException());
             resetThreadLocalPstmt();
