@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  */
 public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
-    private static final int BATCH_INSERT_SIZE = 2;
+    private static final int BATCH_INSERT_SIZE = 20;
 
     private AccumulatorEventPersistanceStrategy() {
     }
