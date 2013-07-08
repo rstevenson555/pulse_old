@@ -11,22 +11,13 @@
  */
 package com.bos.art.logParser.db;
 
-import java.sql.Connection;
-
-import java.sql.PreparedStatement;
-
-import java.sql.SQLException;
-
-import java.text.SimpleDateFormat;
-
-import org.apache.log4j.Logger;
-
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
-
 import com.bos.art.logParser.records.ExternalEventTiming;
-
 import com.bos.art.logParser.records.ILiveLogParserRecord;
-import java.util.logging.Level;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -46,7 +37,7 @@ import java.util.logging.Level;
 public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
     protected static final Logger logger = (Logger) Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName());
-    private static final int BATCH_INSERT_SIZE = 2;
+    private static final int BATCH_INSERT_SIZE = 200;
 
     private ExternalTimingPersistanceStrategy() {
     }

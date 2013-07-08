@@ -24,7 +24,7 @@ import org.joda.time.DateTime;
  */
 public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
-    private final static int MAXBATCHINSERTSIZE = 5000;
+    private final static int MAXBATCHINSERTSIZE = 4500;
     private final static int INCREMENT_AMOUNT = 10;
     private final static int MINBATCHINSERTSIZE = 3000;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
