@@ -406,6 +406,9 @@ public class ClientReader implements Runnable {
     public void run() {
         InputStream insource = null;
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        // Parse our test input.
+        InputSource inputSource = null;
+        PushbackInputStream pinput = null;
 
         try {
             parser = getSAXParser();
@@ -510,8 +513,6 @@ public class ClientReader implements Runnable {
             digester.addCallMethod("FILESTARTXML/EVENT/PAGE/USERINFO/USERKEY", "setUserKey", 0, new Class[]{String.class});
             digester.addCallMethod("FILESTARTXML/EVENT/PAGE/USERINFO/BROWSER", "setBrowser", 0, new Class[]{String.class});
 
-            // Parse our test input.
-            InputSource inputSource = null;
 
             /*
              * String tmpEvent = new String(" <FILESTARTXML>"); tmpEvent += " <EVENT type=\"config\" classname=\"null\"
@@ -552,7 +553,6 @@ public class ClientReader implements Runnable {
 //                        "<ExceptionEvent message=\"", "\">"),
 //                        40);
 //                
-                PushbackInputStream pinput = null;
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
                             new PatchFilterInputStream(
@@ -625,7 +625,7 @@ public class ClientReader implements Runnable {
             unloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
-            String message = e.getMessage();
+            String message = e.getMessage();            
 
             if (message != null && message.indexOf("Connection reset") > -1) {
                 System.err.println(
@@ -681,6 +681,10 @@ public class ClientReader implements Runnable {
 
             }
             try {
+                if (pinput!=null) 
+                    pinput.close();
+                if(insource!=null)
+                    insource.close();                
                 if (inputSocket!=null)
                     inputSocket.close();
             }catch(java.io.IOException io) {
