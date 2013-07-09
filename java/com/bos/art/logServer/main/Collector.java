@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Properties;
@@ -65,7 +68,7 @@ public class Collector {
         Map config;
         String hostname = "";
         try {
-            hostname = java.net.InetAddress.getLocalHost().getHostName();
+            hostname = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException ex) {
             logger.error("Collector.loadConfig", ex);
         }
@@ -112,20 +115,20 @@ public class Collector {
             encode_input = true;
         }
         if (args[0].equals("-server")) {
-            java.net.ServerSocket server = null;
+            ServerSocket server = null;
             System.out.println("Running in server mode, listening on " + ART_COLLECTOR_PORT);
             while (true) {
                 try {
-                    server = new java.net.ServerSocket(ART_COLLECTOR_PORT);
+                    server = new ServerSocket(ART_COLLECTOR_PORT);
                     break;
-                } catch (java.net.SocketException se) {
+                } catch (SocketException se) {
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ie) {
                         // just ignore
                     }
                     continue;
-                } catch (java.io.IOException io) {
+                } catch (IOException io) {
                     logger.error("io exception: " + io.getMessage());
                 }
             }
@@ -133,7 +136,7 @@ public class Collector {
                 while (true) {
                     pool.execute(new ClientReader(server.accept(),encode_input));
                 }
-            } catch (java.io.IOException iex) { // time expired
+            } catch (IOException iex) { // time expired
                 // try to re-connect to the server
                 System.out.println("time expired");
             } catch (java.lang.Exception e) {
