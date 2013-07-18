@@ -140,9 +140,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             // this Latch acquire will prevent other Threads from 
             // doing their web-service requests until the latch.release
             // executes               
-        
-            //channel = new JChannel(PROTOCOL);
-            
+                    
             channel = new JChannel(false);                 // 1
             channel.setReceiver(this);
             ProtocolStack stack=new ProtocolStack(); // 2
@@ -150,45 +148,25 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 
             TCP tcp = new TCP();
             tcp.setBindToAllInterfaces(false);
-            try { 
-                InetAddress router_server = InetAddress.getByName(Engine.JAVA_GROUPS_ROUTER_SERVER);
-                tcp.setBindAddress(router_server);               
-            } catch (UnknownHostException ex) {
-                java.util.logging.Logger.getLogger(CommunicationChannel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            try { 
+//                InetAddress router_server = InetAddress.getByName(Engine.JAVA_GROUPS_ROUTER_SERVER);
+//                tcp.setBindAddress(router_server);               
+//            } catch (UnknownHostException ex) {
+//                java.util.logging.Logger.getLogger(CommunicationChannel.class.getName()).log(Level.SEVERE, null, ex);
+//            }
             tcp.setBindPort(Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
             tcp.setReaperInterval(300000);
 
-            //System.out.println("localip: " + localIp);
-            
-            IpAddress address=null;
             InetSocketAddress serveraddr = null;
-            try {
-                address = new IpAddress(Engine.JAVA_GROUPS_ROUTER_SERVER, Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
-                serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
-            } catch (UnknownHostException ex) {
-                java.util.logging.Logger.getLogger(CommunicationChannel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            List<IpAddress> initialhosts = new ArrayList<IpAddress>();
-            initialhosts.add(address);      
-            
-            TCPPING tcpping = new TCPPING();            
-            tcpping.setInitialHosts( initialhosts);
-            tcpping.setPortRange(1);
-            tcpping.setTimeout(4000);
-            tcpping.setNumInitialMembers(1);
+            serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             
             TCPGOSSIP gossip = new TCPGOSSIP();
             ArrayList<InetSocketAddress> slist = new ArrayList<InetSocketAddress>();
             slist.add(serveraddr);
             gossip.setInitialHosts(slist);
-            //tcpping.setNumPingRequests(2);
-            
-            //System.out.println("initial hosts: " +address);
-            //System.out.println("initial hosts: " +mhost);
             
             NAKACK2 nakack2 = new NAKACK2();
             nakack2.setDiscardDeliveredMsgs(true);                        
@@ -207,26 +185,20 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             FD fd = new FD();
             fd.setTimeout(10000);
             fd.setMaxTries(5);            
-            //fdsock.
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 2500);
             
             stack.addProtocol(tcp).
-                    //addProtocol(tcpping).
                     addProtocol(gossip).
                     addProtocol(new MERGE2()).
                     addProtocol(fdsock).
                     addProtocol(fd).
                     addProtocol(vsuspect).
-                    //addProtocol(new BARRIER()).
                     addProtocol(nakack2).
                     addProtocol(new UNICAST()).                    
                     addProtocol(new STABLE()).
                     addProtocol(gms);
-//                    addProtocol(new UFC()).
-//                    addProtocol(new MFC()).
-//                    addProtocol(new FRAG2());
             
             try {
                 stack.init();                         // 5
@@ -239,23 +211,18 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             channel.connect("ART-DATA");            
             channel.addChannelListener(this);
-            //channel.setOpt(Channel.AUTO_RECONNECT, Boolean.TRUE);
-            //channel.setOpt(org.jgroups.Channel.LOCAL, Boolean.FALSE);
-
-            //adapter = new com.bos.art.logParser.broadcast.network.PullPushAdapter(channel, (MessageListener) this,
-            //        (MembershipListener) this);
              
             // we will restart the connection every morning at 5:00 am
             // turn off the scheduler for now
             // ******************************************************************
-            java.util.Calendar morning = java.util.Calendar.getInstance();
-
-            morning.set(Calendar.HOUR_OF_DAY, 5);
-            morning.set(Calendar.MINUTE, 0);
-            morning.set(Calendar.SECOND, 0);
-            morning.add(Calendar.DAY_OF_MONTH, 1);
-
-            Thread.sleep(5000);
+//            java.util.Calendar morning = java.util.Calendar.getInstance();
+//
+//            morning.set(Calendar.HOUR_OF_DAY, 5);
+//            morning.set(Calendar.MINUTE, 0);
+//            morning.set(Calendar.SECOND, 0);
+//            morning.add(Calendar.DAY_OF_MONTH, 1);
+//
+//            Thread.sleep(5000);
 
             // turn this off for now
             // timer.scheduleAtFixedRate( reconnectTask, morning.getTime(), 86400*1000 );
@@ -281,11 +248,6 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             channel.setReceiver(this);
             channel.connect("ART-DATA");
             channel.addChannelListener(this);
-            //channel.setOpt(Channel.AUTO_RECONNECT, Boolean.TRUE);
-            //channel.setOpt(org.jgroups.Channel.LOCAL, Boolean.FALSE);
-
-            //adapter = new com.bos.art.logParser.broadcast.network.PullPushAdapter(channel, (MessageListener) this,
-           //         (MembershipListener) this);
                          
         } catch (Exception ce) {
             logger.error("Channel Exception ", ce);
