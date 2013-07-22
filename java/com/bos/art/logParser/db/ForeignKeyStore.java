@@ -580,6 +580,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             con = ConnectionPoolT.getConnection();
             pstmt = con.prepareStatement(UPDATE_SESSIONS);
 
+            int batchCount = 0;
             for(SessionDataClass sdc:allPersistableObjects) {
                 if (tone == false) {
                     tone = true;
@@ -587,7 +588,11 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 }
                 //updateSessionRecord(sdc);
                 updateSessionRecordWithConnection(con, pstmt, sdc);
+                batchCount++;
             }
+            logger.info("Batched " + batchCount + " Session Record updates ");
+            pstmt.executeBatch();
+            con.commit();
             
         } catch (SQLException ex) {
             //java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
@@ -740,6 +745,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             con = ConnectionPoolT.getConnection();
             PreparedStatement pstmt = con.prepareStatement(UPDATE_SESSIONS);
             updateSessionRecordWithConnection(con, pstmt, sdc);
+            con.commit();
             pstmt.close();
                         
         } catch (SQLException se) {
@@ -781,7 +787,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         pstmt.setInt(7, sdc.touchCount);
         pstmt.setInt(8, (int) duration);
         pstmt.setInt(9, sdc.sessionID);
-        pstmt.execute();
+        //pstmt.execute();
+        pstmt.addBatch();
     }
     
 
