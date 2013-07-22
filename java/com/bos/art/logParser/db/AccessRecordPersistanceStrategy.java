@@ -14,8 +14,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import org.apache.log4j.Logger;
 /**
  * @author I0360D3
@@ -29,7 +27,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
     private static final String IPADDRESS = "#IPADDRESS#";
     private final static int MAXBATCHINSERTSIZE = 2500;
     private final static int INCREMENT_AMOUNT = 10;
-    private final static int MINBATCHINSERTSIZE = 1100;
+    private final static int MINBATCHINSERTSIZE = 2000;
     private static final String USERID = "#USERID#";
     private static int lastBatchInsertSize = MINBATCHINSERTSIZE;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
