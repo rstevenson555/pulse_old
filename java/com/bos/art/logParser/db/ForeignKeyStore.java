@@ -592,18 +592,18 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             }
             logger.info("Batched " + batchCount + " Session Record updates ");
             pstmt.executeBatch();
-            con.commit();
+            //con.commit();
             
         } catch (SQLException ex) {
             //java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
             logger.error("Error updatating Session Records ",ex);
-            if ( con!=null) {
-                try {
-                    con.rollback();
-                } catch (SQLException ex1) {
-                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex1);
-                }
-            }
+//            if ( con!=null) {
+//                try {
+//                    con.rollback();
+//                } catch (SQLException ex1) {
+//                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex1);
+//                }
+//            }
         } finally {
             if ( pstmt!=null) {
                 try {
