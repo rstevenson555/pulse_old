@@ -18,6 +18,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -505,93 +506,119 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
     }
 
     private void persistSessionData() {
-        //logger.warn("persistSessionData");
-        Map<String,Object> tm = foreignKeyTables.get(ForeignKeyStore.FK_SESSIONS_SESSION_ID);
         List<SessionDataClass> allPersistableObjects = new ArrayList<SessionDataClass>();
         Map<String,CounterClass> htSessionCounts = new HashMap<String,CounterClass>();
+        Connection con = null;
+        PreparedStatement pstmt = null;
         
-        if (tm != null) {
-            java.util.Date removeDate;
-            java.util.Date oneMinDate;
-            java.util.Date fiveMinDate;
-            java.util.Date tenMinDate;
-            java.util.Date thirtyMinDate;
+        try {
+            logger.warn("persistSessionData");
+            Map<String,Object> tm = foreignKeyTables.get(ForeignKeyStore.FK_SESSIONS_SESSION_ID);
             
-            Calendar removeCalendar;
-            removeCalendar = GregorianCalendar.getInstance();
-            
-            removeCalendar.setTime(new Date());
-            removeCalendar.add(Calendar.MINUTE, -1);
-            oneMinDate = removeCalendar.getTime();
-            
-            removeCalendar.setTime(new Date());
-            removeCalendar.add(Calendar.MINUTE, -5);
-            fiveMinDate = removeCalendar.getTime();
-            
-            removeCalendar.setTime(new Date());
-            removeCalendar.add(Calendar.MINUTE, -10);
-            tenMinDate = removeCalendar.getTime();
-            
-            removeCalendar.setTime(new Date());
-            removeCalendar.add(Calendar.MINUTE, -30);
-            thirtyMinDate = removeCalendar.getTime();
-            
-            removeCalendar.setTime(new Date());
-            removeCalendar.add(Calendar.MINUTE, -SESSION_REMOVAL_MINUTES);
-            removeDate = removeCalendar.getTime();
-            
-            List<String> removeKeys = new ArrayList<String>();
+            if (tm != null) {
+                java.util.Date removeDate;
+                java.util.Date oneMinDate;
+                java.util.Date fiveMinDate;
+                java.util.Date tenMinDate;
+                java.util.Date thirtyMinDate;
+                
+                DateTime now = new DateTime();
+                
+                oneMinDate = now.minusMinutes(1).toDate();
+                fiveMinDate = now.minusMinutes(5).toDate();
+                tenMinDate = now.minusMinutes(10).toDate();
+                thirtyMinDate = now.minusMinutes(30).toDate();           
+                removeDate = now.minusMinutes(SESSION_REMOVAL_MINUTES).toDate();
+                
+                List<String> removeKeys = new ArrayList<String>();
 
-            boolean once = true, sdconce = true;
-            for(String key:tm.keySet()) {
-                Object o = tm.get(key);
-                if (o instanceof SessionDataClass) {
-                    SessionDataClass sdc = (SessionDataClass) o;
-                    if (sdc.lastRequestDate.after(oneMinDate)) {
-                        sdc.persistOneMinuteSession = true;
-                        allPersistableObjects.add(sdc);
-                        incrementOneMinSessions(sdc, htSessionCounts);
-                        incrementFiveMinSessions(sdc, htSessionCounts);
-                        incrementTenMinSessions(sdc, htSessionCounts);
-                        incrementThirtyMinSessions(sdc, htSessionCounts);
-                    } else if (sdc.lastRequestDate.after(fiveMinDate)) {
-                        incrementFiveMinSessions(sdc, htSessionCounts);
-                        incrementTenMinSessions(sdc, htSessionCounts);
-                        incrementThirtyMinSessions(sdc, htSessionCounts);
-                    } else if (sdc.lastRequestDate.after(tenMinDate)) {
-                        incrementTenMinSessions(sdc, htSessionCounts);
-                        incrementThirtyMinSessions(sdc, htSessionCounts);
-                    } else if (sdc.lastRequestDate.after(thirtyMinDate)) {
-                        incrementThirtyMinSessions(sdc, htSessionCounts);
-                    } else if (sdc.lastRequestDate.before(removeDate) && sdc.touchDate.before(removeDate)) {
-                        removeKeys.add(key);
+                for(String key:tm.keySet()) {
+                    Object o = tm.get(key);
+                    if (o instanceof SessionDataClass) {
+                        SessionDataClass sdc = (SessionDataClass) o;
+                        
+                        if (sdc.lastRequestDate.after(oneMinDate)) {
+                            sdc.persistOneMinuteSession = true;
+                            allPersistableObjects.add(sdc);
+                            incrementOneMinSessions(sdc, htSessionCounts);
+                            incrementFiveMinSessions(sdc, htSessionCounts);
+                            incrementTenMinSessions(sdc, htSessionCounts);
+                            incrementThirtyMinSessions(sdc, htSessionCounts);
+                            
+                        } else if (sdc.lastRequestDate.after(fiveMinDate)) {
+                            incrementFiveMinSessions(sdc, htSessionCounts);
+                            incrementTenMinSessions(sdc, htSessionCounts);
+                            incrementThirtyMinSessions(sdc, htSessionCounts);
+                            
+                        } else if (sdc.lastRequestDate.after(tenMinDate)) {
+                            incrementTenMinSessions(sdc, htSessionCounts);
+                            incrementThirtyMinSessions(sdc, htSessionCounts);
+                            
+                        } else if (sdc.lastRequestDate.after(thirtyMinDate)) {
+                            incrementThirtyMinSessions(sdc, htSessionCounts);
+                            
+                        } else if (sdc.lastRequestDate.before(removeDate) && sdc.touchDate.before(removeDate)) {
+                            removeKeys.add(key);
+                        }
+                    } else {
+                        logger.warn("ForeignKeyStore object NOT a SessionDataClass");
                     }
-                } else {
-                    logger.warn("ForeignKeyStore object NOT a SessionDataClass");
+                }
+                boolean rone = false;
+                for (String key : removeKeys) {
+                    Object o = tm.remove(key);
+                    if (o instanceof SessionDataClass) {
+                        if ( rone == false) {
+                            //logger.warn("all persistableObjects.add "+removeKeys.size());
+                        }
+                        allPersistableObjects.add((SessionDataClass)o);
+                    }
                 }
             }
-            boolean rone = false;
-            for (String key : removeKeys) {
-                Object o = tm.remove(key);
-                if (o instanceof SessionDataClass) {
-                    if ( rone == false) {
-                        //logger.warn("all persistableObjects.add "+removeKeys.size());
-                    }
-                    allPersistableObjects.add((SessionDataClass)o);
+            
+            boolean tone = false;
+            con = ConnectionPoolT.getConnection();
+            pstmt = con.prepareStatement(UPDATE_SESSIONS);
+
+            for(SessionDataClass sdc:allPersistableObjects) {
+                if (tone == false) {
+                    tone = true;
+                    //logger.warn("about to updateSessionRecord "+allPersistableObjects.size());
+                }
+                //updateSessionRecord(sdc);
+                updateSessionRecordWithConnection(con, pstmt, sdc);
+            }
+            
+        } catch (SQLException ex) {
+            //java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("Error updatating Session Records ",ex);
+            if ( con!=null) {
+                try {
+                    con.rollback();
+                } catch (SQLException ex1) {
+                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             }
-        }
-        
-        boolean tone = false;
-        for(SessionDataClass sdc:allPersistableObjects) {
-            if (tone == false) {
-                tone = true;
-                //logger.warn("about to updateSessionRecord "+allPersistableObjects.size());
+        } finally {
+            if ( pstmt!=null) {
+                try {
+                    pstmt.close();
+                } catch (SQLException ex) {
+                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-            updateSessionRecord(sdc);
+            if ( con!=null) {
+                try {
+                    con.close();
+                } catch (SQLException ex) {
+                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
         }
         
         broadcastSessionDataBeans(htSessionCounts);
+
     }
     
 
@@ -711,23 +738,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         Connection con = null;
         try {
             con = ConnectionPoolT.getConnection();
-            long duration = sdc.lastRequestDate.getTime() - sdc.firstRequestDate.getTime();
             PreparedStatement pstmt = con.prepareStatement(UPDATE_SESSIONS);
-            pstmt.setString(1, sdc.IPAddress);
-            if (sdc != null && sdc.browserType != null && sdc.browserType.length() > 254) {
-                pstmt.setString(2, sdc.browserType.substring(0, 254));
-                browser_logger.info("browser Too long, chomping: " + sdc.browserType);
-            } else {
-                pstmt.setString(2, sdc.browserType);
-            }
-            pstmt.setInt(3, sdc.User_ID);
-            pstmt.setInt(4, sdc.Context_ID);
-            pstmt.setTimestamp(5, new Timestamp(sdc.firstRequestDate.getTime()));
-            pstmt.setTimestamp(6, new Timestamp(sdc.lastRequestDate.getTime()));
-            pstmt.setInt(7, sdc.touchCount);
-            pstmt.setInt(8, (int) duration);
-            pstmt.setInt(9, sdc.sessionID);
-            pstmt.execute();
+            updateSessionRecordWithConnection(con, pstmt, sdc);
             pstmt.close();
                         
         } catch (SQLException se) {
@@ -750,6 +762,29 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             }
         }
     }
+    
+        
+    private void updateSessionRecordWithConnection(Connection con,PreparedStatement pstmt,SessionDataClass sdc) throws SQLException {
+        long duration = sdc.lastRequestDate.getTime() - sdc.firstRequestDate.getTime();
+        //PreparedStatement pstmt = con.prepareStatement(UPDATE_SESSIONS);
+        pstmt.setString(1, sdc.IPAddress);
+        if (sdc != null && sdc.browserType != null && sdc.browserType.length() > 254) {
+            pstmt.setString(2, sdc.browserType.substring(0, 254));
+            browser_logger.info("browser Too long, chomping: " + sdc.browserType);
+        } else {
+            pstmt.setString(2, sdc.browserType);
+        }
+        pstmt.setInt(3, sdc.User_ID);
+        pstmt.setInt(4, sdc.Context_ID);
+        pstmt.setTimestamp(5, new Timestamp(sdc.firstRequestDate.getTime()));
+        pstmt.setTimestamp(6, new Timestamp(sdc.lastRequestDate.getTime()));
+        pstmt.setInt(7, sdc.touchCount);
+        pstmt.setInt(8, (int) duration);
+        pstmt.setInt(9, sdc.sessionID);
+        pstmt.execute();
+    }
+    
+
     
     /**
      * update the session_id with the proper value
