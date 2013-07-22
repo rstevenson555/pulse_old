@@ -19,5 +19,6 @@ ActiveRecord::Base.establish_connection(
 Benchmark.bm(25) do |x|
     x.report("delete from sessions") { result = ActiveRecord::Base.connection.execute("delete from sessions where inserttime < (now() - interval '4 weeks')") ; puts "deleted #{result} records" }
     x.report("delete from users") { result = ActiveRecord::Base.connection.execute("delete from users where lastmodtime < (now() - interval '12 weeks')"); puts "deleted #{result} records" }
-    x.report("delete from htmlpageresponse") { result = ActiveRecord::Base.connection.execute("delete from htmlpageresponse where time < (now() - interval '1 weeks')"); puts "deleted #{result} records"  }
+    x.report("delete from htmlpageresponse") { result = ActiveRecord::Base.connection.execute("delete from htmlpageresponse where time < (now() - interval '3 days')"); puts "deleted #{result} records"  }
+    x.report("delete from queryparameter") { result = ActiveRecord::Base.connection.execute("delete from queryparameters where lastmodtime < (now() - interval '3 days')"); puts "deleted #{result} records"  }
 end
