@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 import org.apache.commons.codec.binary.Hex;
@@ -41,7 +42,6 @@ public abstract class BasePersistanceStrategy {
     public static final String FK_INSTANCES_INSERT = "insert into Instances (InstanceName) values (?)";
     public static final String FK_SESSIONS_INSERT = "insert into Sessions (IPAddress, sessionTXT, browserType, User_ID ) values (?,?,?,?)";
     public static final String FK_QUERY_PARAMETERS_INSERT = "insert into QueryParameters (queryParams,value_hash) values (?,?)";
-    //public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where MD5(queryParams)=MD5(?)";
     public static final String FK_QUERY_PARAMETERS_SELECT = "select QueryParameter_ID from QueryParameters where value_hash=?";
     public static final String FK_USERS_INSERT = "insert into Users (userName) values (?)";
     public static final String FK_USERS_SELECT = "select User_ID from Users where userName = ?";
@@ -63,6 +63,11 @@ public abstract class BasePersistanceStrategy {
     public static final int DATABASE_MISS_THRESHOLD = 1000000;
     
     static {
+        initMaps();
+    }
+    
+    private static void initMaps()
+    {
         sequenceNameHashMap = new HashMap();
         sequenceNameHashMap.put(FK_BRANCH_INSERT, "branches_branch_tag_id_seq");
         sequenceNameHashMap.put(FK_APP_INSERT, "apps_app_id_seq");
@@ -87,35 +92,48 @@ public abstract class BasePersistanceStrategy {
     }
     
     protected int insertForeignKey(String sqlInsert, List insertValues, Connection con) throws SQLException {
-        PreparedStatement pstmt = con.prepareStatement(sqlInsert);
+        PreparedStatement pstmt = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS);                
         int resultValue = 0;
 
         try {
-            for (int i = 0,tot = insertValues.size(); i < tot; ++i) {
-                Object o = insertValues.get(i);
-
-                if (o instanceof String) {
-                    pstmt.setString(i + 1, (String) o);
-                } else if (o instanceof Integer) {
-                    pstmt.setInt(i + 1, ((Integer) o).intValue());
-                } else if (o instanceof java.util.Date){
-                    java.util.Date d = (java.util.Date) o;
-                    pstmt.setTimestamp(i+1, new java.sql.Timestamp( d.getTime() ));
-                } else {
-                    logger.error("insertForeignKey unknown type: " + o.getClass().getName() + " for param " + (i+1),new Exception() );
-                }
-            }
-            if (pstmt.executeUpdate() > 0) {
-                ++contextWrite;
-                String seqName = (String) sequenceNameHashMap.get(sqlInsert);
-
-                if (seqName != null) {
-                    resultValue = selectLastInsert(con, seqName);
-                } 
-            }
+            resultValue = insertForeignKeyWithPreparedStatement(pstmt, sqlInsert,  insertValues,  con);
         }
         finally {
             pstmt.close();
+        }
+        return resultValue;
+    }
+    
+    protected int insertForeignKeyWithPreparedStatement(PreparedStatement pstmt, String sqlInsert, List insertValues, Connection con) throws SQLException {
+        int resultValue = 0;
+
+        for (int i = 0,tot = insertValues.size(); i < tot; ++i) {
+            Object o = insertValues.get(i);
+
+            if (o instanceof String) {
+                pstmt.setString(i + 1, (String) o);
+            } else if (o instanceof Integer) {
+                pstmt.setInt(i + 1, ((Integer) o).intValue());
+            } else if (o instanceof java.util.Date){
+                java.util.Date d = (java.util.Date) o;
+                pstmt.setTimestamp(i+1, new java.sql.Timestamp( d.getTime() ));
+            } else {
+                logger.error("insertForeignKey unknown type: " + o.getClass().getName() + " for param " + (i+1),new Exception() );
+            }
+        }
+        if (pstmt.executeUpdate() > 0) {
+            ++contextWrite;
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if ( rs.next()) {
+                resultValue = rs.getInt(1);
+                //logger.warn("sequenceval: " + resultValue);
+            }
+//            String seqName = (String) sequenceNameHashMap.get(sqlInsert);
+//
+//            if (seqName != null) {
+//                resultValue = selectLastInsert(con, seqName);
+//            } 
+            if (rs!=null) rs.close();
         }
         return resultValue;
     }
@@ -140,18 +158,16 @@ public abstract class BasePersistanceStrategy {
                     PreparedStatement pstmt = con.prepareStatement(sqlSelect);
 
                     for (int i = 0,tot = selectValues.size(); i < tot; ++i) {
-                        Object o = selectValues.get(i);                        
-
+                        Object o = selectValues.get(i);                                               
+                               
                         if (o instanceof String) {
                             // I don't want to always escape by default, because the overhead,
                             // so we are only doing it if we get a error in the catch block below,
                             // then set the escapeString value to true
                             if ( escapeString ) {
-                                //String input = (String)o;
-                                String input = String.valueOf(o);
+                                String input = (String)o;
                                 input = StringEscapeUtils.escapeJava(input);
                                 selectValues.set(i, input);
-                                //insertValues.set(i, input);
                                 pstmt.setString(i + 1, input);
                             } else
                                 pstmt.setString(i + 1, String.valueOf(o));
@@ -236,18 +252,19 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
+    
     static public int selectLastInsert(Connection con, String seqName) throws SQLException {
         PreparedStatement pstmt2 = con.prepareStatement(SELECT_CURRVAL);
-
         pstmt2.setString(1, seqName);
-        ResultSet rs2 = pstmt2.executeQuery();
+        
+        ResultSet rs = pstmt2.executeQuery();
         int resultVal = 0;
 
-        if (rs2.next()) {
-            resultVal = rs2.getInt(1);
+        if (rs.next()) {
+            resultVal = rs.getInt(1);
         }
-        rs2.close();
-        pstmt2.close();
+        if (rs!=null) rs.close();
+        if (pstmt2!=null) pstmt2.close();
         return resultVal;
     }
 
@@ -385,28 +402,79 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
-
+//    private static ThreadLocal foreignKeyConnections = new ThreadLocal() {
+//        @Override
+//        protected synchronized Object initialValue() {
+//            try {
+//                return ConnectionPoolT.getConnection();
+//            } catch (SQLException se) {
+//                logger.error("SQL Exception ", se);
+//            }
+//            return null;
+//        }
+//    };
+//    
+//    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
+//        @Override
+//        protected synchronized Object initialValue() {
+//            try {
+//                return ((Connection)foreignKeyConnections.get()).prepareStatement(FK_SESSIONS_INSERT,Statement.RETURN_GENERATED_KEYS);
+//            } catch (SQLException se) {
+//                logger.error("SQL Exception ", se);
+//            }
+//            return null;
+//        }
+//    };
+//
+//     public void resetThreadLocalPstmt() {
+//        logger.info("Resetting the Pstmt!");
+//        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
+//        Connection con = (Connection)foreignKeyConnections.get();
+//        try {
+//            try {
+//                if (ps != null) {
+//                    ps.close();
+//                    ps = null;
+//                }
+//                if (con != null) {
+//                    con.close();
+//                    con = null;
+//                }
+//            } catch (SQLException se) {
+//                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
+//            }
+//            con = ConnectionPoolT.getConnection();
+//            ps =
+//                con.prepareStatement(
+//                    FK_SESSIONS_INSERT);
+//            foreignKeyConnections.set(con);
+//            threadLocalPstmt.set(ps);
+//        } catch (Exception e) {
+//            logger.error("Exception ", e);
+//        }
+//    }
+     
     protected int insertSession(String sessiontxt, String ip, String browser, int userID) {
         String sqlInsert = FK_SESSIONS_INSERT;
         List bindParams = Arrays.asList(ip,sessiontxt,browser,new Integer(userID));
         
         Connection con = null;
         int resultValue = 0;
-
+        PreparedStatement pstmt = null;
         try {
             con = ConnectionPoolT.getConnection();
-            resultValue = insertForeignKey(sqlInsert, bindParams, con);
+            pstmt = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS);                
+            
+            resultValue = insertForeignKeyWithPreparedStatement(pstmt, sqlInsert, bindParams, con);
         } catch (SQLException se) {
-            logger.error("SQLException", se);
-        }
-        finally {
+            logger.error("insertSession SQLException", se);
+            //resetThreadLocalPstmt();
+        } finally {
             try {
-                if (con != null) {
-                    con.close();
-                    con = null;
-                }
-            } catch (Throwable t) {
-                logger.error("Throwable", t);
+                if (pstmt!=null) pstmt.close();
+                if (con!=null) con.close();
+            } catch (SQLException ex) {
+                logger.error("insertSession SQLException", ex);
             }
         }
         return resultValue;
