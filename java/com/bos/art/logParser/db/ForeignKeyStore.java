@@ -6,6 +6,7 @@
  */
 package com.bos.art.logParser.db;
 
+import com.bos.art.logParser.broadcast.beans.BeanBag;
 import com.bos.art.logParser.broadcast.beans.SessionDataBean;
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
@@ -628,17 +629,23 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
     
 
     private void broadcastSessionDataBeans(Map<String,CounterClass> htCounterClass) {
+        BeanBag beanBag = new BeanBag();
+        List sdl = new ArrayList<SessionDataBean>();
         
-        for(String sNext:htCounterClass.keySet()) {
-            CounterClass cc = (CounterClass) htCounterClass.get(sNext);
-            SessionDataBean sessionBean;
-            sessionBean = new SessionDataBean();
+        //for(String sNext:htCounterClass.keySet()) {
+        //    CounterClass cc = (CounterClass) htCounterClass.get(sNext);
+        for(Map.Entry<String,CounterClass> entry:htCounterClass.entrySet()) {
+            CounterClass cc = entry.getValue();
+            String sNext = entry.getKey();            
+                        
+            SessionDataBean sessionBean = new SessionDataBean();
             sessionBean.setCurrentTime(new java.util.Date());
             sessionBean.setOneMinSessions(cc.oneMin);
             sessionBean.setFiveMinSessions(cc.fiveMin);
             sessionBean.setTenMinSessions(cc.tenMin);
             sessionBean.setThirtyMinSessions(cc.thirtyMin);
             sessionBean.setContext(sNext);
+            
             if (sessionBroadcastCounter++ % 100 == 0) {
                 logger.warn(
                         "BroadCasting the Session Data : "
@@ -652,8 +659,11 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                         + ":"
                         + sessionBean.getThirtyMinSessions());
             }
-            broadcast(sessionBean);
+            sdl.add(sessionBean);
+            //broadcast(sessionBean);                 
         }
+        beanBag.setBeans(sdl);
+        broadcast(beanBag);
     }
 
     private void incrementOneMinSessions(SessionDataClass sdc, Map<String,CounterClass> htData) {
@@ -834,6 +844,15 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             logger.error("Error broadcasting data: ", e);
         }
     }
+    
+    private void broadcast(BeanBag bean) {
+        try {
+            CommunicationChannel.getInstance().broadcast(bean, null);
+        } catch (Exception e) {
+            logger.error("Error broadcasting data: ", e);
+        }
+    }
+
 
     private void updateTest() {
         SessionDataClass sdc = new SessionDataClass();
