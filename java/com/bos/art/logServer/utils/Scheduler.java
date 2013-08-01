@@ -13,8 +13,8 @@ import EDU.oswego.cs.dl.util.concurrent.ClockDaemon;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class is just a simple wrapper around the ClockDeamon object in the concurrent library
@@ -25,7 +25,7 @@ import java.util.TimerTask;
 public class Scheduler extends ClockDaemon
 {
     private static final String DEFAULTSCHEDULERNAME="BOSDefaultScheduler";
-    private static HashMap schedulerMap = new HashMap();
+    private static ConcurrentHashMap schedulerMap = new ConcurrentHashMap();
 
     /** Default thread factory. Creates worker threads. */
     private static final ThreadFactory FACTORY = new ThreadFactory() {
@@ -41,13 +41,18 @@ public class Scheduler extends ClockDaemon
     /**
      * Just call the default constructor
      **/
-    private Scheduler(String name)
+    private Scheduler(String name,final int threadpriority)
     {
         super();
-        setThreadFactory(FACTORY);
-        synchronized( schedulerMap ) {
-            schedulerMap.put( name, this );
-        }
+        setThreadFactory( new ThreadFactory() {
+            public Thread newThread(Runnable command) {
+                Thread t = new Thread(command, "LPScheduler");
+                t.setPriority(threadpriority);
+
+                return t;
+            }
+        });
+        schedulerMap.put( name, this );
     }
 
     /**
@@ -55,7 +60,7 @@ public class Scheduler extends ClockDaemon
      **/
     synchronized public static Scheduler getInstance()
     {
-        return getInstance(DEFAULTSCHEDULERNAME);
+        return getInstance(DEFAULTSCHEDULERNAME,Thread.MIN_PRIORITY+1);
     }
 
     /**
@@ -63,14 +68,20 @@ public class Scheduler extends ClockDaemon
      **/
     synchronized public static Scheduler getInstance(String name)
     {
+        return getInstance(name,Thread.MIN_PRIORITY+1);
+    }
+
+    /**
+     * returns the named scheduler, if one doesn't exist we create it
+     **/
+    synchronized public static Scheduler getInstance(String name,int threadpriority)
+    {
         Scheduler scheduler = null;
-        synchronized( schedulerMap ) {
-            if ( (scheduler = (Scheduler)schedulerMap.get( name ))!=null)
-                return scheduler;
-            else {
-                scheduler = new Scheduler( name );
-                return scheduler;
-            }
+        if ( (scheduler = (Scheduler)schedulerMap.get( name ))!=null)
+            return scheduler;
+        else {
+            scheduler = new Scheduler( name, threadpriority );
+            return scheduler;
         }
     }
 
@@ -158,4 +169,5 @@ public class Scheduler extends ClockDaemon
         super.shutDown();
     }
 }
+
 
