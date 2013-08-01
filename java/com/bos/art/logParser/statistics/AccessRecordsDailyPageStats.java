@@ -360,10 +360,12 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int pageStart = contextEnd + PAGE.length();
         int pageEnd = nextKey.indexOf(MACHINE_TYPE);
         int machineTypeStart = nextKey.indexOf(MACHINE_TYPE) + MACHINE_TYPE.length();
+        int machineTypeEnd = nextKey.indexOf(INSTANCE_TYPE);
 
         String contextName = nextKey.substring(contextStart, contextEnd);
         String pageName = nextKey.substring(pageStart, pageEnd);
-        String machineType = nextKey.substring(machineTypeStart);
+        String machineType = nextKey.substring(machineTypeStart,machineTypeEnd);
+        
         PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
         int pageID = 0;
         int contextID = 0;
@@ -466,9 +468,11 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int pageStart = contextEnd + PAGE.length();
         int pageEnd = nextKey.indexOf(MACHINE_TYPE);
         int machineTypeStart = pageEnd + MACHINE_TYPE.length();
+        int machineTypeEnd = nextKey.indexOf(INSTANCE_TYPE);
+        
         String contextName = nextKey.substring(contextStart, contextEnd);
         String pageName = nextKey.substring(pageStart, pageEnd);
-        String machineType = nextKey.substring(machineTypeStart);
+        String machineType = nextKey.substring(machineTypeStart,machineTypeEnd);
 
         PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
         try {
