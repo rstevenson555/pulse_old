@@ -40,7 +40,7 @@ public class QueryParamCleaner extends Thread {
             int removed24 = 0;
             if (tm == null) {
                 try {
-                    Thread.sleep(THIRTY_MINUTES);
+                    Thread.sleep(THIRTY_MINUTES_MILLIS);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -48,8 +48,8 @@ public class QueryParamCleaner extends Thread {
             }
 
             try {
-                long timeCheck = System.currentTimeMillis() - ONE_HOUR;
-                long timeCheck24 = System.currentTimeMillis() - TWENTYFOUR_HOURS;
+                long timeCheck = System.currentTimeMillis() - ONE_HOUR_MILLIS;
+                long timeCheck24 = System.currentTimeMillis() - TWENTYFOUR_HOURS_MILLIS;
                 
                 for (String key : tm.keySet()) {
                     if ( tm.get(key) instanceof ForeignKeyStore.QueryParamClass) {
@@ -68,7 +68,7 @@ public class QueryParamCleaner extends Thread {
                 logger.warn("QueryParamCleaner Removed         : " + removed);
                 logger.warn("QueryParamCleaner Removed24 Hour  : " + removed24);
                 try {
-                    Thread.sleep(TimeIntervalConstants.TEN_MINUTES);
+                    Thread.sleep(TimeIntervalConstants.TEN_MINUTES_MILLIS);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -78,3 +78,4 @@ public class QueryParamCleaner extends Thread {
         }
     }
 }
+

@@ -19,7 +19,7 @@ public class MessageUnloader extends java.lang.Thread {
     private Connector connector;
     private InetAddress address = null;
     private int port = 0;
-    final private long reconnectionDelay = TimeIntervalConstants.THIRTY_SECONDS;
+    final private long reconnectionDelay = TimeIntervalConstants.THIRTY_SECONDS_MILLIS;
     private long writeCount = 0;
     private boolean exitOnFinish = false;
     private long writeTime = System.currentTimeMillis();
@@ -328,3 +328,4 @@ public class MessageUnloader extends java.lang.Thread {
         }
     }
 }
+

@@ -13,18 +13,22 @@ import org.joda.time.Interval;
  * The constant definitions all express their time in milliseconds
  */
 public interface TimeIntervalConstants {
-    public static final long FIFTEEN_SECONDS = new Interval(new DateTime(),new DateTime().plusSeconds(15)).toDurationMillis();
-    public static final long THIRTY_SECONDS = new Interval(new DateTime(),new DateTime().plusSeconds(30)).toDurationMillis();
+    static final int FIFTEEN_SECONDS_MILLIS = (int)(new Interval(new DateTime(),new DateTime().plusSeconds(15)).toDurationMillis());
+    static final int THIRTY_SECONDS_MILLIS = (int)(new Interval(new DateTime(),new DateTime().plusSeconds(30)).toDurationMillis());
+    static final int FIVE_SECOND_DELAY = 5;
     
-    public static final long THREE_MINUTES = new Interval(new DateTime(),new DateTime().plusMinutes(3)).toDurationMillis();
-    public static final long THIRTY_MINUTES = new Interval(new DateTime(),new DateTime().plusMinutes(30)).toDurationMillis();
-    public static final long TEN_MINUTES = new Interval(new DateTime(),new DateTime().plusMinutes(10)).toDurationMillis();
+    static final long THREE_MINUTES_MILLIS = new Interval(new DateTime(),new DateTime().plusMinutes(3)).toDurationMillis();
+    static final long THIRTY_MINUTES_MILLIS = new Interval(new DateTime(),new DateTime().plusMinutes(30)).toDurationMillis();
+    static final long TEN_MINUTES_MILLIS = new Interval(new DateTime(),new DateTime().plusMinutes(10)).toDurationMillis();
+    static final int TEN_MINUTE_DELAY = 10;
 
-    public static final long ONE_HOUR = new Interval(new DateTime(),new DateTime().plusHours(1)).toDurationMillis();
-    public static final long TWO_HOURS = new Interval(new DateTime(),new DateTime().plusHours(2)).toDurationMillis();
-    public static final long TWENTYFOUR_HOURS = new Interval(new DateTime(),new DateTime().plusHours(1)).toDurationMillis();
+    static final long ONE_HOUR_MILLIS = new Interval(new DateTime(),new DateTime().plusHours(1)).toDurationMillis();
+    static final long TWO_HOURS_MILLIS = new Interval(new DateTime(),new DateTime().plusHours(2)).toDurationMillis();
+    static final long TWENTYFOUR_HOURS_MILLIS = new Interval(new DateTime(),new DateTime().plusHours(1)).toDurationMillis();
     
-    public static final long ONE_DAY = new Interval(new DateTime(),new DateTime().plusDays(1)).toDurationMillis();
-    public static final long SEVEN_DAYS = new Interval(new DateTime(),new DateTime().plusDays(7)).toDurationMillis();
+    static final long ONE_DAY_MILLIS = new Interval(new DateTime(),new DateTime().plusDays(1)).toDurationMillis();
+    static final long SEVEN_DAYS_MILLIS = new Interval(new DateTime(),new DateTime().plusDays(7)).toDurationMillis();
     
+
 }
+
