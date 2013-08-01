@@ -14,7 +14,9 @@ import com.bos.art.logParser.db.ForeignKeyStore;
 import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.ExternalEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
+import com.bos.art.logServer.utils.StringConstants;
 import static com.bos.art.logServer.utils.TimeIntervalConstants.FIVE_SECOND_DELAY;
+import static com.bos.art.logServer.utils.StringConstants.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -100,10 +102,11 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         return;
     }
 
+    
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         ExternalEventTiming eet = (ExternalEventTiming) record;
         String key = fdfKey.print(record.getEventTime().getTime().getTime())
-                + "$START_INSTANCE#" + eet.getInstance()
+                + "#START_INSTANCE#" + eet.getInstance()
                 + "#START_SERVER#" + eet.getServerName()
                 + "#START_CLASSIFICATION#" + eet.getClassification();
         
