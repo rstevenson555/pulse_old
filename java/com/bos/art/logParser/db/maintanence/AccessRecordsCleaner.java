@@ -12,7 +12,7 @@ import java.sql.ResultSet;
 import java.util.Properties;
 
 import com.bos.art.logParser.db.ConnectionPoolT;
-import com.bos.art.logServer.utils.TimeIntervalConstants;
+import static com.bos.art.logServer.utils.TimeIntervalConstants.*;
 
 import edu.luc.cs.trull.task.Task;
 import org.apache.log4j.Logger;
@@ -138,7 +138,7 @@ public class AccessRecordsCleaner implements Task {
                 maxRecordPK = rs.getInt("max_rpk");
                 currentRecordPK = minRecordPK;
                 startTime = System.currentTimeMillis();
-                estimatedFinishTime = startTime + TimeIntervalConstants.TWO_HOURS;
+                estimatedFinishTime = startTime + TWO_HOURS_MILLIS;
             }
 
         } catch (Exception e) {
@@ -202,3 +202,4 @@ public class AccessRecordsCleaner implements Task {
         this.startTime = startTime;
     }
 }
+
