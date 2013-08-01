@@ -53,12 +53,16 @@ public class ExternalAccessRecordsMinuteBean extends TransferBean implements Ser
         key = lkey;
         timeString = lkey.substring(0, MACHINE_START_INDEX);
 
-        logger.warn("ExternalAccessRecordsMinuteBean lkey: " + lkey);
+        System.out.println("lkey: " + lkey);
         
+        int startInstance = lkey.indexOf(START_INSTANCE_DELIMETER) + START_INSTANCE_DELIMETER.length();
+        int endInstance = lkey.indexOf(START_SERVER_DELIMETER);
         int startMachine = lkey.indexOf(START_SERVER_DELIMETER) + START_SERVER_DELIMETER.length();
         int endMachine = lkey.indexOf(START_CLASSIFICATION_DELIMETER);
         int startClassification = endMachine + START_CLASSIFICATION_DELIMETER.length();
+        
         machine = lkey.substring(startMachine, endMachine);
+        instance = lkey.substring(startInstance, endInstance);
         classificationID = 0;
         try {
             classificationID = Integer.parseInt(lkey.substring(startClassification));
