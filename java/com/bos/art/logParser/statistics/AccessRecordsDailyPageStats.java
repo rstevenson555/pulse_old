@@ -13,28 +13,26 @@ import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.UserRequestTiming;
+import static com.bos.art.logServer.utils.StringConstants.*;
+import static com.bos.art.logServer.utils.TimeIntervalConstants.TEN_MINUTE_DELAY;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
 /**
  * @author I0360D3
  *
  * To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class AccessRecordsDailyPageStats extends StatisticsUnit {
-    private static final String CONTEXT = "#CONTEXT#";
-    private static final String MACHINE_TYPE = "#MACHINE_TYPE#";
-    private static final String PAGE = "#PAGE#";
+    private static final int PRINTSTATS_MODVALUE = 500000;
 
     private static final DateTimeFormatter fdf  = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private static final int DATE_LENGTH = 8;
@@ -42,7 +40,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             (Logger) Logger.getLogger(AccessRecordsDailyPageStats.class.getName());
     private static AccessRecordsDailyPageStats instance = new AccessRecordsDailyPageStats();
     private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMdd"); 
-
     private static DateTimeFormatter sdf2 = DateTimeFormat.forPattern("yyyyMMddHHmmss"); 
 
     private ConcurrentHashMap<String, TimeSpanEventContainer> hours;
@@ -50,7 +47,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
     private int eventsProcessed;
     private int timeSlices;
     private java.util.Date lastDataWriteTime;
-    private static final int MINUTE_DELAY = 10;
     private static int counter = 0;
 
     public AccessRecordsDailyPageStats() {
@@ -88,7 +84,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                     record.isErrorPage());
             ++eventsProcessed;
         }
-        if (calls > 0 && calls % 500000 == 0) {
+        if (calls > 0 && calls % PRINTSTATS_MODVALUE == 0) {
             ++calls;
             int totalCount = 0;
             for (String nextKey : hours.keySet()) {
@@ -110,7 +106,9 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 + PAGE
                 + urt.getPage()
                 + MACHINE_TYPE
-                + ForeignKeyStore.getInstance().getMachineType(urt.getServerName());
+                + ForeignKeyStore.getInstance().getMachineType(urt.getServerName()) 
+                + INSTANCE_TYPE
+                + urt.getInstance();
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) hours.get(key);
         if (container == null) {
@@ -122,11 +120,12 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             if (container == null) {
                 container =
                         new TimeSpanEventContainer(
-                        record.getServerName(),
-                        record.getAppName(),
-                        record.getContext(),
-                        record.getRemoteHost(),
-                        record.getEventTime());
+                            record.getServerName(),
+                            record.getAppName(),
+                            record.getContext(),
+                            record.getRemoteHost(),
+                            record.getEventTime(),
+                            record.getInstance());
             }
             hours.put(key, container);
         }
@@ -172,7 +171,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 int ptotalUsers = pdistinctUsers;
                 long ptotalLoadTime = 1l * paverageLoadTime * ptotalLoads;
 
-                container = new TimeSpanEventContainer("Summary", "Summary", "Summary", "Summary", ltime,
+                container = new TimeSpanEventContainer("Summary", "Summary", "Summary", "Summary", ltime,"Summary",
                         ptotalLoads,
                         paverageLoadTime,
                         ptotalLoadTime,
@@ -196,12 +195,10 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             rs.close();
             pstmt.close();
         } catch (SQLException se) {
-            // TODO Logger
             logger.error("AccessRecordsDailyStats",se);
             try {
                 con.rollback();
             } catch (SQLException sse) {
-                //sse.printStackTrace();
                 logger.error("AccessRecordsDailyStats",sse);
             }
 
@@ -211,7 +208,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
 //					con.commit();
                     con.close();
                 } catch (Throwable t) {
-                    //TODO Logger
                     logger.error("Exception Closing Connection .. ", t);
                 }
             }
@@ -242,10 +238,9 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
      */
     public void persistData() {
 
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.MINUTE, MINUTE_DELAY);
-        Date nextWriteDate = gc.getTime();
+        DateTime gc = new DateTime(lastDataWriteTime);
+        gc.plusMinutes(TEN_MINUTE_DELAY);
+        Date nextWriteDate = gc.toDate();        
 
         if (new java.util.Date().after(nextWriteDate)) {
             lastDataWriteTime = new java.util.Date();
@@ -566,3 +561,4 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
     public void flush() {
     }
 }
+

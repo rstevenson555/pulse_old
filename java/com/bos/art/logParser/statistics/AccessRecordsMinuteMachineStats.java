@@ -134,7 +134,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
 		String key =
 			fdfKey.print(record.getEventTime().getTime().getTime())
-				+ record.getServerName();
+				+ record.getServerName() + record.getInstance();
         
 			TimeSpanEventContainer container =
 				(TimeSpanEventContainer) minutes.get(key);
@@ -146,7 +146,8 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 						record.getAppName(),
 						record.getContext(),
 						record.getRemoteHost(),
-						record.getEventTime());
+						record.getEventTime(),
+                        record.getInstance());
 				minutes.put(key, container);
 			}
 			return container;
@@ -507,4 +508,5 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 	}
 
 }
+
 
