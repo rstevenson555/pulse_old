@@ -6,7 +6,6 @@
  */
 package com.bos.art.logParser.statistics;
 
-import com.bcop.arch.utility.FastDateFormat;
 import com.bos.art.logParser.broadcast.beans.ExternalAccessRecordsMinuteBean;
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 import com.bos.art.logParser.db.AccessRecordPersistanceStrategy;
@@ -15,13 +14,12 @@ import com.bos.art.logParser.db.ForeignKeyStore;
 import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.ExternalEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
+import static com.bos.art.logServer.utils.TimeIntervalConstants.FIVE_SECOND_DELAY;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.sql.Timestamp;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
@@ -40,19 +38,13 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
             (Logger) Logger.getLogger(ExternalTimingMachineClassificationMinuteStats.class.getName());
     private static ExternalTimingMachineClassificationMinuteStats instance;
     private static final DateTimeFormatter fdf  = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
-    private static final DateTimeFormatter fdfMySQLTime  = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final DateTimeFormatter fdfKey  = DateTimeFormat.forPattern("yyyyMMddHHmm");
-    // private static SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMddHHmmss");
     private static DateTimeFormatter sdf2 = DateTimeFormat.forPattern("yyyyMMddHHmmss");
-    //private Hashtable minutes;
     private ConcurrentHashMap<String, TimeSpanEventContainer> minutes;
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
     private java.util.Date lastDataWriteTime;
-    private static final int HOUR_DELAY = 1;
-    private static final int MINUTE_DELAY = 1;
-    private static final int SECONDS_DELAY = 5;
     transient private PersistanceStrategy pStrat;
     private java.util.Date lastPersistDate;
 
@@ -111,8 +103,10 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         ExternalEventTiming eet = (ExternalEventTiming) record;
         String key = fdfKey.print(record.getEventTime().getTime().getTime())
+                + "$START_INSTANCE#" + eet.getInstance()
                 + "#START_SERVER#" + eet.getServerName()
                 + "#START_CLASSIFICATION#" + eet.getClassification();
+        
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) minutes.get(key);
         
@@ -124,7 +118,8 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                     record.getAppName(),
                     record.getContext(),
                     record.getRemoteHost(),
-                    record.getEventTime());
+                    record.getEventTime(),
+                    record.getInstance());
             minutes.put(key, container);
         }
         return container;
@@ -151,13 +146,12 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
      * @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.SECOND, SECONDS_DELAY);
-        Date nextWriteDate = gc.getTime();
-        gc.setTime(new java.util.Date());
-        gc.add(Calendar.HOUR, -2);
-        Date broadcastCutOff = gc.getTime();
+        DateTime gc = new DateTime(lastDataWriteTime);
+        gc = gc.plusSeconds(FIVE_SECOND_DELAY);
+        Date nextWriteDate = gc.toDate();
+        gc = new DateTime();
+        gc = gc.minusHours(2);
+        Date broadcastCutOff = gc.toDate();
         
         if (logger.isDebugEnabled()) {
             logger.debug(
@@ -169,7 +163,8 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                     + (System.currentTimeMillis() - nextWriteDate.getTime()));
         }
 
-        if (new java.util.Date().after(nextWriteDate)) {
+        DateTime now = new DateTime();
+        if ( now.isAfter(nextWriteDate.getTime())) {
             if (logger.isDebugEnabled()) {
                 logger.debug(
                         "persistCalled for External Minute Stats time:nextWriteDate: -- "
@@ -179,7 +174,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                         + " diff:"
                         + (System.currentTimeMillis() - nextWriteDate.getTime()));
             }
-            lastDataWriteTime = new java.util.Date();
+            lastDataWriteTime = now.toDate();
             for (String nextKey : minutes.keySet()) {
                 TimeSpanEventContainer tsec =
                         (TimeSpanEventContainer) minutes.get(nextKey);
@@ -306,16 +301,25 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         Connection con = null;
         try {
 
+            int startInstance = nextKey.indexOf("#START_INSTANCE#") + "#START_INSTANCE#".length();
+            int endInstance = nextKey.indexOf("#START_SERVER#");
             int startMachine = nextKey.indexOf("#START_SERVER#") + "#START_SERVER#".length();
             int endMachine = nextKey.indexOf("#START_CLASSIFICATION#");
             int startClassification = endMachine + "#START_CLASSIFICATION#".length();
 
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                    tsec.getAccessRecordsForeignKeys(),
-                    nextKey.substring(startMachine, endMachine),
-                    ForeignKeyStore.FK_MACHINES_MACHINE_ID,
-                    pStrat);
+                        tsec.getAccessRecordsForeignKeys(),
+                        nextKey.substring(startMachine, endMachine),
+                        ForeignKeyStore.FK_MACHINES_MACHINE_ID,
+                        pStrat);
+            
+            int instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                        tsec.getAccessRecordsForeignKeys(),
+                        nextKey.substring(startInstance, endInstance),
+                        ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                        pStrat);
             int classificationID = 0;
             try {
                 classificationID = Integer.parseInt(nextKey.substring(startClassification));
@@ -379,8 +383,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 //					con.commit();
                     con.close();
                 } catch (Throwable t) {
-                    //TODO Logger
-                    logger.error("Error Closing Connection ... ", t);
+                    logger.error("insertData, Error Closing Connection ... ", t);
                 }
             }
         }
@@ -390,10 +393,13 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
             TimeSpanEventContainer tsec,
             String nextKey,
             String state) {
-
+//FIXME update query with instance ID
         Connection con = null;
         try {
 
+            
+            int startInstance = nextKey.indexOf("#START_INSTANCE#") + "#START_INSTANCE#".length();
+            int endInstance = nextKey.indexOf("#START_SERVER#");
             int startMachine = nextKey.indexOf("#START_SERVER#") + "#START_SERVER#".length();
             int endMachine = nextKey.indexOf("#START_CLASSIFICATION#");
             int startClassification = endMachine + "#START_CLASSIFICATION#".length();
@@ -404,12 +410,19 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                     nextKey.substring(startMachine, endMachine),
                     ForeignKeyStore.FK_MACHINES_MACHINE_ID,
                     pStrat);
+            
+            int instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                        tsec.getAccessRecordsForeignKeys(),
+                        nextKey.substring(startInstance, endInstance),
+                        ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                        pStrat);
+            
             int classificationID = 0;
             try {
                 classificationID = Integer.parseInt(nextKey.substring(startClassification));
-            } catch (NumberFormatException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (NumberFormatException e) {                
+                logger.error("updateData parse exception",e);
             }
             con = getConnection();
             PreparedStatement pstmt =
@@ -439,10 +452,11 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                 d = dt.toDate();
 
             } catch (IllegalArgumentException pe) {
+                logger.error("ExternalTimingMachingClassificationMinutStats bad date format: ",pe);
                 d = new Date();
             }
 
-            pstmt.setTimestamp(18, new java.sql.Timestamp(d.getTime()));
+            pstmt.setTimestamp(18, new Timestamp(d.getTime()));
 
             pstmt.setInt(19, classificationID);
             pstmt.execute();
@@ -466,7 +480,6 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 //					con.commit();
                     con.close();
                 } catch (Throwable t) {
-                    //TODO Logger
                     logger.error("Error Closing Connection ...", t);
                 }
             }
@@ -493,8 +506,9 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         try {
             CommunicationChannel.getInstance().broadcast(bean, null);
         } catch (Exception e) {
-            logger.error("Error broadcasting data", e);
+            logger.error("ExternalTimingMachineClassificationMinuteStats: Error broadcasting data", e);
         }
 
     }
 }
+
