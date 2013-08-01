@@ -7,10 +7,9 @@
 package com.bos.art.logParser.db;
 
 import com.bos.art.logServer.utils.TimeIntervalConstants;
-import java.util.Iterator;
+import static com.bos.art.logServer.utils.TimeIntervalConstants.*;
 import java.util.Map;
 import org.apache.log4j.Logger;
-import static com.bos.art.logServer.utils.TimeIntervalConstants.*;
 
 /**
  *
