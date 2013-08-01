@@ -94,11 +94,11 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
 	}
 	
 	synchronized private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record){
-		String key = sdf.print(record.getEventTime().getTime().getTime()) + record.getServerName();
+		String key = sdf.print(record.getEventTime().getTime().getTime()) + record.getServerName() + record.getInstance();
 		TimeSpanEventContainer container = (TimeSpanEventContainer)hours.get(key);
 		if(container == null){
 			++timeSlices;
-			container = new TimeSpanEventContainer(record.getServerName(),record.getAppName(),record.getContext(),record.getRemoteHost(),record.getEventTime());
+			container = new TimeSpanEventContainer(record.getServerName(),record.getAppName(),record.getContext(),record.getRemoteHost(),record.getEventTime(),record.getInstance());
 			container.setModDelayMinutes(MINUTES_MOD_DELAY);
 			container.setDataDelayMinutes(MINUTES_DATA_DELAY);
 			hours.put(key,container);
@@ -390,3 +390,4 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
 
 
 }
+
