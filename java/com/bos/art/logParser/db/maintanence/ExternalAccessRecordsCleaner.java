@@ -25,7 +25,7 @@ import org.apache.log4j.Logger;
  * Templates
  */
 public class ExternalAccessRecordsCleaner implements Task {
-    private static final long CLEAN_NUMBER_OF_DAYS = TimeIntervalConstants.SEVEN_DAYS;
+    private static final long CLEAN_NUMBER_OF_DAYS = TimeIntervalConstants.SEVEN_DAYS_MILLIS;
 
     private static final int VACUUM_REMOVAL_THRESHOLD = 20 * 1000000;
     private static final int MAX_INCREMENT = 500000;
@@ -277,3 +277,4 @@ public class ExternalAccessRecordsCleaner implements Task {
         this.startTime = startTime;
     }
 }
+
