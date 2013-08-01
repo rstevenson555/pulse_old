@@ -56,11 +56,11 @@ public class StatisticsModule extends TimerTask implements Serializable {
     
 	private StatisticsModule(){
 		statUnits = new CopyOnWriteArrayList();
-        timer = Scheduler.getInstance("timer");        
-        timerClean = Scheduler.getInstance("cleaner");
+        timer = Scheduler.getInstance("timer",Thread.NORM_PRIORITY);        
+        timerClean = Scheduler.getInstance("cleaner",Thread.NORM_PRIORITY);
 //		        
         logger.warn("Scheduling tasks");
-		timerClean.executePeriodically(THREE_MINUTES,new MyRunnable(this) { 
+		timerClean.executePeriodically(THREE_MINUTES_MILLIS,new MyRunnable(this) { 
             public void run() {
                 try {
                     super.run();
@@ -70,7 +70,7 @@ public class StatisticsModule extends TimerTask implements Serializable {
             } 
         }, false);
 		//timerClean.executePeriodically(30*60,new Thread(ForeignKeyStore.getInstance()) {
-        timerClean.executePeriodically(THIRTY_SECONDS,new MyRunnable(ForeignKeyStore.getInstance()) {
+        timerClean.executePeriodically(THIRTY_SECONDS_MILLIS,new MyRunnable(ForeignKeyStore.getInstance()) {
             public void run() {
                 try {
                     super.run();
@@ -79,7 +79,7 @@ public class StatisticsModule extends TimerTask implements Serializable {
                 }
             } 
         }, false);
-        timerClean.executePeriodically(ONE_HOUR,new Thread(com.bos.art.logParser.db.maintanence.AccessRecordsCleanerDriver.getInstance()) {
+        timerClean.executePeriodically(ONE_HOUR_MILLIS,new Thread(com.bos.art.logParser.db.maintanence.AccessRecordsCleanerDriver.getInstance()) {
             public void run() {
                 try {
                     super.run();
@@ -121,7 +121,7 @@ public class StatisticsModule extends TimerTask implements Serializable {
                     logger.error("ForeignKeyStore Error clearing queue:",e);
                 }
             }
-        },midnight,ONE_DAY);
+        },midnight,ONE_DAY_MILLIS);
 	}
 	
 	public static StatisticsModule getInstance(){
@@ -130,7 +130,7 @@ public class StatisticsModule extends TimerTask implements Serializable {
 	
 	public void addStatUnit(StatisticsUnit su){
 		statUnits.add(su);
-		timer.executePeriodically(FIFTEEN_SECONDS,new Thread(su),true);
+		timer.executePeriodically(FIFTEEN_SECONDS_MILLIS,new Thread(su),true);
 	}
 	
 	public void removeStatUnit(StatisticsUnit su){
@@ -203,3 +203,4 @@ public class StatisticsModule extends TimerTask implements Serializable {
 		return beans;
 	}
 }
+
