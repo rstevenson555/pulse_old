@@ -26,7 +26,7 @@ import org.apache.log4j.Logger;
  */
 public class AccumulatorRecordsCleaner implements Task {
     //private static final int CLEAN_NUMBER_OF_DAYS = 1000 * 60 * 60 * 24 * 7 * 1;
-    private static final long CLEAN_NUMBER_OF_DAYS = TimeIntervalConstants.SEVEN_DAYS;
+    private static final long CLEAN_NUMBER_OF_DAYS = TimeIntervalConstants.SEVEN_DAYS_MILLIS;
 
     private static final int VACUUM_REMOVAL_THRESHOLD = 20 * 1000000;
     private static final int MAX_INCREMENT = 500000;
@@ -272,3 +272,4 @@ public class AccumulatorRecordsCleaner implements Task {
         this.startTime = startTime;
     }
 }
+
