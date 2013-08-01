@@ -133,7 +133,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
 			container = getFromDatabase( stripTime(record.getEventTime().getTime() ),null, ltime);
 
 			if(container == null){
-				container = new TimeSpanEventContainer(record.getServerName(),record.getAppName(),record.getContext(),record.getRemoteHost(),ltime);
+				container = new TimeSpanEventContainer(record.getServerName(),record.getAppName(),record.getContext(),record.getRemoteHost(),ltime,record.getInstance());
 			}
 
             days.put(key,container);
@@ -177,7 +177,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
 				long ptotalLoadTime = 1l*paverageLoadTime*ptotalLoads;
 				
 				
-				container = new TimeSpanEventContainer("Summary", "Summary","Summary", "Summary", ltime,
+				container = new TimeSpanEventContainer("Summary", "Summary","Summary", "Summary", ltime,"Summary",
 				ptotalLoads,
 				paverageLoadTime,
 				ptotalLoadTime,
@@ -474,3 +474,4 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
 	}
 
 }
+
