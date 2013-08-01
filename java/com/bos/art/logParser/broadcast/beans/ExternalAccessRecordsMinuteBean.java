@@ -6,10 +6,10 @@
  */
 package com.bos.art.logParser.broadcast.beans;
 
-import java.io.Serializable;
-
 import com.bos.art.logParser.statistics.TimeSpanEventContainer;
+import java.io.Serializable;
 import org.apache.log4j.Logger;
+import org.jgroups.Message;
 
 /**
  * @author I0360D3
@@ -21,9 +21,11 @@ public class ExternalAccessRecordsMinuteBean extends TransferBean implements Ser
     private static final int MACHINE_START_INDEX = 12;
     private static final String START_CLASSIFICATION_DELIMETER = "#START_CLASSIFICATION#";
     private static final String START_SERVER_DELIMETER = "#START_SERVER#";
+    private static final String START_INSTANCE_DELIMETER = "#START_INSTANCE#";
     private static Logger logger = Logger.getLogger(ExternalAccessRecordsMinuteBean.class.getName());
     private String key;
     protected String machine;
+    protected String instance;
     protected String timeString;
     protected int totalLoads;
     protected int averageLoadTime;
@@ -51,6 +53,8 @@ public class ExternalAccessRecordsMinuteBean extends TransferBean implements Ser
         key = lkey;
         timeString = lkey.substring(0, MACHINE_START_INDEX);
 
+        System.out.println("lkey: " + lkey);
+        
         int startMachine = lkey.indexOf(START_SERVER_DELIMETER) + START_SERVER_DELIMETER.length();
         int endMachine = lkey.indexOf(START_CLASSIFICATION_DELIMETER);
         int startClassification = endMachine + START_CLASSIFICATION_DELIMETER.length();
@@ -340,6 +344,13 @@ public class ExternalAccessRecordsMinuteBean extends TransferBean implements Ser
     public String getMachine() {
         return machine;
     }
+    
+    /**
+     * @return
+     */
+    public String getInstance() {
+        return instance;
+    }
 
     /**
      * @return
@@ -353,6 +364,13 @@ public class ExternalAccessRecordsMinuteBean extends TransferBean implements Ser
      */
     public void setMachine(String string) {
         machine = string;
+    }
+    
+    /**
+     * @param string
+     */
+    public void setInstance(String instance) {
+        this.instance = instance;
     }
 
     /**
@@ -376,7 +394,8 @@ public class ExternalAccessRecordsMinuteBean extends TransferBean implements Ser
         classificationID = i;
     }
 
-    public void processBean(org.jgroups.Message msg) {
+    public void processBean(Message msg) {
         getClient().process(msg, this);
     }
 }
+

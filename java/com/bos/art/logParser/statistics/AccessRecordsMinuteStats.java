@@ -106,11 +106,12 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             ++timeSlices;
             container =
                     new TimeSpanEventContainer(
-                    record.getServerName(),
-                    record.getAppName(),
-                    record.getContext(),
-                    record.getRemoteHost(),
-                    record.getEventTime());
+                        record.getServerName(),
+                        record.getAppName(),
+                        record.getContext(),
+                        record.getRemoteHost(),
+                        record.getEventTime(),
+                        record.getInstance());
             minutes.put(key, container);
         }
         return container;
@@ -471,3 +472,4 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
         persistData();
     }
 }
+

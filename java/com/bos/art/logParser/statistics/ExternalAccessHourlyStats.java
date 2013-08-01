@@ -73,7 +73,7 @@ public class ExternalAccessHourlyStats extends StatisticsUnit {
 		TimeSpanEventContainer container = (TimeSpanEventContainer)hours.get(key);
 		if(container == null){
 			++timeSlices;
-			container = new TimeSpanEventContainer(record.getServerName(),record.getAppName(),record.getContext(),record.getRemoteHost(),record.getEventTime());
+			container = new TimeSpanEventContainer(record.getServerName(),record.getAppName(),record.getContext(),record.getRemoteHost(),record.getEventTime(),record.getInstance());
 			hours.put(key,container);
 		}
 		return container;
@@ -119,3 +119,4 @@ public class ExternalAccessHourlyStats extends StatisticsUnit {
 	}
 
 }
+
