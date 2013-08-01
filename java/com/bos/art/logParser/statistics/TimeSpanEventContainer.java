@@ -59,6 +59,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
 	//  Identifying Attributes.
 	//  Some of these won't be used, but I wanted it to contain all possiblilities.
 	private String machine;
+    private String instance;
 	private String appName;
 	private String context;
 	private String remoteHost;
@@ -93,9 +94,10 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
 	private int reload50Percentile;
 	private int reload25Percentile;	
 	
-	public TimeSpanEventContainer(String machine, String app,String context, String remoteHost, Calendar time){
+	public TimeSpanEventContainer(String machine, String app,String context, String remoteHost, Calendar time,String instance){
 		accessRecordsForeignKeys = new AccessRecordsForeignKeys(time.getTime());
 		this.machine = machine;
+        this.instance = instance;
 		this.appName = app;
 		this.context = context;
 		this.remoteHost = remoteHost;
@@ -111,7 +113,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
 		closeTimeForMod.add(Calendar.MINUTE,modDelayMinutes);
 	}
     
-	public TimeSpanEventContainer(String machine, String app,String context, String remoteHost, Calendar time,
+	public TimeSpanEventContainer(String machine, String app,String context, String remoteHost, Calendar time, String instance,
             int ptotalLoads,
             int paverageLoadTime,
             long ptotalLoadTime,
@@ -133,7 +135,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
             int preload25Percentile
 	)
     {
-		this(machine,app,context,remoteHost,time);
+		this(machine,app,context,remoteHost,time,instance);
 		totalLoads =  ptotalLoads;
 		averageLoadTime = paverageLoadTime;
 		totalLoadTime = ptotalLoadTime;
@@ -289,6 +291,13 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
 	 */
 	public String getMachine() {
 		return machine;
+	}
+    
+    	/**
+	 * @return
+	 */
+	public String getInstance() {
+		return instance;
 	}
 
 	/**
@@ -553,4 +562,5 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
 	}
 
 }
+
 
