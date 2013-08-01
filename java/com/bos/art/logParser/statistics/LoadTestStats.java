@@ -527,7 +527,7 @@ public class LoadTestStats extends StatisticsUnit {
                 ++timeSlices;
                 Calendar c = GregorianCalendar.getInstance();
                 c.setTime(rtd.lastModDate);
-                container = new TimeSpanEventContainer(script, "", "", "", c);
+                container = new TimeSpanEventContainer(script, "", "", "", c, "instance");
                 testTimeSpanEventContainer.put(script, container);
             }
             return container;
@@ -546,7 +546,7 @@ public class LoadTestStats extends StatisticsUnit {
                 ++timeSlices;
                 Calendar c = GregorianCalendar.getInstance();
                 c.setTime(rtd.lastModDate);
-                container = new TimeSpanEventContainer(rtd.loadTestTransaction, "", "", "", c);
+                container = new TimeSpanEventContainer(rtd.loadTestTransaction, "", "", "", c, "instance");
                 minutesTimeSpanEventContainer.put(key, container);
             }
             return container;
@@ -567,7 +567,7 @@ public class LoadTestStats extends StatisticsUnit {
                 ++timeSlices;
                 Calendar c = GregorianCalendar.getInstance();
                 c.setTime(rtd.lastModDate);
-                container = new TimeSpanEventContainer(script, "", "", "", c);
+                container = new TimeSpanEventContainer(script, "", "", "", c, "instance");
                 testSessionTimeSpanEventContainer.put(script, container);
             }
             return container;
@@ -1286,3 +1286,4 @@ public class LoadTestStats extends StatisticsUnit {
 		}
     }
 }
+
