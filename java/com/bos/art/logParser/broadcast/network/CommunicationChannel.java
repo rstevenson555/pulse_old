@@ -170,21 +170,21 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             NAKACK2 nakack2 = new NAKACK2();
             nakack2.setDiscardDeliveredMsgs(true);                        
-            nakack2.setUseMcastXmit(false);            
+            nakack2.setUseMcastXmit(true);            
                        
             GMS gms = new GMS();
             gms.setJoinTimeout(5000);
-            gms.setViewAckCollectionTimeout(3000);
-            gms.setMergeTimeout(3000);  
+            gms.setViewAckCollectionTimeout(3500);
+            gms.setMergeTimeout(3500);  
             gms.setMaxJoinAttempts(1);
             gms.setViewBundling(true);
-            gms.setMaxBundlingTime(1500);
+            gms.setMaxBundlingTime(3500);
             
             FD_SOCK fdsock = new FD_SOCK();
             
             FD fd = new FD();
-            fd.setTimeout(10000);
-            fd.setMaxTries(5);            
+            fd.setTimeout(1000);
+            fd.setMaxTries(3);            
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 2500);
