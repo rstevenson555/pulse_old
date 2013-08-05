@@ -14,9 +14,7 @@ import com.bos.art.logParser.db.ForeignKeyStore;
 import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.ExternalEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
-import com.bos.art.logServer.utils.StringConstants;
 import static com.bos.art.logServer.utils.TimeIntervalConstants.FIVE_SECOND_DELAY;
-import static com.bos.art.logServer.utils.StringConstants.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -28,6 +26,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import static com.bos.art.logServer.utils.StringConstants.*;
 
 /**
  * @author I0360D3
@@ -51,7 +50,6 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
     private java.util.Date lastPersistDate;
 
     public ExternalTimingMachineClassificationMinuteStats() {
-        //minutes = new Hashtable();
         minutes = new ConcurrentHashMap<String, TimeSpanEventContainer>();
         lastDataWriteTime = new java.util.Date();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
@@ -106,9 +104,9 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         ExternalEventTiming eet = (ExternalEventTiming) record;
         String key = fdfKey.print(record.getEventTime().getTime().getTime())
-                + "#START_INSTANCE#" + eet.getInstance()
-                + "#START_SERVER#" + eet.getServerName()
-                + "#START_CLASSIFICATION#" + eet.getClassification();
+                + START_INSTANCE + eet.getInstance()
+                + START_SERVER + eet.getServerName()
+                + START_CLASSIFICATION + eet.getClassification();
         
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) minutes.get(key);
@@ -304,11 +302,11 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         Connection con = null;
         try {
 
-            int startInstance = nextKey.indexOf("#START_INSTANCE#") + "#START_INSTANCE#".length();
-            int endInstance = nextKey.indexOf("#START_SERVER#");
-            int startMachine = nextKey.indexOf("#START_SERVER#") + "#START_SERVER#".length();
-            int endMachine = nextKey.indexOf("#START_CLASSIFICATION#");
-            int startClassification = endMachine + "#START_CLASSIFICATION#".length();
+            int startInstance = nextKey.indexOf(START_INSTANCE) + START_INSTANCE.length();
+            int endInstance = nextKey.indexOf(START_SERVER);
+            int startMachine = nextKey.indexOf(START_SERVER) + START_SERVER.length();
+            int endMachine = nextKey.indexOf(START_CLASSIFICATION);
+            int startClassification = endMachine + START_CLASSIFICATION.length();
 
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
@@ -399,13 +397,12 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 //FIXME update query with instance ID
         Connection con = null;
         try {
-
             
-            int startInstance = nextKey.indexOf("#START_INSTANCE#") + "#START_INSTANCE#".length();
-            int endInstance = nextKey.indexOf("#START_SERVER#");
-            int startMachine = nextKey.indexOf("#START_SERVER#") + "#START_SERVER#".length();
-            int endMachine = nextKey.indexOf("#START_CLASSIFICATION#");
-            int startClassification = endMachine + "#START_CLASSIFICATION#".length();
+            int startInstance = nextKey.indexOf(START_INSTANCE) + START_INSTANCE.length();
+            int endInstance = nextKey.indexOf(START_SERVER);
+            int startMachine = nextKey.indexOf(START_SERVER) + START_SERVER.length();
+            int endMachine = nextKey.indexOf(START_CLASSIFICATION);
+            int startClassification = endMachine + START_CLASSIFICATION.length();
 
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(

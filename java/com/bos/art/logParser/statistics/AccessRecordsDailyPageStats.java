@@ -107,8 +107,9 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 + urt.getPage()
                 + MACHINE_TYPE
                 + ForeignKeyStore.getInstance().getMachineType(urt.getServerName()) 
-                + INSTANCE_TYPE
+                + START_INSTANCE
                 + urt.getInstance();
+        
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) hours.get(key);
         if (container == null) {
@@ -131,7 +132,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         }
         return container;
     }
-    private static final String SQL_SELECT_RECORD = "SELECT * from DailyPageLoadTimes where Day = ? and Page_ID = ? and Context_ID=? and machineType=?";
+    private static final String SQL_SELECT_RECORD = "SELECT * from DailyPageLoadTimes where Day = ? and Page_ID = ? and Context_ID=? and machineType=? and instance_id=?";
 
     private TimeSpanEventContainer getFromDatabase(Date dateKey, String key, Calendar ltime) {
         Connection con = null;
@@ -139,6 +140,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int pageID = getPageIDFromKey(key, ltime.getTime());
         int contextID = getContextIDFromKey(key, ltime.getTime());
         String machineType = getMachineTypeFromKey(key, ltime.getTime());
+        int instanceID = getInstanceIDFromKey(key, ltime.getTime());
         try {
 
             con = getConnection();
@@ -147,6 +149,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             pstmt.setInt(2, pageID);
             pstmt.setInt(3, contextID);
             pstmt.setString(4, machineType);
+            pstmt.setInt(5,instanceID);
 
             ResultSet rs = pstmt.executeQuery();
             boolean found = rs.next();
@@ -298,7 +301,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             + "DistinctUsers,          ErrorPages, "
             + "ThirtySecondLoads,      TwentySecondLoads, "
             + "FifteenSecondLoads,     TenSecondLoads, "
-            + "FiveSecondLoads) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            + "FiveSecondLoads,instance_id) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     private static final String SQL_UPDATE_STATEMENT =
             "update DailyPageLoadTimes set "
             + "TotalLoads = ?,             AverageLoadTime = ?,  "
@@ -309,7 +312,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             + "ThirtySecondLoads = ?,      TwentySecondLoads = ?, "
             + "FifteenSecondLoads = ?,     TenSecondLoads = ?, "
             + "FiveSecondLoads = ?,        State = ? where "
-            + "Day = ? and Page_ID = ? and Context_ID = ? and machineType = ?";
+            + "Day = ? and Page_ID = ? and Context_ID = ? and machineType = ? and instance_id = ?";
 
     private int getContextIDFromKey(String nextKey, Date ldate) {
         int contextStart = nextKey.indexOf(CONTEXT) + CONTEXT.length();
@@ -328,14 +331,30 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
 
     private String getMachineTypeFromKey(String nextKey, Date ldate) {
         try {
-            int machineTypeEnd = nextKey.indexOf(MACHINE_TYPE) + MACHINE_TYPE.length();
-            return nextKey.substring(machineTypeEnd);
+            int machineTypeStart = nextKey.indexOf(MACHINE_TYPE) + MACHINE_TYPE.length();
+            int machineTypeEnd = nextKey.indexOf(START_INSTANCE);
+            return nextKey.substring(machineTypeStart,machineTypeEnd);
         } catch (RuntimeException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
             return "NE";
         }
     }
+    
+    private int getInstanceIDFromKey(String nextKey, Date ldate) {
+        int contextStart = nextKey.indexOf(START_INSTANCE) + START_INSTANCE.length();
+        String instanceName = nextKey.substring(contextStart);
+        
+        PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
+        int instanceID =
+                ForeignKeyStore.getInstance().getForeignKey(
+                new AccessRecordsForeignKeys(ldate),
+                instanceName,
+                ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                pStrat);
+        return instanceID;
+    }
+
 
     private int getPageIDFromKey(String nextKey, Date ldate) {
         int contextEnd = nextKey.indexOf(PAGE);
@@ -360,15 +379,19 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int pageStart = contextEnd + PAGE.length();
         int pageEnd = nextKey.indexOf(MACHINE_TYPE);
         int machineTypeStart = nextKey.indexOf(MACHINE_TYPE) + MACHINE_TYPE.length();
-        int machineTypeEnd = nextKey.indexOf(INSTANCE_TYPE);
+        int machineTypeEnd = nextKey.indexOf(START_INSTANCE);
+        int instanceStart = nextKey.indexOf(START_INSTANCE) + START_INSTANCE.length();
+       // int instanceEnd = nextKey.indexOf(START_INSTANCE);
 
         String contextName = nextKey.substring(contextStart, contextEnd);
         String pageName = nextKey.substring(pageStart, pageEnd);
         String machineType = nextKey.substring(machineTypeStart,machineTypeEnd);
+        String instanceName = nextKey.substring(instanceStart);
         
         PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
         int pageID = 0;
         int contextID = 0;
+        int instanceID = 0;
         Date d = null;
         try {
 
@@ -378,6 +401,14 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                     contextName,
                     ForeignKeyStore.FK_CONTEXTS_CONTEXT_ID,
                     pStrat);
+            
+            instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                    tsec.getAccessRecordsForeignKeys(),
+                    instanceName,
+                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                    pStrat);
+
             pageID =
                     ForeignKeyStore.getInstance().getForeignKey(
                     tsec.getAccessRecordsForeignKeys(),
@@ -390,7 +421,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                     con.prepareStatement(SQL_INSERT_STATEMENT);
 
             try {
-                //d = sdf2.parse(nextKey.substring(0, DATE_LENGTH) + "000000");
                 DateTime dt = sdf2.parseDateTime(nextKey.substring(0, DATE_LENGTH) + "000000");
                 d = dt.toDate();
 
@@ -399,9 +429,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 d = new Date();
             }
 
-            //logger.error("AccessRecordsDailyPageStats (line 412): d => "+d.toString());
-            //logger.error("AccessRecordsDailyPageStats (line 413): contextID => "+contextID);
-            //logger.error("AccessRecordsDailyPageStats (line 414): pageID => "+pageID);
             pstmt.setDate(1, new java.sql.Date(d.getTime()));
 
             //pstmt.setString(1, nextKey.substring(0, DATE_LENGTH) + "000000");
@@ -425,6 +452,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             pstmt.setInt(17, tsec.getFifteenSecondLoads());
             pstmt.setInt(18, tsec.getTenSecondLoads());
             pstmt.setInt(19, tsec.getFiveSecondLoads());
+            pstmt.setInt(20, instanceID);
             pstmt.execute();
             pstmt.close();
 
@@ -467,12 +495,14 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int contextEnd = nextKey.indexOf(PAGE);
         int pageStart = contextEnd + PAGE.length();
         int pageEnd = nextKey.indexOf(MACHINE_TYPE);
-        int machineTypeStart = pageEnd + MACHINE_TYPE.length();
-        int machineTypeEnd = nextKey.indexOf(INSTANCE_TYPE);
+        int machineTypeStart = nextKey.indexOf(MACHINE_TYPE) + MACHINE_TYPE.length();
+        int machineTypeEnd = nextKey.indexOf(START_INSTANCE);
+        int instanceStart = nextKey.indexOf(START_INSTANCE) + START_INSTANCE.length();
         
         String contextName = nextKey.substring(contextStart, contextEnd);
         String pageName = nextKey.substring(pageStart, pageEnd);
         String machineType = nextKey.substring(machineTypeStart,machineTypeEnd);
+        String instanceName = nextKey.substring(instanceStart);
 
         PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
         try {
@@ -488,6 +518,12 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                     tsec.getAccessRecordsForeignKeys(),
                     pageName,
                     ForeignKeyStore.FK_PAGES_PAGE_ID,
+                    pStrat);
+            int instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                    tsec.getAccessRecordsForeignKeys(),
+                    instanceName,
+                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
                     pStrat);
 
             con = getConnection();
@@ -523,6 +559,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             pstmt.setInt(18, pageID);
             pstmt.setInt(19, contextID);
             pstmt.setString(20, machineType);
+            pstmt.setInt(21, instanceID);
             pstmt.execute();
             pstmt.close();
 
