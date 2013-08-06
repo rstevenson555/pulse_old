@@ -189,10 +189,14 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 2500);
             
+            MERGE2 merge2 = new MERGE2();
+            merge2.setMaxInterval(100000);
+            merge2.setMinInterval(20000);
+            
             stack.addProtocol(tcp).
                     addProtocol(gossip).
-                    addProtocol(new MERGE2()).
-                    addProtocol(fdsock).
+                    addProtocol(merge2).
+                    //addProtocol(fdsock).
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
