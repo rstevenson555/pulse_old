@@ -9,6 +9,8 @@ package com.bos.art.logParser.collector;
 
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import java.io.Serializable;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
 
@@ -21,7 +23,7 @@ import org.apache.log4j.Logger;
 public class DatabaseWriteQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(DatabaseWriteQueue.class.getName());
     private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
-    private LinkedBlockingQueue dequeue; // UnboundedFifoBuffer dequeue;
+    private BlockingQueue dequeue; // UnboundedFifoBuffer dequeue;
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
@@ -33,7 +35,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     // guards for boundaries
     
     private DatabaseWriteQueue() {
-        dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
 
     public static DatabaseWriteQueue getInstance() {
@@ -70,7 +72,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
         /*if (dequeue instanceof BoundedLinkedQueue) {
             sb.append(((BoundedLinkedQueue) dequeue).size());
         } else if (dequeue instanceof BoundedBuffer) { */
-            sb.append(((LinkedBlockingQueue) dequeue).size());
+            sb.append(((BlockingQueue) dequeue).size());
         //}
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());

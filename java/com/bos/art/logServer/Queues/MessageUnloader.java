@@ -7,13 +7,14 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.Logger;
 
 public class MessageUnloader extends java.lang.Thread {
     private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
 
-    private LinkedBlockingQueue queue = null;
+    private BlockingQueue queue = null;
     private static Logger logger = Logger.getLogger(MessageUnloader.class.getName());
     private ObjectOutputStream outputStream = null;
     private Connector connector;
@@ -48,7 +49,7 @@ public class MessageUnloader extends java.lang.Thread {
     }
 
     private MessageUnloader() {
-        queue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
+        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
 
         // connect to the output
 

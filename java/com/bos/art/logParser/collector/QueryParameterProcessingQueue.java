@@ -10,6 +10,8 @@ package com.bos.art.logParser.collector;
 import java.io.Serializable;
 import org.apache.log4j.Logger;
 import com.bos.art.logParser.records.QueryParameters;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -22,7 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class QueryParameterProcessingQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterProcessingQueue.class.getName());
     private static QueryParameterProcessingQueue instance;
-    private LinkedBlockingQueue dequeue; // UnboundedFifoBuffer dequeue;
+    private BlockingQueue dequeue; // UnboundedFifoBuffer dequeue;
     private int objectsRemoved;
     private int objectsProcessed;
     private volatile long totalSysTime;
@@ -31,7 +33,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     //private static final int MAX_DB_QUEUE_SIZE = 50000;
     
     private QueryParameterProcessingQueue() {
-        dequeue = new LinkedBlockingQueue(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
 
     public static QueryParameterProcessingQueue getInstance() {
@@ -69,7 +71,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
         /*if (dequeue instanceof BoundedLinkedQueue) {
             sb.append(((BoundedLinkedQueue) dequeue).size());
         } else if (dequeue instanceof BoundedBuffer) { */
-            sb.append(((LinkedBlockingQueue) dequeue).size());
+            sb.append(((BlockingQueue) dequeue).size());
         //}
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
