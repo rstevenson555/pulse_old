@@ -174,11 +174,11 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                        
             GMS gms = new GMS();
             gms.setJoinTimeout(5000);
-            gms.setViewAckCollectionTimeout(3500);
-            gms.setMergeTimeout(3500);  
-            gms.setMaxJoinAttempts(1);
+            gms.setViewAckCollectionTimeout(5000);
+            gms.setMergeTimeout(5000);  
+            gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
-            gms.setMaxBundlingTime(3500);
+            gms.setMaxBundlingTime(5000);
             
             FD_SOCK fdsock = new FD_SOCK();
             
@@ -198,7 +198,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(nakack2).
                     addProtocol(new UNICAST()).                    
                     addProtocol(new STABLE()).
-                    addProtocol(gms);
+                    addProtocol(gms).addProtocol(new FLUSH());
             
             try {
                 stack.init();                         // 5
