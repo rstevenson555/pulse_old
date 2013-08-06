@@ -183,7 +183,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             FD_SOCK fdsock = new FD_SOCK();
             
             FD fd = new FD();
-            fd.setTimeout(1000);
+            fd.setTimeout(10000);
             fd.setMaxTries(3);            
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
