@@ -174,11 +174,11 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                        
             GMS gms = new GMS();
             gms.setJoinTimeout(5000);
-            gms.setViewAckCollectionTimeout(5000);
-            gms.setMergeTimeout(5000);  
+            //gms.setViewAckCollectionTimeout(5000);
+            //gms.setMergeTimeout(5000);  
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
-            gms.setMaxBundlingTime(5000);
+            //gms.setMaxBundlingTime(5000);
             
             FD_SOCK fdsock = new FD_SOCK();
             
@@ -188,10 +188,11 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 2500);
+            vsuspect.use_icmp = true;
             
             MERGE2 merge2 = new MERGE2();
             merge2.setMaxInterval(100000);
-            merge2.setMinInterval(20000);
+            //merge2.setMinInterval(20000);
             
             stack.addProtocol(tcp).
                     addProtocol(gossip).
