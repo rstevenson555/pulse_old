@@ -282,7 +282,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());
             experience = determineUserExperience(pagehtml, experience);
                                
-            pstmt.setString(9, pagehtml);
+            // don't store PDF's
+            pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
             pstmt.setString(11, String.valueOf(experience));
 
