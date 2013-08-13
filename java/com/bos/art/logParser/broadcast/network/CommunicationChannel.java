@@ -170,12 +170,12 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             NAKACK2 nakack2 = new NAKACK2();
             nakack2.setDiscardDeliveredMsgs(true);                        
-            nakack2.setUseMcastXmit(true);            
+            nakack2.setUseMcastXmit(false);  
                        
             GMS gms = new GMS();
             gms.setJoinTimeout(5000);
-            //gms.setViewAckCollectionTimeout(5000);
-            //gms.setMergeTimeout(5000);  
+            gms.setViewAckCollectionTimeout(5000);
+            gms.setMergeTimeout(5000);  
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
             //gms.setMaxBundlingTime(5000);
@@ -199,7 +199,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(merge2).
                     //addProtocol(fdsock).
                     addProtocol(fd).
-                    addProtocol(vsuspect).
+                    //addProtocol(vsuspect).
                     addProtocol(nakack2).
                     addProtocol(new UNICAST()).                    
                     addProtocol(new STABLE()).
