@@ -96,10 +96,6 @@ public class StatisticsModule extends TimerTask implements Serializable {
         d = d.plusDays(1);
         Date midnight = d.toDate();
         
-        //DateTime dt = new DateTime();
-        //Date nextrun = dt.plusMinutes(2).toDate();
-          //timerClean.s
-        // every midnight
         timerClean.scheduleAtFixedRate(new Thread() {            
             public void run() {
                 try {                    
@@ -169,9 +165,12 @@ public class StatisticsModule extends TimerTask implements Serializable {
 		}
 	}
 	
+    private int FOUR_HOURS_OF_DATA = 4;
+    // upon connect send four hours of data out to the new client
+    
 	public Collection<TransferBean> getAllBeans(){
         DateTime now = new DateTime();
-        long broadCastLimitTime = now.minusHours(1).toInstant().getMillis();
+        long broadCastLimitTime = now.minusHours(FOUR_HOURS_OF_DATA).toInstant().getMillis();
         
         logger.warn("getAllBeans Called..."); 
 		List<TransferBean> beans = new ArrayList<TransferBean>();
