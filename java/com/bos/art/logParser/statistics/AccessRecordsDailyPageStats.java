@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -42,7 +43,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
     private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMdd"); 
     private static DateTimeFormatter sdf2 = DateTimeFormat.forPattern("yyyyMMddHHmmss"); 
 
-    private ConcurrentHashMap<String, TimeSpanEventContainer> hours;
+    private Map<String, TimeSpanEventContainer> hours;
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
