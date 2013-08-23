@@ -72,7 +72,7 @@ public class ClientReader implements Runnable {
       }
     }
     
-    static private LRUMap<String,Object> uniqueRecord = new LRUMap(10000);    
+    //static private LRUMap<String,Object> uniqueRecord = new LRUMap(10000);    
     static {
         // Initialize SAX Parser factory defaults
         initSAXFactory(null, false, false);
@@ -279,25 +279,25 @@ public class ClientReader implements Runnable {
                             builder.append("PageRecordEvent").append(pre.getPageName()).append(pre.getSessionId()).append(pre.getTime()).append(pre.getRequestToken()).append(pre.getEncodedPage().hashCode()).append(pre.getInstance());
                             String buffer = builder.toString();
                             
-                            synchronized(ulock) {
-                                if (uniqueRecord.get(buffer)!=null) {
-                                    //logger.info("found user: " + buffer);
-
-                                    return;
-                                } else {
-                                    //logger.info("not found user: " + buffer);
-
-                                    pagesPerMinute++;
-                                    if ( now.isAfter(pagesMinute)) {
-                                        
-                                        logger.info("Pages Per minute: " + (pagesPerMinute));
-                                        pagesMinute = now.plusMinutes(1);
-                                        pagesPerMinute = 0;
-                                    }
-                                    uniqueRecord.put(buffer,new Object());
-                                }                           
-                            }
-                            
+//                            synchronized(ulock) {
+//                                if (uniqueRecord.get(buffer)!=null) {
+//                                    //logger.info("found user: " + buffer);
+//
+//                                    return;
+//                                } else {
+//                                    //logger.info("not found user: " + buffer);
+//
+//                                    pagesPerMinute++;
+//                                    if ( now.isAfter(pagesMinute)) {
+//                                        
+//                                        logger.info("Pages Per minute: " + (pagesPerMinute));
+//                                        pagesMinute = now.plusMinutes(1);
+//                                        pagesPerMinute = 0;
+//                                    }
+//                                    uniqueRecord.put(buffer,new Object());
+//                                }                           
+//                            }
+//                            
                             add(pre);
                         }
                     } else {
@@ -316,24 +316,24 @@ public class ClientReader implements Runnable {
                         builder.append("UserRequestTiming").append(timing.getPage()).append(timing.getLoadTime()).append(timing.getSessionId()).append(timing.getUserKey()).append(timing.getTime());
                         String buffer = builder.toString();
                                                 
-                        synchronized(ulock) {
-                            if (uniqueRecord.get(buffer)!=null) {
-                                //logger.info("found user: " + buffer);
-
-                                return;
-                            } else {
-                                //logger.info("not found user: " + buffer);
-
-                                arPerMinute++;
-                                if ( now.isAfter(arMinute)) {
-
-                                    logger.info("AccessRecords Per minute: " + (arPerMinute));
-                                    arMinute = now.plusMinutes(1);
-                                    arPerMinute = 0;
-                                }
-                                uniqueRecord.put(buffer,new Object());
-                            }                           
-                        }
+//                        synchronized(ulock) {
+//                            if (uniqueRecord.get(buffer)!=null) {
+//                                //logger.info("found user: " + buffer);
+//
+//                                return;
+//                            } else {
+//                                //logger.info("not found user: " + buffer);
+//
+//                                arPerMinute++;
+//                                if ( now.isAfter(arMinute)) {
+//
+//                                    logger.info("AccessRecords Per minute: " + (arPerMinute));
+//                                    arMinute = now.plusMinutes(1);
+//                                    arPerMinute = 0;
+//                                }
+//                                uniqueRecord.put(buffer,new Object());
+//                            }                           
+//                        }
                     }
 
                     // this is to ensure that we only process end type messages
@@ -354,17 +354,17 @@ public class ClientReader implements Runnable {
                 builder.append("ExternalEventTiming").append(exttiming.getClassification()).append(exttiming.getLoadTime()).append(exttiming.getTime()).append(exttiming.getInstance());
                 String buffer = builder.toString();
 
-                synchronized(ulock) {
-                    if (uniqueRecord.get(buffer)!=null) {
-                        //logger.info("found user: " + buffer);
-
-                        return;
-                    } else {
-                        //logger.info("not found user: " + buffer);
-
-                        uniqueRecord.put(buffer,new Object());
-                    }                           
-                }
+//                synchronized(ulock) {
+//                    if (uniqueRecord.get(buffer)!=null) {
+//                        //logger.info("found user: " + buffer);
+//
+//                        return;
+//                    } else {
+//                        //logger.info("not found user: " + buffer);
+//
+//                        uniqueRecord.put(buffer,new Object());
+//                    }                           
+//                }
                                 
                 // this is to ensure that we only process end type messages
                 if (!exttiming.getBegin()) {
@@ -384,17 +384,17 @@ public class ClientReader implements Runnable {
             builder.append("AccumulatorEventTiming").append(accumulator.getTime()).append(accumulator.getClassification()).append(accumulator.getValue()).append(accumulator.getInstance());
             String buffer = builder.toString();
 
-            synchronized(ulock) {
-                if (uniqueRecord.get(buffer)!=null) {
-                    //logger.info("found user: " + buffer);
-
-                    return;
-                } else {
-                    //logger.info("not found user: " + buffer);
-
-                    uniqueRecord.put(buffer,new Object());
-                }                           
-            }
+//            synchronized(ulock) {
+//                if (uniqueRecord.get(buffer)!=null) {
+//                    //logger.info("found user: " + buffer);
+//
+//                    return;
+//                } else {
+//                    //logger.info("not found user: " + buffer);
+//
+//                    uniqueRecord.put(buffer,new Object());
+//                }                           
+//            }
             
             // this is to ensure that we only process end type messages
             if (!accumulator.getBegin()) {
