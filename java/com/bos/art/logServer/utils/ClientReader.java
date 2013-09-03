@@ -334,7 +334,7 @@ public class ClientReader implements Runnable {
 //                                uniqueRecord.put(buffer,new Object());
 //                            }
 //                        }
-//                    }
+                    }
 
                     // this is to ensure that we only process end type messages
                     if (!timing.getBegin() ) {
