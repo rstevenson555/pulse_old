@@ -36,9 +36,9 @@ public class EngineClientHandler implements Runnable {
         counter = c;
     }
 
-    private Object readData(ObjectInputStream dis) throws IOException,ClassNotFoundException
+    private Object readData(ObjectInputStream ois) throws IOException,ClassNotFoundException
     {
-        return dis.readObject();
+        return ois.readObject();
     }
 
     public void run() {
@@ -46,27 +46,19 @@ public class EngineClientHandler implements Runnable {
         LiveLogPriorityQueue systemTaskQueue = LiveLogPriorityQueue.getSystemTaskQueue();
 
         try {
-            //ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream()));
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),1024*8)); // 16k
+            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),1024*16)); // 16k
 
             while (true) {
                 try {
-					
-                    //Object o = in.readObject();
                     Object o = readData(in);
 
                     if (o instanceof SystemTask) {
-                        // if(logger.isInfoEnabled()){
                         logger.warn("SystemTask Entering Priority Queue " + o.toString() + ":Time:" + System.currentTimeMillis());
                         logger.warn("SystemTask Queue " + systemTaskQueue.toString());
-                        // }
                         systemTaskQueue.addObject(o);
                         continue;
                     }
-                    // logger.debug("Object Read in" + o.toString());
-                    // logger.debug("Class Name " + o.getClass().getName());
                     if (o instanceof ILiveLogPriorityQueueMessage) {
-
                         // insert into the priority queue at this point.
                         ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage) o;
 
@@ -77,10 +69,6 @@ public class EngineClientHandler implements Runnable {
 
                             if (aet.getClassification() >= 100000 && aet.getClassification() < 499999) {
                                 continue;
-                                // logger.warn("AET Database EventFound...");
-                                // if(aet.getClassification() >=300000 && aet.getClassification()<399999){
-                                // logger.warn("Classification : "+aet.getClassification()+"\n\n"+aet.getValue());
-                                // }
                             }
                         }
                         queue.addObject(llpr);
