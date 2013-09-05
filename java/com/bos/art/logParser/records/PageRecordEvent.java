@@ -11,10 +11,6 @@ import com.bos.art.logParser.db.HtmlPageRecordPersistanceStrategy;
 import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logServer.utils.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 /**
  * @author I0360D3
