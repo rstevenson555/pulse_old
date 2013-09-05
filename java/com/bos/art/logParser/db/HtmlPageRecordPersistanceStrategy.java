@@ -17,6 +17,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
+import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
@@ -288,8 +292,9 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             // don't store PDF's
             //pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
             if ( pagehtml!=null) {
-                byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
-                pagehtml = new String(bytes);
+               // byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
+               // pagehtml = new String(bytes);
+                pagehtml = StringEscapeUtils.escapeHtml4(pagehtml);
             } else {
                 pagehtml = "";
             }
