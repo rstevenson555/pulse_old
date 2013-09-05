@@ -29,7 +29,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private int objectsProcessed;
     private volatile long totalSysTime;
     protected static boolean unloadDB = true;
-    private static final int MAX_DB_QUEUE_SIZE = 200000;
+    private static final int MAX_DB_QUEUE_SIZE = 10000;
     //private static final int MAX_DB_QUEUE_SIZE = 50000;
     
     private QueryParameterProcessingQueue() {
@@ -68,11 +68,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
         StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
-        /*if (dequeue instanceof BoundedLinkedQueue) {
-            sb.append(((BoundedLinkedQueue) dequeue).size());
-        } else if (dequeue instanceof BoundedBuffer) { */
-            sb.append(((BlockingQueue) dequeue).size());
-        //}
+        sb.append(((BlockingQueue) dequeue).size());
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
@@ -90,7 +86,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
      */
     @Override
     public void run() {
-        while (unloadDB) {
+        while (unloadDB && !Thread.currentThread().isInterrupted()) {
             if (logger.isInfoEnabled()) {
                 if (objectsRemoved % 10000 == 0) {
                     logger.info(toString());

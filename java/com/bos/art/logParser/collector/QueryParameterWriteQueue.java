@@ -30,7 +30,7 @@ import org.joda.time.DateTime;
 public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
     private static QueryParameterWriteQueue instance;
-    private BlockingQueue dequeue; // UnboundedFifoBuffer dequeue;
+    private BlockingQueue dequeue;
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
@@ -40,13 +40,12 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private final static int MINBATCHINSERTSIZE = 1200;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
-
     protected static boolean unloadDB = true;
-    private static final int MAX_DB_QUEUE_SIZE = 200000;
-    // QUEUE SIZE
-    //private static final int MAX_DB_QUEUE_SIZE = 5000;
-    //private static final int MAX_DB_QUEUE_SIZE = 50000;
-    
+    private static final int MAX_DB_QUEUE_SIZE = 10000;
+    private static DateTime now = null;
+    private static DateTime oneMinute = new DateTime().plusMinutes(1);
+    private static long recordsPerMinute = 0;
+                              
     private QueryParameterWriteQueue() {
         dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
@@ -59,7 +58,6 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     }
 
     public void addLast(Object o) {
-
         boolean success = dequeue.offer(o);
         if (!success) {
             logger.error("QueryParameterWriteQueue failed adding to the QueryParameterWriteQueue: ");
@@ -67,10 +65,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
     }
 
-    public Object removeFirst() {
+    final public Object removeFirst() {
         try {
             // if empty wait until someone puts something in
-            
             Object o = dequeue.take();
             return o;            
         } catch (InterruptedException e) {
@@ -85,11 +82,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
-        /*if (dequeue instanceof BoundedLinkedQueue) {
-            sb.append(((BoundedLinkedQueue) dequeue).size());
-        } else if (dequeue instanceof BoundedBuffer) { */
-            sb.append(((BlockingQueue) dequeue).size());
-        //}
+        sb.append(((BlockingQueue) dequeue).size());
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
@@ -102,16 +95,13 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         return sb.toString();
     }
 
-    private static DateTime now = null;
-    private static DateTime oneMinute = new DateTime().plusMinutes(1);
-    private static long recordsPerMinute = 0;
 
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
      */
     @Override
     public void run() {
-        while (unloadDB) {
+        while (unloadDB && !Thread.currentThread().isInterrupted()) {
             
             now = new DateTime();
             recordsPerMinute++;
@@ -127,8 +117,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 }
             }
             try {
-                Object o = this.removeFirst();
-
+                Object o = removeFirst();
                 ++objectsRemoved;
                 if (o == null) {
                     logger.error("removeFirst Returned Null!");
@@ -257,7 +246,8 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 if (((currentTimePerInsert <= timePerInsert) && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT))) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + " time per insert: " + timePerInsert + " elapsed: " + elapsed);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + 
+                            " time per insert: " + timePerInsert + " elapsed: " + elapsed);
                 } else if ((currentTimePerInsert * .65) > timePerInsert
                         && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;

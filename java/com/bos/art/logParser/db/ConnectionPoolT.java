@@ -20,8 +20,9 @@ public class ConnectionPoolT {
 	
     private static boolean conInit = false;
     private static Object lock = new Object();
-    
-	public static Connection getConnection() throws SQLException{
+    private static final String JDBC_APACHE_COMMONS_DBCP_ART_DB_POOL = "jdbc:apache:commons:dbcp:art-db-pool";
+
+    public static Connection getConnection() throws SQLException{
         if(!conInit){
             synchronized(lock){
                 if(!conInit){
@@ -30,7 +31,7 @@ public class ConnectionPoolT {
                 }
             }
         }
-		return DriverManager.getConnection("jdbc:apache:commons:dbcp:art-db-pool");
+		return DriverManager.getConnection(JDBC_APACHE_COMMONS_DBCP_ART_DB_POOL);
 	}
 
 }

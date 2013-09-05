@@ -25,7 +25,8 @@ public class QueryParameters {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameters.class.getName());
     private String queryParameters;
     private Integer recordPK;
-
+    private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
+    
     private QueryParameters() {
     }
 
@@ -97,16 +98,12 @@ public class QueryParameters {
                     set.add(currentParameter);
                 }
             }
-//            for (String s : set) {
-//                Integer queryParameterID = getQueryParameterId(s);
-//                QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));
-//            }
         }
         // this does the lookup and insert
         Integer queryParameterID = getQueryParameterId( stringSet.toString() );
         QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));
     }
-    private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
+
 
     /**
      * this does the lookup and insert

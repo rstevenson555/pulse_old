@@ -23,17 +23,16 @@ import org.apache.log4j.Logger;
 public class DatabaseWriteQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(DatabaseWriteQueue.class.getName());
     private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
-    private BlockingQueue dequeue; // UnboundedFifoBuffer dequeue;
+    private BlockingQueue dequeue; 
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
     protected static boolean unloadDB = true;
-    //private static final int MAX_DB_QUEUE_SIZE = 300000;
     private static final int MAX_DB_QUEUE_SIZE = 10000;
     private static long fullCount = 0;
     private static long writeCount = 0;
     // guards for boundaries
-    
+
     private DatabaseWriteQueue() {
         dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
@@ -45,17 +44,15 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
     public void addLast(Object o) {
 
-            boolean success = dequeue.offer(o);
-            if (!success && (fullCount++ % 100) == 0) {
-                logger.error("DatabaseWriteQueue is full, throwing out messages");
-            }
+        boolean success = dequeue.offer(o);
+        if (!success && (fullCount++ % 100) == 0) {
+            logger.error("DatabaseWriteQueue is full, throwing out messages");
+        }
     }
 
     public Object removeFirst() {
         try {
-
             Object o = dequeue.take();
-
             return o;
         } catch (InterruptedException e) {
             logger.error("Interrupted Exception taking from the Database Write Queue: ", e);
@@ -69,11 +66,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
-        /*if (dequeue instanceof BoundedLinkedQueue) {
-            sb.append(((BoundedLinkedQueue) dequeue).size());
-        } else if (dequeue instanceof BoundedBuffer) { */
-            sb.append(((BlockingQueue) dequeue).size());
-        //}
+        sb.append(((BlockingQueue) dequeue).size());
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
@@ -89,41 +82,42 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
      */
+
     @Override
     public void run() {
         try {
-        while (unloadDB) {
-            if (logger.isInfoEnabled()) {
-                if (objectsRemoved % 100000 == 0) {
-                    logger.info(toString());
-                }
-            }
-            try {
-                Object o = this.removeFirst();
-
-                ++objectsRemoved;
-                if (o == null) {
-                    logger.error("removeFirst Returned Null!");
-                    continue;
-                }
-                if (o instanceof ILiveLogParserRecord) {
-                    long writeStartTime = System.currentTimeMillis();
-
-                    if ( writeCount++ % 1000 == 0) {
-                        //logger.warn("DatabaseWriteQueue writeToDatabase called");
+            while (unloadDB && !Thread.currentThread().isInterrupted()) {
+                if (logger.isInfoEnabled()) {
+                    if (objectsRemoved % 100000 == 0) {
+                        logger.info(toString());
                     }
-                    ((ILiveLogParserRecord) o).writeToDatabase();
-                    totalWriteTime += (System.currentTimeMillis() - writeStartTime);
-                    ++objectsWritten;
-                } else {
-                    logger.error("removeFirst gave " + o.getClass().getName());
                 }
-            } catch (Throwable t) {
-                logger.error("Throwable in DatabaseWriteQueue Thread! " + Thread.currentThread().getName() + ":", t);
+                try {
+                    Object o = removeFirst();
+
+                    ++objectsRemoved;
+                    if (o == null) {
+                        logger.error("removeFirst Returned Null!");
+                        continue;
+                    }
+                    if (o instanceof ILiveLogParserRecord) {
+                        long writeStartTime = System.currentTimeMillis();
+
+                        if (writeCount++ % 1000 == 0) {
+                            //logger.warn("DatabaseWriteQueue writeToDatabase called");
+                        }
+                        ((ILiveLogParserRecord) o).writeToDatabase();
+                        totalWriteTime += (System.currentTimeMillis() - writeStartTime);
+                        ++objectsWritten;
+                    } else {
+                        logger.error("removeFirst gave " + o.getClass().getName());
+                    }
+                } catch (Throwable t) {
+                    logger.error("Throwable in DatabaseWriteQueue Thread! " + Thread.currentThread().getName() + ":", t);
+                }
             }
-        }
-        }catch(Throwable t) {
-            logger.error("DatabaseWriteQueue errored, should never happen!!!",t);
+        } catch (Throwable t) {
+            logger.error("DatabaseWriteQueue errored, should never happen!!!", t);
         }
     }
 }
