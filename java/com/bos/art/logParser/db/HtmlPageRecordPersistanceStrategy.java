@@ -293,7 +293,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             //pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
             if ( pagehtml!=null) {
                 byte []bytes = Charset.forName("ASCII").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
-                pagehtml = new String(bytes);
+                pagehtml = new String(bytes).replace('\u0000',' ');  //strip null byte 
                 //pagehtml = StringEscapeUtils.escapeHtml4(pagehtml);
             } else {
                 pagehtml = "";
