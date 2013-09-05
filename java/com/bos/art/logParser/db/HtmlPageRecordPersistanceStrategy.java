@@ -81,7 +81,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                         + "Instance_ID, "
                         + "experience "
                         + " ) "
-                        + " values (?,?,?,?,?,?,?,?,convert_to(?,'UTF8'),?,?)");
+                        + " values (?,?,?,?,?,?,?,?,?,?,?)");
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
@@ -129,7 +129,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                     + "Instance_ID, " 
                     + "experience" 
                     + ") " 
-                    + " values (?,?,?,?,?,?,?,?,convert_to(?,'UTF8'),?,?)");
+                    + " values (?,?,?,?,?,?,?,?,?,?,?)");
             threadLocalCon.set(con);
             threadLocalPstmt.set(ps);
         } catch (Exception e) {
