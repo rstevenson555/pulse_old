@@ -25,7 +25,9 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
     private int requestToken;
     private int requestTokenCount;
     private String encodedPage;
-
+    transient private AccessRecordsForeignKeys foreignKeys;
+    transient private PersistanceStrategy pStrat;
+                             
     public String getBrowser() {
         return null;
     }
@@ -154,8 +156,6 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
     }
 
 
-    transient private AccessRecordsForeignKeys foreignKeys;
-    transient private PersistanceStrategy pStrat;
 
 
     public AccessRecordsForeignKeys obtainForeignKeys() {
