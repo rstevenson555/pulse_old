@@ -9,6 +9,9 @@ package com.bos.art.logParser.db;
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.PageRecordEvent;
+
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -284,6 +287,13 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                                
             // don't store PDF's
             //pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
+            if ( pagehtml!=null) {
+                byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
+                pagehtml = new String(bytes);
+            } else {
+                pagehtml = "";
+            }
+
             pstmt.setString(9, pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
             pstmt.setString(11, String.valueOf(experience));
