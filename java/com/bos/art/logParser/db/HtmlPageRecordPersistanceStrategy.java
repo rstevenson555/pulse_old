@@ -31,6 +31,13 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
     private static double timePerInsert = 5000.0;
     private static HtmlPageRecordPersistanceStrategy instance;
     private static final Object initLock = new Object();
+    private DateTime now = null;
+    private DateTime oneMinute = new DateTime().plusMinutes(1);
+    private long recordsPerMinute = 0;
+    private static final Logger logger = (Logger) Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName());
+    private static long batch = 0;
+    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private static DateTime batchNow = new DateTime();
 
     protected HtmlPageRecordPersistanceStrategy() {
     }
@@ -43,7 +50,6 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         }
         return instance;
     }
-    private static final Logger logger = (Logger) Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName());
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 
         @Override
@@ -75,7 +81,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                         + "Instance_ID, "
                         + "experience "
                         + " ) "
-                        + " values (?,?,?,?,?,?,?,?,?,?,?)");
+                        + " values (?,?,?,?,?,?,?,?,convert_to(?,'UTF8'),?,?)");
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
@@ -123,7 +129,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                     + "Instance_ID, " 
                     + "experience" 
                     + ") " 
-                    + " values (?,?,?,?,?,?,?,?,?,?,?)");
+                    + " values (?,?,?,?,?,?,?,?,convert_to(?,'UTF8'),?,?)");
             threadLocalCon.set(con);
             threadLocalPstmt.set(ps);
         } catch (Exception e) {
@@ -131,10 +137,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         }
     }
 
-    private static long batch = 0;
-    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
-    private static DateTime batchNow = new DateTime();
-    
+
     public void blockInsert(PreparedStatement pstmt) {
         try {
             pstmt.addBatch();
@@ -211,10 +214,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      * (non-Javadoc) @see
      * com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
      */    
-    private DateTime now = null;
-    private DateTime oneMinute = new DateTime().plusMinutes(1);
-    private long recordsPerMinute = 0;
-    
+
     public boolean writeToDatabase(ILiveLogParserRecord record) {
         PageRecordEvent pre = (PageRecordEvent) record;
         AccessRecordsForeignKeys fk = pre.obtainForeignKeys();
@@ -283,7 +283,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             experience = determineUserExperience(pagehtml, experience);
                                
             // don't store PDF's
-            pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
+            //pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
+            pstmt.setString(9, pagehtml);
             pstmt.setInt(10, fk.fkInstanceID);
             pstmt.setString(11, String.valueOf(experience));
 
