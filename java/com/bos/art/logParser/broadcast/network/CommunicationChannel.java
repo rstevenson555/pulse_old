@@ -158,8 +158,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
+            tcp.setMaxBundleSize(256000);
             tcp.setReaperInterval(300000);
-
+            
             InetSocketAddress serveraddr = null;
             serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             
@@ -167,15 +168,17 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             ArrayList<InetSocketAddress> slist = new ArrayList<InetSocketAddress>();
             slist.add(serveraddr);
             gossip.setInitialHosts(slist);
+            gossip.setNumInitialMembers(11);
+            gossip.setTimeout(8000);
             
             NAKACK2 nakack2 = new NAKACK2();
             nakack2.setDiscardDeliveredMsgs(true);                        
-            nakack2.setUseMcastXmit(false);  
+            nakack2.setUseMcastXmit(true);  
                        
             GMS gms = new GMS();
-            gms.setJoinTimeout(5000);
-            gms.setViewAckCollectionTimeout(5000);
-            gms.setMergeTimeout(5000);  
+            gms.setJoinTimeout(8000);
+            gms.setViewAckCollectionTimeout(10000);
+            gms.setMergeTimeout(10000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
             //gms.setMaxBundlingTime(5000);
