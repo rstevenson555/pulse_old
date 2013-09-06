@@ -555,28 +555,28 @@ public class ClientReader implements Runnable {
                 PushbackInputStream pinput = null;
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
-                            new PatchFilterInputStream(
+                            //new PatchFilterInputStream(
                                 //new Base64EncodedInputStream(
                                     //new Base64EncodedInputStream(
                                         //new XMLEncodedInputStream(
-                                            new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER) /*,*/
+                                            new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER), /*,*/
                                             //"<Payload>", "</Payload>"),
                                     //"<startBase64EncodedSection>", "</startBase64EncodedSection>"),
                             //"<ExceptionEvent message=\"", "\">")
-                        ),
+                        //),
                     40);
                
                 } else {
                     pinput = new PushbackInputStream(
-                            new PatchFilterInputStream(
+                            //new PatchFilterInputStream(
                                 new Base64EncodedInputStream(
                                     new Base64EncodedInputStream(
                                         //new XMLEncodedInputStream(
                                             new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER),
                                             //"<Payload>", "</Payload>"),
                                     "<startBase64EncodedSection>", "</startBase64EncodedSection>"), /* error */
-                            "<ExceptionEvent message=\"", "\">") /* exception */
-                        ),
+                            "<ExceptionEvent message=\"", "\">"), /* exception */
+                        //),
                     40);
                 }
 
