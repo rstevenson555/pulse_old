@@ -19,7 +19,7 @@ import org.joda.time.format.DateTimeFormatter;
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class AccessRecordsMinuteBean extends TransferBean {
-	
+
 	private static final int MACHINE_START_INDEX = 12;
     private String key;
     private MinuteStatsKey mkey;
@@ -47,8 +47,8 @@ public class AccessRecordsMinuteBean extends TransferBean {
 
 	public AccessRecordsMinuteBean(){
     }
-    
-	public AccessRecordsMinuteBean(TimeSpanEventContainer tsec, String lkey){      
+
+	public AccessRecordsMinuteBean(TimeSpanEventContainer tsec, String lkey){
 		key = lkey;
         context = tsec.getContext();
 		machine = lkey.substring(MACHINE_START_INDEX);
@@ -98,13 +98,13 @@ public class AccessRecordsMinuteBean extends TransferBean {
 		i50Percentile = tsec.get50Percentile();
 		i25Percentile = tsec.get25Percentile();
 	}
-	
+
     public AccessRecordsMinuteBean(String dateString, int li90Percentile, int laverageloadtime,int ltotalusers){
         timeString = dateString;
         i90Percentile = li90Percentile;
         averageLoadTime = laverageloadtime;
         totalUsers = ltotalusers;
-    }	
+    }
 
 	/**
 	 * @return
@@ -395,13 +395,13 @@ public class AccessRecordsMinuteBean extends TransferBean {
 	public void setTimeString(String string) {
 		timeString = string;
 	}
-    
+
     public void setContext(String cxt) {
         context = cxt;
     }
-    
+
     public String getContext() {
-        return context;        
+        return context;
     }
 
     public void processBean(org.jgroups.Message msg)
@@ -410,4 +410,3 @@ public class AccessRecordsMinuteBean extends TransferBean {
     }
 
 }
-
