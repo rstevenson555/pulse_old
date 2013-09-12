@@ -16,7 +16,6 @@ package com.bos.art.logParser.statistics;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -24,7 +23,6 @@ import java.util.GregorianCalendar;
 import org.apache.log4j.Logger;
 
 
-import com.bcop.arch.utility.FastDateFormat;
 import com.bos.art.logParser.broadcast.beans.AccessRecordsMinuteBean;
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 import com.bos.art.logParser.db.AccessRecordPersistanceStrategy;
@@ -57,7 +55,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     private static final DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private static final DateTimeFormatter fdfMySQLTime = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final DateTimeFormatter fdfKey = DateTimeFormat.forPattern("yyyyMMddHHmm");
-    private ConcurrentHashMap<String, TimeSpanEventContainer> minutes;
+    private ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer> minutes;
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
@@ -74,7 +72,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     public AccessRecordsMinuteMachineStats() {
 
-        minutes = new ConcurrentHashMap<String, TimeSpanEventContainer>();
+        minutes = new ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer>();
         lastDataWriteTime = new java.util.Date();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
 
@@ -123,12 +121,15 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
         return;
     }
 
-
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
 
-        String key =
-                fdfKey.print(record.getEventTime().getTime().getTime())
-                        + record.getServerName() + record.getInstance();
+//        String key =
+//                fdfKey.print(record.getEventTime().getTime().getTime())
+//                        + record.getServerName() + record.getInstance();
+        MinuteStatsKey key = new MinuteStatsKey();
+        key.setTime( new DateTime(record.getEventTime().getTime()).withSecondOfMinute(0).toDate());
+        key.setServerName( record.getServerName());
+        key.setInstanceName(record.getInstance());
 
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) minutes.get(key);
@@ -191,10 +192,9 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             logger.info("persistCalled for Minute Stats time:nextWriteDate: -- " + System.currentTimeMillis() + ":" + nextWriteDate.getTime() + " diff:" + (System.currentTimeMillis() - nextWriteDate.getTime()));
             lastDataWriteTime = new java.util.Date();
 
-            for (String nextKey : minutes.keySet()) {
-                TimeSpanEventContainer tsec =
-                        (TimeSpanEventContainer) minutes.get(nextKey);
-
+            for(MinuteStatsKey nextKey:minutes.keySet()) {
+                    TimeSpanEventContainer tsec =
+                            (TimeSpanEventContainer) minutes.get(nextKey);
                 if (persistData(tsec, nextKey)) {
                     minutes.remove(nextKey);
                 }
@@ -273,7 +273,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
      * update.
      */
 
-    private boolean persistData(TimeSpanEventContainer tsec, String nextKey) {
+    private boolean persistData(TimeSpanEventContainer tsec, MinuteStatsKey nextKey) {
 
         //logger.info("persistData Called for :" + fdfKey.format(tsec.getTime()));
 
@@ -315,7 +315,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     }
 
 
-    private void broadcast(TimeSpanEventContainer tsec, String nextKey) {
+    private void broadcast(TimeSpanEventContainer tsec, MinuteStatsKey nextKey) {
         AccessRecordsMinuteBean bean = new AccessRecordsMinuteBean(tsec, nextKey);
         try {
             CommunicationChannel.getInstance().broadcast(bean, null);
@@ -326,29 +326,27 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     }
 
 
-    private void insertData(TimeSpanEventContainer tsec, String nextKey) {
+    private void insertData(TimeSpanEventContainer tsec, MinuteStatsKey nextKey) {
 
         Connection con = null;
         try {
 
             logger.warn("insertData: " + nextKey);
-            logger.warn("insertData sub12: " + nextKey.substring(12));
+            logger.warn("insertData sub12: " + nextKey.serverName);
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
                             tsec.getAccessRecordsForeignKeys(),
-                            nextKey.substring(12),
+                            nextKey.serverName,
                             ForeignKeyStore.FK_MACHINES_MACHINE_ID,
                             pStrat);
 
-//            int instanceID =
-//                    ForeignKeyStore.getInstance().getForeignKey(
-//                            tsec.getAccessRecordsForeignKeys(),
-//                            "instance",
-//                            ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-//                            pStrat);
-//                    )
+            int instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                            tsec.getAccessRecordsForeignKeys(),
+                            nextKey.instanceName,
+                            ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                            pStrat);
 
-            int instanceID = 0;
             con = getConnection();
 
             PreparedStatement pstmt =
@@ -359,7 +357,8 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             Date d = null;
             try {
 
-                DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
+                //DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
+                DateTime dt = new DateTime(nextKey.time);
                 d = dt.toDate();
             }
             catch (IllegalArgumentException pe) {
@@ -418,7 +417,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     private void updateData(
 
             TimeSpanEventContainer tsec,
-            String nextKey,
+            MinuteStatsKey nextKey,
             String state) {
 
         Connection con = null;
@@ -427,17 +426,16 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
                             tsec.getAccessRecordsForeignKeys(),
-                            nextKey.substring(12),
+                            nextKey.serverName,
                             ForeignKeyStore.FK_MACHINES_MACHINE_ID,
                             pStrat);
 
-//            int instanceID =
-//				ForeignKeyStore.getInstance().getForeignKey(
-//					tsec.getAccessRecordsForeignKeys(),
-//					nextKey.substring(12),
-//					ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-//					pStrat);
-            int instanceID = 0;
+            int instanceID =
+				ForeignKeyStore.getInstance().getForeignKey(
+					tsec.getAccessRecordsForeignKeys(),
+					nextKey.instanceName,
+					ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+					pStrat);
 
             con = getConnection();
             PreparedStatement pstmt =
@@ -461,7 +459,8 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             pstmt.setInt(17, machineID);
             Date d = null;
             try {
-                DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
+                //DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
+                DateTime dt = new DateTime(nextKey.time);
                 d = dt.toDate();
             }
 
@@ -499,7 +498,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     }
 
-    private void updateAndCloseData(TimeSpanEventContainer tsec, String nextKey) {
+    private void updateAndCloseData(TimeSpanEventContainer tsec,MinuteStatsKey nextKey) {
         updateData(tsec, nextKey, "C");
     }
 

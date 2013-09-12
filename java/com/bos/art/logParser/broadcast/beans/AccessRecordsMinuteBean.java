@@ -6,7 +6,11 @@
  */
 package com.bos.art.logParser.broadcast.beans;
 
+import com.bos.art.logParser.statistics.MinuteStatsKey;
 import com.bos.art.logParser.statistics.TimeSpanEventContainer;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  * @author I0360D3
@@ -18,8 +22,10 @@ public class AccessRecordsMinuteBean extends TransferBean {
 	
 	private static final int MACHINE_START_INDEX = 12;
     private String key;
+    private MinuteStatsKey mkey;
     protected String context;
 	protected String machine;
+    protected String instance;
 	protected String timeString;
 	protected int totalLoads;
 	protected int averageLoadTime;
@@ -47,6 +53,33 @@ public class AccessRecordsMinuteBean extends TransferBean {
         context = tsec.getContext();
 		machine = lkey.substring(MACHINE_START_INDEX);
 		timeString = lkey.substring(0,MACHINE_START_INDEX);
+		totalLoads = tsec.getTotalLoads();
+		averageLoadTime = tsec.getAverageLoadTime();
+		totalLoadTime = tsec.getTotalLoadTime();
+		maxLoadTime = tsec.getMaxLoadTime();
+		minLoadTime = tsec.getMinLoadTime();
+		distinctUsers = tsec.getDistinctUsers();
+		totalUsers = tsec.getTotalUsers();
+		errorPages = tsec.getErrorPages();
+		thirtySecondLoads = tsec.getThirtySecondLoads();
+		twentySecondLoads = tsec.getTwentySecondLoads();
+		fifteenSecondLoads = tsec.getFifteenSecondLoads();
+		tenSecondLoads = tsec.getTenSecondLoads();
+		fiveSecondLoads = tsec.getFiveSecondLoads();
+		i90Percentile = tsec.get90Percentile();
+		i75Percentile = tsec.get75Percentile();
+		i50Percentile = tsec.get50Percentile();
+		i25Percentile = tsec.get25Percentile();
+	}
+
+    private static final DateTimeFormatter fdfKey = DateTimeFormat.forPattern("yyyyMMddHHmm");
+
+    public AccessRecordsMinuteBean(TimeSpanEventContainer tsec, MinuteStatsKey lkey){
+		mkey = lkey;
+        context = tsec.getContext();
+		machine = lkey.getServerName();
+        instance = lkey.getInstanceName();
+        timeString = fdfKey.print( new DateTime(lkey.getTime()) );
 		totalLoads = tsec.getTotalLoads();
 		averageLoadTime = tsec.getAverageLoadTime();
 		totalLoadTime = tsec.getTotalLoadTime();
@@ -346,6 +379,16 @@ public class AccessRecordsMinuteBean extends TransferBean {
 		machine = string;
 	}
 
+    /**
+	 * @param string
+	 */
+	public void setInstance(String string) {
+		instance = string;
+	}
+
+    public String getInstance() {
+		return instance;
+	}
 	/**
 	 * @param string
 	 */
