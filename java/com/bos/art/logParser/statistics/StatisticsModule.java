@@ -176,9 +176,9 @@ public class StatisticsModule extends TimerTask implements Serializable {
 		List<TransferBean> beans = new ArrayList<TransferBean>();
         
 		AccessRecordsMinuteStats mStats = AccessRecordsMinuteStats.getInstance();
-        Map<String,TimeSpanEventContainer> h  = mStats.getData();
+        Map<MinuteStatsKey,TimeSpanEventContainer> h  = mStats.getData();
         
-        for(String s : h.keySet()) {
+        for(MinuteStatsKey s : h.keySet()) {
             TimeSpanEventContainer tsec = (TimeSpanEventContainer)h.get(s);
             if(tsec.getTime().getTime().getTime()>broadCastLimitTime){
                 beans.add(new AccessRecordsMinuteBean(tsec,s));
