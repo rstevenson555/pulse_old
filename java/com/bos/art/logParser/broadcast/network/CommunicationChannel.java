@@ -186,8 +186,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             FD_SOCK fdsock = new FD_SOCK();
             
             FD fd = new FD();
-            fd.setTimeout(10000);
-            fd.setMaxTries(3);            
+            fd.setTimeout(5000);
+            fd.setMaxTries(3);
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 2500);
@@ -196,6 +196,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             MERGE2 merge2 = new MERGE2();
             merge2.setMaxInterval(100000);
             //merge2.setMinInterval(20000);
+            merge2.setMinInterval(30000);                        
             
             stack.addProtocol(tcp).
                     addProtocol(gossip).
