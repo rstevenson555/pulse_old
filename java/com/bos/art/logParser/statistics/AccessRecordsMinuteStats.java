@@ -38,7 +38,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
     private static AccessRecordsMinuteStats instance;
     private static final DateTimeFormatter fdf  = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private static final DateTimeFormatter fdfKey  = DateTimeFormat.forPattern("yyyyMMddHHmm");
-    private ConcurrentHashMap<String, TimeSpanEventContainer> minutes;
+    private ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer> minutes;
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
@@ -48,7 +48,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
     private static DateTimeFormatter sdf2 = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     public AccessRecordsMinuteStats() {
-        minutes = new ConcurrentHashMap<String, TimeSpanEventContainer>();
+        minutes = new ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer>();
         lastDataWriteTime = new java.util.Date();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
     }
@@ -87,7 +87,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
         if (calls > 0 && calls % 500000 == 0) {
             ++calls;
             int totalCount = 0;
-            for (String nextKey : minutes.keySet()) {
+            for (MinuteStatsKey nextKey : minutes.keySet()) {
                 TimeSpanEventContainer tsec =
                         (TimeSpanEventContainer) minutes.get(nextKey);
 
@@ -99,7 +99,13 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
     }
 
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
-        String key = fdfKey.print(record.getEventTime().getTime().getTime());
+        //String key = fdfKey.print(record.getEventTime().getTime().getTime());
+
+        MinuteStatsKey key = new MinuteStatsKey();
+        key.setTime( new DateTime(record.getEventTime().getTime()).withSecondOfMinute(0).toDate());
+        key.setServerName( record.getServerName());
+        key.setInstanceName(record.getInstance());
+
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) minutes.get(key);
         if (container == null) {
@@ -117,7 +123,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
         return container;
     }
 
-    public Map<String, TimeSpanEventContainer> getData() {
+    public Map<MinuteStatsKey, TimeSpanEventContainer> getData() {
         return minutes;
     }
 
@@ -166,7 +172,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
                         + (System.currentTimeMillis() - nextWriteDate.getTime()));
             }
             lastDataWriteTime = new java.util.Date();
-            for (String nextKey : minutes.keySet()) {
+            for (MinuteStatsKey nextKey : minutes.keySet()) {
                 TimeSpanEventContainer tsec =
                         (TimeSpanEventContainer) minutes.get(nextKey);
                 if (persistData(tsec, nextKey, broadcastCutOff)) {
@@ -185,7 +191,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             + "DistinctUsers,          ErrorPages, "
             + "ThirtySecondLoads,      TwentySecondLoads, "
             + "FifteenSecondLoads,     TenSecondLoads, "
-            + "FiveSecondLoads) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            + "FiveSecondLoads, instance_id) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     private static final String SQL_UPDATE_STATEMENT =
             "update MinuteStatistics set "
             + "TotalLoads = ?,             AverageLoadTime = ?,  "
@@ -196,7 +202,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             + "ThirtySecondLoads = ?,      TwentySecondLoads = ?, "
             + "FifteenSecondLoads = ?,     TenSecondLoads = ?, "
             + "FiveSecondLoads = ?,        State = ? where "
-            + "Machine_id = ? and Time = ? ";
+            + "Machine_id = ? and Time = ? and instance_id = ?";
 
     private String getString(TimeSpanEventContainer tsec, String nextKey) {
         StringBuilder sb = new StringBuilder();
@@ -234,7 +240,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
      */
     private boolean persistData(
             TimeSpanEventContainer tsec,
-            String nextKey,
+            MinuteStatsKey nextKey,
             Date broadcastCutOffTime) {
         //logger.info("persistData Called for :" + fdfKey.format(tsec.getTime()));
         boolean shouldRemove = false;
@@ -294,7 +300,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
         return shouldRemove;
     }
 
-    private void broadcast(TimeSpanEventContainer tsec, String nextKey) {
+    private void broadcast(TimeSpanEventContainer tsec, MinuteStatsKey nextKey) {
         AccessRecordsMinuteBean bean =
                 new AccessRecordsMinuteBean(tsec, nextKey);
         try {
@@ -307,16 +313,23 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
 //	private SimpleDateFormat sdfForClose =
 //		new SimpleDateFormat("yyyyMMddHHmmss");
 //	private Calendar gcForClose = GregorianCalendar.getInstance();
-    private void insertData(TimeSpanEventContainer tsec, String nextKey) {
+    private void insertData(TimeSpanEventContainer tsec, MinuteStatsKey nextKey) {
         Connection con = null;
         try {
 
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
                     tsec.getAccessRecordsForeignKeys(),
-                    nextKey.substring(12),
+                    nextKey.getServerName(),
                     ForeignKeyStore.FK_MACHINES_MACHINE_ID,
                     pStrat);
+             int instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                    tsec.getAccessRecordsForeignKeys(),
+                    nextKey.getServerName(),
+                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                    pStrat);
+
             con = getConnection();
             PreparedStatement pstmt =
                     con.prepareStatement(SQL_INSERT_STATEMENT);
@@ -327,7 +340,8 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             Date d = null;
             try {
                 //d = sdf2.parse(nextKey.substring(0, 12) + "00");
-                DateTime dt = sdf2.parseDateTime(nextKey.substring(0, 12) + "00");
+                //DateTime dt = sdf2.parseDateTime(nextKey.substring(0, 12) + "00");
+                DateTime dt =new DateTime(nextKey.getTime()).withSecondOfMinute(0);
                 d = dt.toDate();
 
             } catch (IllegalArgumentException pe) {
@@ -350,6 +364,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             pstmt.setInt(15, tsec.getFifteenSecondLoads());
             pstmt.setInt(16, tsec.getTenSecondLoads());
             pstmt.setInt(17, tsec.getFiveSecondLoads());
+            pstmt.setInt(18, instanceID);
             pstmt.execute();
             pstmt.close();
 
@@ -383,7 +398,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
 
     private void updateData(
             TimeSpanEventContainer tsec,
-            String nextKey,
+            MinuteStatsKey nextKey,
             String state) {
 
         Connection con = null;
@@ -392,9 +407,16 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
                     tsec.getAccessRecordsForeignKeys(),
-                    nextKey.substring(12),
+                    nextKey.getServerName(),
                     ForeignKeyStore.FK_MACHINES_MACHINE_ID,
                     pStrat);
+            int instanceID =
+                    ForeignKeyStore.getInstance().getForeignKey(
+                    tsec.getAccessRecordsForeignKeys(),
+                    nextKey.getInstanceName(),
+                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                    pStrat);
+
             con = getConnection();
             PreparedStatement pstmt =
                     con.prepareStatement(SQL_UPDATE_STATEMENT);
@@ -420,7 +442,8 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             Date d = null;
             try {
                 //d = sdf2.parse(nextKey.substring(0, 12) + "00");
-                DateTime dt = sdf2.parseDateTime(nextKey.substring(0, 12) + "00");
+                //DateTime dt = sdf2.parseDateTime(nextKey.substring(0, 12) + "00");
+                DateTime dt = new DateTime(nextKey.getTime()).withSecondOfMinute(0);
                 d = dt.toDate();
 
             } catch (IllegalArgumentException pe) {
@@ -428,6 +451,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             }
 
             pstmt.setTimestamp(18, new java.sql.Timestamp(d.getTime()));
+            pstmt.setInt(19, instanceID);
 
             pstmt.execute();
             pstmt.close();
@@ -460,7 +484,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
 
     private void updateAndCloseData(
             TimeSpanEventContainer tsec,
-            String nextKey) {
+            MinuteStatsKey nextKey) {
         updateData(tsec, nextKey, "C");
     }
 

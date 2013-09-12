@@ -358,7 +358,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             try {
 
                 //DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
-                DateTime dt = new DateTime(nextKey.time);
+                DateTime dt = new DateTime(nextKey.time).withSecondOfMinute(0);
                 d = dt.toDate();
             }
             catch (IllegalArgumentException pe) {
@@ -460,7 +460,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             Date d = null;
             try {
                 //DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
-                DateTime dt = new DateTime(nextKey.time);
+                DateTime dt = new DateTime(nextKey.time).withSecondOfMinute(0);
                 d = dt.toDate();
             }
 
