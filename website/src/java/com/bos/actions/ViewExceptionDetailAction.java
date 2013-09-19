@@ -55,6 +55,9 @@ public class ViewExceptionDetailAction extends BaseAction {
         String selectedDate = request.getParameter("selectedDate");
         String el = request.getParameter("el");
         String eid = request.getParameter("eid");
+
+        logger.warn("el parameter: " + el);
+        logger.warn("eid parameter: " + eid);
         ViewExceptionDetailHelper mh = null;
         if(el == null || el.equals("")){
         	el = "java.lang.NullPointerException";
@@ -63,11 +66,11 @@ public class ViewExceptionDetailAction extends BaseAction {
         	
 			mh = new ViewExceptionDetailHelper(selectedDate,el,eid);
         } else { 
-        	Calendar calendar = Calendar.getInstance();
-         	StringBuffer todaysDate = new StringBuffer(); 
-         	todaysDate.append(calendar.get(Calendar.DAY_OF_MONTH));
-         	todaysDate.append(calendar.get(Calendar.MONTH));
-         	todaysDate.append(calendar.get(Calendar.YEAR));
+//        	Calendar calendar = Calendar.getInstance();
+//         	StringBuffer todaysDate = new StringBuffer();
+//         	todaysDate.append(calendar.get(Calendar.DAY_OF_MONTH));
+//         	todaysDate.append(calendar.get(Calendar.MONTH));
+//         	todaysDate.append(calendar.get(Calendar.YEAR));
          	SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
          	Date d = new Date();
          	String dateString = sdf.format(d);
