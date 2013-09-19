@@ -45,7 +45,8 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static DateTime now = null;
     private static DateTime oneMinute = new DateTime().plusMinutes(1);
     private static long recordsPerMinute = 0;
-                              
+    private static long fullCount = 0;
+    
     private QueryParameterWriteQueue() {
         dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
     }
@@ -59,7 +60,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
     public void addLast(Object o) {
         boolean success = dequeue.offer(o);
-        if (!success) {
+        if (!success && (fullCount++ % 100) == 0) {
             logger.error("QueryParameterWriteQueue failed adding to the QueryParameterWriteQueue: ");
         }
 
@@ -68,8 +69,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     final public Object removeFirst() {
         try {
             // if empty wait until someone puts something in
-            Object o = dequeue.take();
-            return o;            
+            return dequeue.take();                        
         } catch (InterruptedException e) {
             logger.error("Interrupted Exception taking from the Database Write Queue: ", e);
             e.printStackTrace();
