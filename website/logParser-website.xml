@@ -74,6 +74,11 @@
         <servlet-class>com.bos.servlets.HtmlRenderService</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+    <servlet id="Servlet_5">
+        <servlet-name>IPService</servlet-name>
+        <servlet-class>com.bos.servlets.IPServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
     
     
 <!-- Standard Action Servlet Mapping -->
@@ -97,4 +102,8 @@
         <url-pattern>/servlets/HtmlRenderService</url-pattern>
     </servlet-mapping>
 
+    <servlet-mapping id="ServletMapping_5">
+        <servlet-name>IPService</servlet-name>
+        <url-pattern>/servlets/IPService</url-pattern>
+    </servlet-mapping>
 </web-app>
