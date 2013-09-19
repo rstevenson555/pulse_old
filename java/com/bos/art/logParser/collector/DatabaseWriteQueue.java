@@ -52,8 +52,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
     public Object removeFirst() {
         try {
-            Object o = dequeue.take();
-            return o;
+            return dequeue.take();
         } catch (InterruptedException e) {
             logger.error("Interrupted Exception taking from the Database Write Queue: ", e);
             e.printStackTrace();
