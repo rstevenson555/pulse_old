@@ -22,6 +22,7 @@ import net.sf.hibernate.Databinder;
 import net.sf.hibernate.HibernateException;
 import net.sf.hibernate.Query;
 import net.sf.hibernate.Session;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -164,7 +165,9 @@ public class ViewExceptionTypeHelper {
 				Element exceptionLineTopElement = doc.createElement("ExceptionTopLine");
                 Element countElement = doc.createElement("Count");
                 countElement.appendChild(doc.createTextNode(""+count));
-                exceptionMessageElement.appendChild(doc.createTextNode(exceptionLine));
+                System.out.println("ExceptionLine: " + exceptionLine);
+                System.out.println("topLine: " + topLine);
+                exceptionMessageElement.appendChild(doc.createTextNode(StringEscapeUtils.escapeHtml4(exceptionLine)));
                 try{
 					exceptionLineTopElement.appendChild(doc.createTextNode(topLine));
                 }catch (Exception e){
