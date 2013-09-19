@@ -12,10 +12,13 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import javax.swing.*;
 import org.jgroups.Address;
@@ -230,19 +233,31 @@ public class MessagingApplet extends JApplet implements ChatDelegate, UserDelega
                     e1.printStackTrace();
                 }
             }
-            InetAddress l3= local.getLocalAddress();
-            System.out.println("first try - Local IP:"+l3.getHostAddress());
-            localIp = l3.getHostAddress();
-            local.close();
 
-            if ( localIp==null ) {
+            System.out.println("origin: " + origin);
+            String urlString = origin + "/servlets/IPService";
+            URL url = new URL(urlString);
+            URLConnection conn = url.openConnection();
+                        
+            BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            localIp = new String(rd.readLine());
+            rd.close();
+            System.out.println("localip: " + localIp);
+
+            
+            //InetAddress l3= local.getLocalAddress();
+            //System.out.println("first try - Local IP:"+l3.getHostAddress());
+            //localIp = l3.getHostAddress();
+            //local.close();
+
+            /*if ( localIp==null ) {
                 // if that's null, try the port we connected to in the browser
                 local= new Socket(hostName, origin.getPort());
                 l3= local.getLocalAddress();
                 System.out.println("second try - Local IP:"+l3.getHostAddress());
                 localIp = l3.getHostAddress();
                 local.close();
-            }
+            } */
         }
         catch(Exception e)
         {
