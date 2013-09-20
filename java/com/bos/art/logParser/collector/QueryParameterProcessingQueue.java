@@ -46,16 +46,22 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
         return instance;
     }
 
-    public void addLast(QueryParameters o) {
+    public void addLast(Object o) {
+         addLast((QueryParameters)o);
+    }
 
+    public void addLast(QueryParameters o) {
         boolean success = dequeue.offer(o);
         if (!success && (fullCount++ % 100) == 0) {
             logger.error("Failed adding to the QueryParameterProcessingQueue Queue: ");
         }
-
     }
 
-    public QueryParameters removeFirst() {
+    public Object removeFirst() {
+        return removeFirst0();
+    }
+
+    public QueryParameters removeFirst0() {
         try {
             return dequeue.take();
         } catch (InterruptedException e) {
@@ -95,7 +101,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
                 }
             }
             try {
-                QueryParameters qp = removeFirst();
+                QueryParameters qp = removeFirst0();
 
                 ++objectsRemoved;
                 if (qp == null) {
