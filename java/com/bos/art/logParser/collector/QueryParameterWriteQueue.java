@@ -30,7 +30,7 @@ import org.joda.time.DateTime;
 public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
     private static QueryParameterWriteQueue instance;
-    private BlockingQueue dequeue;
+    private BlockingQueue<QueryParameters.DBQueryParamRecord> dequeue;
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
@@ -48,7 +48,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static long fullCount = 0;
     
     private QueryParameterWriteQueue() {
-        dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue<QueryParameters.DBQueryParamRecord>(MAX_DB_QUEUE_SIZE);
     }
 
     public static QueryParameterWriteQueue getInstance() {
@@ -59,6 +59,10 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     }
 
     public void addLast(Object o) {
+        addLast((QueryParameters.DBQueryParamRecord)o);
+    }
+
+    public void addLast(QueryParameters.DBQueryParamRecord o) {
         boolean success = dequeue.offer(o);
         if (!success && (fullCount++ % 100) == 0) {
             logger.error("QueryParameterWriteQueue failed adding to the QueryParameterWriteQueue: ");
@@ -67,15 +71,20 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     }
 
     final public Object removeFirst() {
+        return removeFirst0();
+    }
+
+    final public QueryParameters.DBQueryParamRecord removeFirst0() {
         try {
             // if empty wait until someone puts something in
-            return dequeue.take();                        
+            return dequeue.take();
         } catch (InterruptedException e) {
             logger.error("Interrupted Exception taking from the Database Write Queue: ", e);
             e.printStackTrace();
         }
         return null;
     }
+
 
     @Override
     public String toString() {
@@ -117,15 +126,15 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 }
             }
             try {
-                Object o = removeFirst();
+                QueryParameters.DBQueryParamRecord dbqp = removeFirst0();
                 ++objectsRemoved;
-                if (o == null) {
+                if (dbqp == null) {
                     logger.error("removeFirst Returned Null!");
                     continue;
                 }
-                if (o instanceof QueryParameters.DBQueryParamRecord) {
+                //if (o instanceof QueryParameters.DBQueryParamRecord) {
                     long sTime = System.currentTimeMillis();	
-                    QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
+                    //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
 
                     try {
                         PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
@@ -147,9 +156,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                         totalWriteTime += (sTime2 - sTime);
                     }
             
-                } else {
-                    logger.error("removeFirst gave " + o.getClass().getName());
-                }
+                //} else {
+                //    logger.error("removeFirst gave " + o.getClass().getName());
+                //}
             } catch (RuntimeException t) {
                 logger.error("Throwable in QueryParameterWiteQueue Thread! " + Thread.currentThread().getName() + ":", t);
             }
