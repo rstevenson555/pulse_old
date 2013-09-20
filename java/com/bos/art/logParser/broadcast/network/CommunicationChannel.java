@@ -205,7 +205,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
-                    addProtocol(new UNICAST()).                    
+                    addProtocol(new UNICAST2()).                    
                     addProtocol(new STABLE()).
                     addProtocol(gms);
                     //addProtocol(new FLUSH());
