@@ -23,9 +23,9 @@ import org.apache.log4j.Logger;
 public class DatabaseWriteQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(DatabaseWriteQueue.class.getName());
     private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
-    private BlockingQueue dequeue; 
+    private BlockingQueue<ILiveLogParserRecord> dequeue;
     private int objectsRemoved;
-    private int objectsWritten;
+    private int objectsWritten;                 
     private long totalWriteTime;
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 10000;
@@ -34,7 +34,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     // guards for boundaries
 
     private DatabaseWriteQueue() {
-        dequeue = new ArrayBlockingQueue(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue<ILiveLogParserRecord>(MAX_DB_QUEUE_SIZE);
     }
 
     public static DatabaseWriteQueue getInstance() {
@@ -43,14 +43,22 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
 
     public void addLast(Object o) {
+        addLast((ILiveLogParserRecord)o);
+    }
 
+    public void addLast(ILiveLogParserRecord o) {
         boolean success = dequeue.offer(o);
         if (!success && (fullCount++ % 100) == 0) {
             logger.error("DatabaseWriteQueue is full, throwing out messages");
         }
     }
 
+
     public Object removeFirst() {
+        return removeFirst0();
+    }
+
+    public ILiveLogParserRecord removeFirst0() {
         try {
             return dequeue.take();
         } catch (InterruptedException e) {
@@ -59,6 +67,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
         }
         return null;
     }
+
 
     @Override
     public String toString() {
@@ -92,25 +101,25 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
                     }
                 }
                 try {
-                    Object o = removeFirst();
+                    ILiveLogParserRecord ilpr = removeFirst0();
 
                     ++objectsRemoved;
-                    if (o == null) {
+                    if (ilpr == null) {
                         logger.error("removeFirst Returned Null!");
                         continue;
                     }
-                    if (o instanceof ILiveLogParserRecord) {
+                    //if (o instanceof ILiveLogParserRecord) {
                         long writeStartTime = System.currentTimeMillis();
 
                         if (writeCount++ % 1000 == 0) {
                             //logger.warn("DatabaseWriteQueue writeToDatabase called");
                         }
-                        ((ILiveLogParserRecord) o).writeToDatabase();
+                        ilpr.writeToDatabase();
                         totalWriteTime += (System.currentTimeMillis() - writeStartTime);
                         ++objectsWritten;
-                    } else {
-                        logger.error("removeFirst gave " + o.getClass().getName());
-                    }
+                    //} else {
+                    //    logger.error("removeFirst gave " + o.getClass().getName());
+                    //}
                 } catch (Throwable t) {
                     logger.error("Throwable in DatabaseWriteQueue Thread! " + Thread.currentThread().getName() + ":", t);
                 }
