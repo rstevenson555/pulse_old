@@ -10,6 +10,10 @@ import com.bos.art.logParser.collector.QueryParameterWriteQueue;
 import com.bos.art.logParser.db.AccessRecordPersistanceStrategy;
 import com.bos.art.logParser.db.ForeignKeyStore;
 import com.bos.art.logParser.db.PersistanceStrategy;
+
+import java.io.UnsupportedEncodingException;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
 import org.apache.commons.codec.binary.Base64;
@@ -100,7 +104,11 @@ public class QueryParameters {
             }
         }
         // this does the lookup and insert
-        Integer queryParameterID = getQueryParameterId( stringSet.toString() );
+        Integer queryParameterID = null;
+        byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(stringSet.toString().toCharArray())).array();
+        String queryString = new String(bytes).replace('\u0000',' ');  //strip null byte 
+
+        queryParameterID = getQueryParameterId( queryString );
         QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));
     }
 
