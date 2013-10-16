@@ -31,6 +31,8 @@ import org.jgroups.stack.ProtocolStack;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.protocols.pbcast.FLUSH;
 import org.jgroups.protocols.pbcast.NAKACK2;
+import org.jgroups.util.SocketFactory;
+
 /**
  * @author I0360D3
  *
@@ -158,15 +160,16 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
-            tcp.setMaxBundleSize(256000);
-            tcp.setReaperInterval(300000);
+            tcp.setMaxBundleSize(64000);
+            //tcp.setReaperInterval(300000);
             
             InetSocketAddress serveraddr = null;
             serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
-            
-            TCPGOSSIP gossip = new TCPGOSSIP();
+
             ArrayList<InetSocketAddress> slist = new ArrayList<InetSocketAddress>();
             slist.add(serveraddr);
+            
+            TCPGOSSIP gossip = new TCPGOSSIP();
             gossip.setInitialHosts(slist);
             gossip.setNumInitialMembers(11);
             gossip.setTimeout(8000);
@@ -177,8 +180,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                        
             GMS gms = new GMS();
             gms.setJoinTimeout(8000);
-            gms.setViewAckCollectionTimeout(10000);
-            gms.setMergeTimeout(10000);
+            gms.setViewAckCollectionTimeout(5000);
+            gms.setMergeTimeout(8000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
             //gms.setMaxBundlingTime(5000);
@@ -196,8 +199,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             MERGE2 merge2 = new MERGE2();
             merge2.setMaxInterval(100000);
             //merge2.setMinInterval(20000);
-            merge2.setMinInterval(30000);                        
-            
+            merge2.setMinInterval(30000);
+
             stack.addProtocol(tcp).
                     addProtocol(gossip).
                     addProtocol(merge2).
@@ -207,7 +210,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(nakack2).
                     addProtocol(new UNICAST2()).                    
                     addProtocol(new STABLE()).
-                    addProtocol(gms);
+                    addProtocol(gms).
+                    addProtocol(new UFC()).
+                    addProtocol(new MFC());                   
                     //addProtocol(new FLUSH());
             
             try {
