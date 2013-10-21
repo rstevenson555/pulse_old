@@ -127,7 +127,8 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                             record.getContext(),
                             record.getRemoteHost(),
                             record.getEventTime(),
-                            record.getInstance());
+                                "ALL");
+                            //record.getInstance());
             }
             hours.put(key, container);
         }
@@ -141,7 +142,8 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int pageID = getPageIDFromKey(key, ltime.getTime());
         int contextID = getContextIDFromKey(key, ltime.getTime());
         String machineType = getMachineTypeFromKey(key, ltime.getTime());
-        int instanceID = getInstanceIDFromKey(key, ltime.getTime());
+        //int instanceID = getInstanceIDFromKey(key, ltime.getTime());
+        int instanceID = 0;
         try {
 
             con = getConnection();
@@ -404,11 +406,12 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                     pStrat);
             
             instanceID =
-                    ForeignKeyStore.getInstance().getForeignKey(
-                    tsec.getAccessRecordsForeignKeys(),
-                    instanceName,
-                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-                    pStrat);
+//                    ForeignKeyStore.getInstance().getForeignKey(
+//                    tsec.getAccessRecordsForeignKeys(),
+//                    instanceName,
+//                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+//                    pStrat);
+            instanceID = 0;
 
             pageID =
                     ForeignKeyStore.getInstance().getForeignKey(
@@ -520,12 +523,13 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                     pageName,
                     ForeignKeyStore.FK_PAGES_PAGE_ID,
                     pStrat);
-            int instanceID =
-                    ForeignKeyStore.getInstance().getForeignKey(
-                    tsec.getAccessRecordsForeignKeys(),
-                    instanceName,
-                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-                    pStrat);
+//            int instanceID =
+//                    ForeignKeyStore.getInstance().getForeignKey(
+//                    tsec.getAccessRecordsForeignKeys(),
+//                    instanceName,
+//                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+//                    pStrat);
+            int instanceID = 0;
 
             con = getConnection();
             PreparedStatement pstmt =
