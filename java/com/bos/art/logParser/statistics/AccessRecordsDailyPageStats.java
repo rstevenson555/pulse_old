@@ -109,7 +109,8 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 + MACHINE_TYPE
                 + ForeignKeyStore.getInstance().getMachineType(urt.getServerName()) 
                 + START_INSTANCE
-                + urt.getInstance();
+                + "ALL";
+                //+ urt.getInstance();
         
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) hours.get(key);
