@@ -44,9 +44,9 @@ public class EngineClientHandler implements Runnable {
     public void run() {
         LiveLogPriorityQueue queue = LiveLogPriorityQueue.getInstance();
         LiveLogPriorityQueue systemTaskQueue = LiveLogPriorityQueue.getSystemTaskQueue();
-
+        ObjectInputStream in = null;
         try {
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),1024*16)); // 16k
+            in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),1024*16)); // 16k
 
             while (true) {
                 try {
@@ -86,6 +86,13 @@ public class EngineClientHandler implements Runnable {
             // Figure out what to do if an exception happens.
             logger.error("Error in EngineClientHandler: ", t);
 
+        } finally {
+            try {
+                if (in!=null) in.close();
+                if (incoming!=null) incoming.close();
+            } catch (IOException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 }
