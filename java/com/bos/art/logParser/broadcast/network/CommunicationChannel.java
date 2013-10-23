@@ -158,25 +158,24 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 //            }
             tcp.setBindPort(Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             tcp.setLoopback(false);
-            tcp.setEnableBundling(true);
+            tcp.setEnableBundling(false);
             tcp.setDiscardIncompatiblePackets(true);
             tcp.setMaxBundleSize(64000);
             //tcp.setReaperInterval(300000);
             
-            InetSocketAddress serveraddr = null;
-            serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
+            InetSocketAddress serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
 
-            ArrayList<InetSocketAddress> slist = new ArrayList<InetSocketAddress>();
-            slist.add(serveraddr);
+            ArrayList<InetSocketAddress> serverList = new ArrayList<InetSocketAddress>();
+            serverList.add(serveraddr);
             
             TCPGOSSIP gossip = new TCPGOSSIP();
-            gossip.setInitialHosts(slist);
+            gossip.setInitialHosts(serverList);
             gossip.setNumInitialMembers(11);
             gossip.setTimeout(8000);
             
             NAKACK2 nakack2 = new NAKACK2();
             nakack2.setDiscardDeliveredMsgs(true);                        
-            nakack2.setUseMcastXmit(true);  
+            nakack2.setUseMcastXmit(false);  
                        
             GMS gms = new GMS();
             gms.setJoinTimeout(8000);
@@ -190,7 +189,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             FD fd = new FD();
             fd.setTimeout(5000);
-            fd.setMaxTries(3);
+            //fd.setMaxTries(3);
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 2500);
