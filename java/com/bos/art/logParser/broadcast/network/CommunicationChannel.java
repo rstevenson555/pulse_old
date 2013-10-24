@@ -187,13 +187,14 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             FD_SOCK fdsock = new FD_SOCK();
             
-            FD fd = new FD();
-            fd.setTimeout(5000);
+//            FD fd = new FD();
+//            fd.setTimeout(5000);
             //fd.setMaxTries(3);
+            FD_ALL fd = new FD_ALL();
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
-            vsuspect.setValue("timeout", 2500);
-            vsuspect.use_icmp = true;
+            vsuspect.setValue("timeout", 4500);
+            //vsuspect.use_icmp = true;
             
             MERGE2 merge2 = new MERGE2();
             merge2.setMaxInterval(100000);
@@ -203,7 +204,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             stack.addProtocol(tcp).
                     addProtocol(gossip).
                     addProtocol(merge2).
-                    addProtocol(fdsock).
+//                    addProtocol(fdsock).
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
