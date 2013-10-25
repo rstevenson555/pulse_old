@@ -560,13 +560,14 @@ public class ClientReader implements Runnable {
                     System.out.println("Debug filename: " + dfilename);
                 }
 
-                pinput.unread(new String("<?xml version=\"1.0\"?>\n<FILESTARTXML>").getBytes());
 
                 DebugInputStream ptmp = null;
                 if (debugging) {
                     ptmp = new DebugInputStream(pinput, dfilename);
                 }
 
+                pinput.unread(new String("<?xml version=\"1.0\"?>\n<FILESTARTXML>").getBytes());
+                
                 // we need to push this on the input stream, because this always
                 // has to be at the top of an
                 // xml document, we should of just had the clients handle this,
