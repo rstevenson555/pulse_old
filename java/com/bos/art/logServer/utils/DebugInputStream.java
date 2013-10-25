@@ -32,11 +32,18 @@ public class DebugInputStream extends FilterInputStream
         return num;
     }
 
+    @Override
+    public int read() throws IOException {
+        int c =  super.read();    //To change body of overridden methods use File | Settings | File Templates.
+        output.write(c);
+        return c;
+    }
+
     public int read(byte b[],int off, int len) throws IOException {
         int num = super.read(b,off,len);
         try {
             if ( num >0 ) 
-                output.write(b,off,num);
+                output.write(b,off,len);
         }
         catch(IOException io)
         {
