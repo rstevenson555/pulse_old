@@ -46,7 +46,7 @@ public class ClientReader implements Runnable {
     static final int FILE_MODE = 2;
     static final int COMMAND_MODE = 3;
     private ClientCache clientCache = new ClientCache();
-    private boolean debugging = true;
+    private boolean debugging = false;
 // for debugging purposes
     private static int filecounter = 0;
     private static final Object ulock = new Object();

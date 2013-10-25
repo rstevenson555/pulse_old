@@ -40,7 +40,6 @@ public class QueryParameters {
     }
 
     public QueryParameters(String qp, int rPK) {
-        logger.warn("base64Encoded: " + base64Encoded);
        
         recordPK = new Integer(rPK);
         if (qp != null && qp.indexOf("#P#") < 0) {
