@@ -535,37 +535,12 @@ public class ClientReader implements Runnable {
 
             if (mode == SOCKET_MODE) {
 
-                /*
-                 * PushbackInputStream pinput = new PushbackInputStream( new
-                 * com.bos.art.logServer.utils.Base64EncodedInputStream( new BufferedInputStream( new
-                 * com.bos.art.logServer.utils.Base64EncodedInputStream( new
-                 * BufferedInputStream(inputSocket.getInputStream(),1024*16), "<startBase64EncodedSection>",
-                 * "</startBase64EncodedSection>"),1024*16),"<ExceptionEvent message=\"", "\">"), 40);
-                 */
-//                PushbackInputStream pinput = new PushbackInputStream(
-//                        new com.bos.art.logServer.utils.Base64EncodedInputStream(
-//                        //new BufferedInputStream( 
-//                        new com.bos.art.logServer.utils.Base64EncodedInputStream(
-//                        new BufferedInputStream(inputSocket.getInputStream(), 1024 * 16),
-//                        "<startBase64EncodedSection>", "</startBase64EncodedSection>"),
-//                        //1024*16),
-//                        "<ExceptionEvent message=\"", "\">"),
-//                        40);
-//                
                 PushbackInputStream pinput = null;
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
-                            //new PatchFilterInputStream(
-                                //new Base64EncodedInputStream(
-                                    //new Base64EncodedInputStream(
-                                        //new XMLEncodedInputStream(
-                                            new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER), /*,*/
-                                            //"<Payload>", "</Payload>"),
-                                    //"<startBase64EncodedSection>", "</startBase64EncodedSection>"),
-                            //"<ExceptionEvent message=\"", "\">")
-                        //),
+                          new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER),
                     40);
-               
+
                 } else {
                     pinput = new PushbackInputStream(
                             //new PatchFilterInputStream(
@@ -584,6 +559,9 @@ public class ClientReader implements Runnable {
                 if (debugging) {
                     System.out.println("Debug filename: " + dfilename);
                 }
+
+                pinput.unread(new String("<?xml version=\"1.0\"?>\n<FILESTARTXML>").getBytes());
+
                 DebugInputStream ptmp = null;
                 if (debugging) {
                     ptmp = new DebugInputStream(pinput, dfilename);
@@ -596,7 +574,6 @@ public class ClientReader implements Runnable {
                 // we didn't
                 // But anyways this is kind of nice!
                 logger.info("reading out local input, from client connections");
-                pinput.unread(new String("<?xml version=\"1.0\"?>\n<FILESTARTXML>").getBytes());
 
                 if (debugging) {
                     insource = ptmp;
@@ -605,7 +582,7 @@ public class ClientReader implements Runnable {
                 }
             }
             if (mode == FILE_MODE) {
-                insource = 
+                insource =
                         new com.bos.art.logServer.utils.Base64EncodedInputStream(new BufferedInputStream(inputStream),
                         "<startBase64EncodedSection>", "</startBase64EncodedSection>");
 
@@ -621,7 +598,7 @@ public class ClientReader implements Runnable {
 
             // specify an 8k input buffer
             digester.parse(inputSource);
-            
+
             unloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
@@ -632,7 +609,7 @@ public class ClientReader implements Runnable {
                         "The Connection Was Reset (Most likely by peer).  Ending thread: " + Thread.currentThread().getName());
                 return;
             }
-            logger.error("IO Error parsing stream: " + e.getMessage() + "\non Thread: " + Thread.currentThread().getName(),e);            
+            logger.error("IO Error parsing stream: " + e.getMessage() + "\non Thread: " + Thread.currentThread().getName(),e);
         } catch (org.xml.sax.SAXParseException spe) {
             int c = 0;
 
@@ -648,7 +625,7 @@ public class ClientReader implements Runnable {
                 return;
             }
 
-            logger.error("SAXParseException parsing input: " + spe + "\non Thread: " + Thread.currentThread().getName(),spe);            
+            logger.error("SAXParseException parsing input: " + spe + "\non Thread: " + Thread.currentThread().getName(),spe);
 
         } catch (org.xml.sax.SAXException se) {
             int c = 0;
@@ -666,10 +643,10 @@ public class ClientReader implements Runnable {
             }
 
             logger.error("SAX Error parsing input: " + se + "\non Thread: " + Thread.currentThread().getName(),se);
-            
+
         } catch (Exception ei) {
             logger.error("Unknown Error reading input: " + ei + "\non Thread: " + Thread.currentThread().getName(),ei);
-            
+
         } finally {
             digester.clear();
             parser.reset();
