@@ -34,12 +34,14 @@ public class QueryParameters {
     static {
         if (System.getProperty("base64Encoded")!=null)
             base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+        logger.warn("base64Encoded: " + base64Encoded);
     }
     
     private QueryParameters() {
     }
 
     public QueryParameters(String qp, int rPK) {
+
         recordPK = new Integer(rPK);
         if (qp != null && qp.indexOf("#P#") < 0) {
             queryParameters = decode(qp);
