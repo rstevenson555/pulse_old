@@ -16,7 +16,6 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 /**
