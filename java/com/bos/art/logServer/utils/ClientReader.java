@@ -539,7 +539,7 @@ public class ClientReader implements Runnable {
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
                           new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER),
-                    40);
+                    50);
 
                 } else {
                     pinput = new PushbackInputStream(
@@ -552,7 +552,7 @@ public class ClientReader implements Runnable {
                                     "<startBase64EncodedSection>", "</startBase64EncodedSection>"), /* error */
                             "<ExceptionEvent message=\"", "\">"), /* exception */
                         //),
-                    40);
+                    50);
                 }
 
                 String dfilename = System.getProperty("user.dir") + File.separator + Thread.currentThread().getName() + "-" + filecounter++;
