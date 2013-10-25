@@ -27,7 +27,12 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
     private String encodedPage;
     transient private AccessRecordsForeignKeys foreignKeys;
     transient private PersistanceStrategy pStrat;
-                             
+    private static boolean base64Encoded = true; // default to true
+    static {
+        if (System.getProperty("base64Encoded")!=null)
+            base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+    }
+    
     public String getBrowser() {
         return null;
     }
@@ -72,7 +77,10 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
         if (StringUtils.isEmpty(pageName)) {
             this.encodedPage = encodedPage;
         } else {
-            this.encodedPage = new String(Base64.decodeFast(encodedPage));
+            if ( base64Encoded)
+                this.encodedPage = new String(Base64.decodeFast(encodedPage));
+            else
+                this.encodedPage = encodedPage;
 //            int hidden = this.encodedPage.indexOf("hidden");
 //            if ( hidden>=0) {
 //                Document doc = Jsoup.parse(this.encodedPage);

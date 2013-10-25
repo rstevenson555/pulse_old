@@ -28,6 +28,11 @@ import com.bos.art.logParser.records.ExceptionRecordEvent;
  */
 public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
+    private static boolean base64Encoded = true;
+    static {
+        if (System.getProperty("base64Encoded")!=null)
+            base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+    }
     private static int BATCH_INSERT_SIZE = 1;
     private final static int MAXBATCHINSERTSIZE = 100;
     private final static int INCREMENT_AMOUNT = 10;
@@ -308,16 +313,32 @@ public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStra
 
     private ArrayList getStack(ExceptionRecordEvent ere, ExceptionHeaderInformation header){
         ArrayList stack = new ArrayList();
-        byte[] decodeBA = Base64.decodeBase64(ere.getEncodedException().getBytes());
-        String stackTrace = new String(decodeBA);
-        logger.debug("stackTrace" + stackTrace);
-        decodeBA = Base64.decodeBase64(ere.getMessage().getBytes());
-        String stackMessage = new String(decodeBA);
+        byte[] decodeBA = null;
+        String stackTrace = null;
+
+        if (base64Encoded) {
+            decodeBA = com.bos.art.logParser.tools.Base64.decodeFast(ere.getEncodedException().getBytes());
+            stackTrace = new String(decodeBA);
+        } else {
+            stackTrace = ere.getEncodedException();
+        }
+
+        if ( logger.isDebugEnabled())
+            logger.debug("stackTrace" + stackTrace);
+        
+        String stackMessage = null;
+        if ( base64Encoded) {
+            decodeBA = com.bos.art.logParser.tools.Base64.decodeFast(ere.getMessage().getBytes());
+            stackMessage = new String(decodeBA);
+        } else {
+            stackMessage = ere.getMessage();
+        }
         //System.out.println("stackMessage before: " + stackMessage);
         if(stackMessage  == null || stackMessage.equalsIgnoreCase("null")){
             stackMessage = null;        
         }
-        logger.debug("traceMessage" + stackMessage);
+        if (logger.isDebugEnabled())
+            logger.debug("traceMessage" + stackMessage);
         
         BufferedReader br = new BufferedReader(new StringReader(stackTrace));
         String line = null;

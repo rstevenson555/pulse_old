@@ -17,6 +17,11 @@ import org.apache.commons.codec.binary.Base64;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class ExceptionRecordEvent extends UserRequestTiming implements ILiveLogParserRecord {
+    private static boolean base64Encoded = true;
+    static {
+        if (System.getProperty("base64Encoded")!=null)
+            base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+    }
 
 	private String pageName ;
 	private String sessionId;
@@ -128,11 +133,18 @@ public class ExceptionRecordEvent extends UserRequestTiming implements ILiveLogP
         sb.append(super.toString());
         sb.append("\n------------------------------------------end super.toString()--------------------------\n");
         sb.append("\n------------------------------------------end super.toString()--------------------------\n");
-        sb.append(new String(new Base64().decode(getEncodedException().getBytes())));
+        if (base64Encoded)
+            sb.append(new String(com.bos.art.logParser.tools.Base64.decodeFast(getEncodedException().getBytes())));
+        else
+            sb.append(getEncodedException());
         sb.append("\n------------------------------------------end Exception...--------------------------\n");
         sb.append(getEncodedException());
         sb.append("\n------------------------------------------end Exception...--------------------------\n");
-        sb.append(new String(new Base64().decode(getEncodedBeanContainer().getBytes())));
+        if (base64Encoded)
+            sb.append(new String(com.bos.art.logParser.tools.Base64.decodeFast(getEncodedBeanContainer().getBytes())));
+        else
+            sb.append(getEncodedBeanContainer());
+
         sb.append("\n------------------------------------------end Beancontainer...--------------------------\n");
         sb.append(getEncodedBeanContainer());
         sb.append("\n------------------------------------------end Beancontainer...--------------------------\n");

@@ -283,7 +283,6 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setString(6, pre.getSessionId());            
             pstmt.setInt(7, requestToken);
             pstmt.setInt(8, requestTokenCount);
-            //String pagehtml = new String(com.bos.art.logParser.tools.Base64.decodeFast(encodedText));
             String pagehtml = nonEncodedText;
             
             int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());

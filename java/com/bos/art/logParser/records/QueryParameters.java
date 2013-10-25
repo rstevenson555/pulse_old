@@ -30,6 +30,11 @@ public class QueryParameters {
     private String queryParameters;
     private Integer recordPK;
     private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
+    private static boolean base64Encoded = true; // default to true
+    static {
+        if (System.getProperty("base64Encoded")!=null)
+            base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+    }
     
     private QueryParameters() {
     }
@@ -46,8 +51,14 @@ public class QueryParameters {
     private String decode(String s) {
         if (s != null) {
             try {
-                byte[] decodeBA = com.bos.art.logParser.tools.Base64.decodeFast(s);
-                return new String(decodeBA);
+                byte[] decodeBA;
+                if ( base64Encoded) {
+                    decodeBA = com.bos.art.logParser.tools.Base64.decodeFast(s);
+                    return new String(decodeBA);
+                } else {
+                    return s;
+                }
+
             } catch (Exception e) {
                 return s;
             }
