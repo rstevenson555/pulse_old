@@ -31,7 +31,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private int objectsProcessed;
     private volatile long totalSysTime;
     protected static boolean unloadDB = true;
-    private static final int MAX_DB_QUEUE_SIZE = 50000;
+    private static final int MAX_DB_QUEUE_SIZE = 10000;
     //private static final int MAX_DB_QUEUE_SIZE = 50000;
     private static long fullCount = 0;
 

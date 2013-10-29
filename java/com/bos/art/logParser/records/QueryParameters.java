@@ -117,10 +117,10 @@ public class QueryParameters {
         }
         // this does the lookup and insert
         Integer queryParameterID = null;
-        byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(stringSet.toString().toCharArray())).array();
-        String queryString = new String(bytes).replace('\u0000',' ');  //strip null byte 
+        //byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(stringSet.toString().toCharArray())).array();
+        //String queryString = new String(bytes).replace('\u0000',' ');  //strip null byte
 
-        queryParameterID = getQueryParameterId( queryString );
+        queryParameterID = getQueryParameterId( stringSet.toString() );
         QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));
     }
 
