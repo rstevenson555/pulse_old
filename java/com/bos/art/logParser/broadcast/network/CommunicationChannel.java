@@ -53,7 +53,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
              + "VERIFY_SUSPECT(timeout=1500;up_thread=false;down_thread=false):"
              + "pbcast.NAKACK(gc_lag=100;retransmit_timeout=600,1200,2400,4800):"
              + "pbcast.STABLE(desired_avg_gossip=20000;max_bytes=0;stability_delay=1000;up_thread=false;down_thread=false):"
-             + "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=true;print_local_addr=true)"; 
+             + "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=true;print_local_addr=true)";
              */ /*
              * tunnelling with SMACK
              *
@@ -61,39 +61,39 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
              "FD(timeout=3000;max_tries=4):" +
              "UNICAST(timeout=1200,2400,3000;down_thread=false;up_thread=false;use_gms=false):" +
              "FRAG(frag_size=8192;down_thread=false;up_thread=false):" +
-             "SMACK(max_xmits=20;timeout=1000,1500,2000;down_thread=false;up_thread=false)"; 
+             "SMACK(max_xmits=20;timeout=1000,1500,2000;down_thread=false;up_thread=false)";
              */ /*
              *  tcp gossipping
              *
              "TCP(start_port=7800):" +
              "TCPGOSSIP(timeout=3000;initial_hosts=prod-art-app1[22001];num_initial_members=2):" +
-             "FD(timeout=2000;max_tries=4):" + 
+             "FD(timeout=2000;max_tries=4):" +
              "VERIFY_SUSPECT(timeout=1500;down_thread=false;up_thread=false):" +
              "pbcast.NAKACK(gc_lag=100;retransmit_timeout=600,1200,2400,4800):" +
-             "pbcast.STABLE(stability_delay=1000;desired_avg_gossip=20000;down_thread=false;max_bytes=0;up_thread=false):"+ 
-             "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=true;print_local_addr=true):" + 
-             "VIEW_ENFORCER:" + 
-             "QUEUE"; 
+             "pbcast.STABLE(stability_delay=1000;desired_avg_gossip=20000;down_thread=false;max_bytes=0;up_thread=false):"+
+             "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=true;print_local_addr=true):" +
+             "VIEW_ENFORCER:" +
+             "QUEUE";
              */ /*
              * UDP gossipping
              *
              **/ /* "UDP(mcast_addr=224.0.0.35;mcast_port=45566;ip_ttl=32;"+
-             "ucast_recv_buf_size=64000;ucast_send_buf_size=32000;" + 
-             "mcast_send_buf_size=5000;mcast_recv_buf_size=10000;loopback=true;" + 
+             "ucast_recv_buf_size=64000;ucast_send_buf_size=32000;" +
+             "mcast_send_buf_size=5000;mcast_recv_buf_size=10000;loopback=true;" +
              "use_incoming_packet_handler=true;use_outgoing_packet_handler=false):" +
              "PING(timeout=2000;num_initial_members=3):" +
              "FD(timeout=2000;max_tries=3;shun=false):" +
-             "VERIFY_SUSPECT(timeout=1500):" + 
+             "VERIFY_SUSPECT(timeout=1500):" +
              "pbcast.NAKACK(gc_lag=50;retransmit_timeout=600,1200,2400,4800;max_xmit_size=8192):" +
              "UNICAST(timeout=1200,2400,3600):" +
-             "pbcast.STABLE(desired_avg_gossip=20000;max_bytes=0;stability_delay=1000):" + 
+             "pbcast.STABLE(desired_avg_gossip=20000;max_bytes=0;stability_delay=1000):" +
              "FRAG(frag_size=8192;down_thread=false;up_thread=false):" +
              "pbcast.GMS(join_timeout=3000;join_retry_timeout=2000;shun=true;print_local_addr=true):" +
              "VIEW_ENFORCER:"+
              "QUEUE";  */ /**
              * tcp
-             **/ 
-            "TCP(start_port=" + Engine.JAVA_GROUPS_ROUTER_SERVER_PORT + ";bind_addr=" + Engine.JAVA_GROUPS_ROUTER_SERVER + ";loopback=false):" + 
+             **/
+            "TCP(start_port=" + Engine.JAVA_GROUPS_ROUTER_SERVER_PORT + ";bind_addr=" + Engine.JAVA_GROUPS_ROUTER_SERVER + ";loopback=false):" +
             "TCPPING(initial_hosts=" + Engine.JAVA_GROUPS_ROUTER_SERVER + "[" + Engine.JAVA_GROUPS_ROUTER_SERVER_PORT + "]):" + 
             "MERGE2():" +
             "FD_SOCK():"+
@@ -109,23 +109,11 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
         
     private static CommunicationChannel instance = null;
     private java.util.List<Address> allViewMembers = null;
-    //private com.bos.art.logParser.broadcast.network.PullPushAdapter  adapter;
-    
+
     private JChannel channel = null;
     private static Timer timer = null;
 
-//    private static class ReconnectTask extends TimerTask {
-//        public void run() {
-//            logger.warn("Dropping Communication Channel");
-//            CommunicationChannel.getInstance().stop();
-//            logger.warn("Restarting Communication Channel");
-//            CommunicationChannel.getInstance().restart();
-//            logger.warn("Restarting Complete!");
-//        }
-//    }
-//
-//    private static ReconnectTask reconnectTask = null;
-    
+
     static {
         try {
             timer = new Timer();
@@ -174,6 +162,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             gossip.setTimeout(8000);
             
             NAKACK2 nakack2 = new NAKACK2();
+
             nakack2.setDiscardDeliveredMsgs(true);                        
             nakack2.setUseMcastXmit(false);  
                        
@@ -201,6 +190,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             //merge2.setMinInterval(20000);
             merge2.setMinInterval(30000);
 
+            UNICAST2 unicast2 = new UNICAST2();
+
             stack.addProtocol(tcp).
                     addProtocol(gossip).
                     addProtocol(merge2).
@@ -208,7 +199,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
-                    addProtocol(new UNICAST2()).                    
+                    addProtocol(unicast2).
                     addProtocol(new STABLE()).
                     addProtocol(gms);
 //                    addProtocol(new UFC()).
