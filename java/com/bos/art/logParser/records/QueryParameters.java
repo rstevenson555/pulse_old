@@ -31,8 +31,8 @@ public class QueryParameters {
     private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
     private static boolean base64Encoded = true; // default to true
     static {
-        if (System.getProperty("base64Encoded")!=null)
-            base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+        //if (System.getProperty("base64Encoded")!=null)
+        //    base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
         logger.warn("base64Encoded: " + base64Encoded);
     }
     

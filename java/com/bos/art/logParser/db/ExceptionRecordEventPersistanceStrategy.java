@@ -30,8 +30,8 @@ public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStra
 
     private static boolean base64Encoded = true;
     static {
-        if (System.getProperty("base64Encoded")!=null)
-            base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+        //if (System.getProperty("base64Encoded")!=null)
+        //    base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
     }
     private static int BATCH_INSERT_SIZE = 1;
     private final static int MAXBATCHINSERTSIZE = 100;
