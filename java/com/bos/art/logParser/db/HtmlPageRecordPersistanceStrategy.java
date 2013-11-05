@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
 import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
 import org.apache.log4j.Logger;
@@ -202,7 +203,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         int order = 1<<1;
         int four_0_four = 1<<2;
         int no_search_results = 1<<3;
-        if ( pagehtml !=null) {
+        if ( StringUtils.isNotBlank(pagehtml)) {
             if ( pagehtml.indexOf("We're sorry")!=-1)                
                 experience |= error;
             if (pagehtml.indexOf("Sorry unexpected")!=-1)
@@ -286,13 +287,20 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             String pagehtml = nonEncodedText;
             
             int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());
-            experience = determineUserExperience(pagehtml, experience);
-                               
+
             // don't store PDF's
             //pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
-            if ( pagehtml!=null) {
-                //byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
-                //pagehtml = new String(bytes).replace('\u0000',' ');  //strip null byte
+
+            if ( StringUtils.isNotBlank(pagehtml)) {
+                if ( pagehtml.indexOf("%PDF-")==0)
+                    pagehtml = "";
+                if ( pagehtml.indexOf("<U+0089>PNG")==0)
+                    pagehtml = "";
+
+                byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
+                pagehtml = new String(bytes,0,pagehtml.length()).replace('\u0000',' ');  //strip null byte                
+
+                experience = determineUserExperience(pagehtml, experience);
                 
                 //pagehtml = StringEscapeUtils.escapeHtml4(pagehtml);
             } else {
