@@ -19,8 +19,8 @@ import org.apache.commons.codec.binary.Base64;
 public class ExceptionRecordEvent extends UserRequestTiming implements ILiveLogParserRecord {
     private static boolean base64Encoded = true;
     static {
-        //if (System.getProperty("base64Encoded")!=null)
-        //    base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+        if (System.getProperty("base64Encoded")!=null)
+            base64Encoded = Boolean.parseBoolean(System.getProperty("base64Encoded"));
     }
 
 	private String pageName ;

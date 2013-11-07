@@ -29,8 +29,8 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
     transient private PersistanceStrategy pStrat;
     private static boolean base64Encoded = true; // default to true
     static {
-        //if (System.getProperty("base64Encoded")!=null)
-        //    base64Encoded = Boolean.getBoolean(System.getProperty("base64Encoded"));
+        if (System.getProperty("base64Encoded")!=null)
+            base64Encoded = Boolean.parseBoolean(System.getProperty("base64Encoded"));
     }
     
     public String getBrowser() {
