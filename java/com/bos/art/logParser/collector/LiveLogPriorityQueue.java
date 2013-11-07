@@ -10,6 +10,8 @@ package com.bos.art.logParser.collector;
 import EDU.oswego.cs.dl.util.concurrent.BoundedPriorityQueue;
 import com.bos.art.logParser.records.ILiveLogPriorityQueueMessage;
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.log4j.Logger;
 
 
@@ -32,18 +34,20 @@ public class LiveLogPriorityQueue implements Serializable {
     private int maxDepth;
     private static LiveLogPriorityQueue instance;
     private static LiveLogPriorityQueue systemTaskInstance;
+    private static AtomicBoolean instanceLock = new AtomicBoolean(false);
+    private static AtomicBoolean instanceTaskLock = new AtomicBoolean(false);
 
     private LiveLogPriorityQueue() {}
 
-    synchronized public static LiveLogPriorityQueue getInstance() {
-        if (instance == null) {
+    public static LiveLogPriorityQueue getInstance() {
+        if (instanceTaskLock.compareAndSet(false,true)){
             instance = new LiveLogPriorityQueue();
         }
         return instance;
     }
 	
-    synchronized public static LiveLogPriorityQueue getSystemTaskQueue() {
-        if (systemTaskInstance == null) {
+    public static LiveLogPriorityQueue getSystemTaskQueue() {
+        if (instanceLock.compareAndSet(false,true)){
             systemTaskInstance = new LiveLogPriorityQueue();
         }
         return systemTaskInstance;

@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -46,12 +47,13 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
     private static long batch = 0;
     private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
     private static DateTime batchNow = new DateTime();
+    private static AtomicBoolean instanceLock = new AtomicBoolean(false);
 
     protected HtmlPageRecordPersistanceStrategy() {
     }
 
     public static HtmlPageRecordPersistanceStrategy getInstance() {
-        synchronized (initLock) {
+        if (instanceLock.compareAndSet(false,true)) {
             if (instance == null) {
                 instance = new HtmlPageRecordPersistanceStrategy();
             }
@@ -59,6 +61,18 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
         return instance;
     }
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
+
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+    private static ThreadLocal threadLocalExperienceCon = new ThreadLocal() {
 
         @Override
         protected synchronized Object initialValue() {
@@ -286,7 +300,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setInt(8, requestTokenCount);
             String pagehtml = nonEncodedText;
             
-            int experience = readSessionUserExperience((Connection)threadLocalCon.get(),pre.getSessionId());
+            int experience = readSessionUserExperience((Connection)threadLocalExperienceCon.get(),pre.getSessionId());
 
             // don't store PDF's
             //pstmt.setString(9, pagehtml.indexOf("%PDF-")==0 ? "" : pagehtml);
@@ -367,10 +381,11 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
      */
     private void updateSessionUserExperience(int experience, PageRecordEvent pre) throws SQLException {
         // update session
-        PreparedStatement sessionpsmt = ((Connection) threadLocalCon.get()).prepareStatement("update sessions set experience = ? where session_id = (select max(session_id) from sessions where sessiontxt = ? )");
+        PreparedStatement sessionpsmt = ((Connection) threadLocalExperienceCon.get()).prepareStatement("update sessions set experience = ? where session_id = (select max(session_id) from sessions where sessiontxt = ? )");
         sessionpsmt.setInt(1,experience);
         sessionpsmt.setString(2,pre.getSessionId() );
         sessionpsmt.executeUpdate();
         sessionpsmt.close();
     }
 }
+                                                                                        

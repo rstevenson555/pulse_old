@@ -14,6 +14,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.log4j.Logger;
 /**
  * @author I0360D3
@@ -46,10 +48,11 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         AccessRecordsRecordPK++;
     }
 
+    private static AtomicBoolean instanceLock = new AtomicBoolean(false);
 
     public static AccessRecordPersistanceStrategy getInstance() {
-        synchronized (initLock) {
-            if (instance == null) {
+        if (instanceLock.compareAndSet(false,true)==false) {
+            if (instance == null) {                
                 instance = new AccessRecordPersistanceStrategy();
             }
         }

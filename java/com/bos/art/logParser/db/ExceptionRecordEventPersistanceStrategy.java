@@ -53,6 +53,7 @@ public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStra
     }
     private static ExceptionRecordEventPersistanceStrategy instance;
     private static final Object initLock = new Object();
+
     public static ExceptionRecordEventPersistanceStrategy getInstance() {
         if (instance == null) {
             synchronized (initLock) {
