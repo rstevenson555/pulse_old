@@ -52,7 +52,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
 
     public static AccessRecordPersistanceStrategy getInstance() {
         if (instanceLock.compareAndSet(false,true)==false) {
-            if (instance == null) {                
+            if (instance == null) {
                 instance = new AccessRecordPersistanceStrategy();
             }
         }
@@ -251,10 +251,8 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         int requestToken = ((UserRequestTiming)record).getRequestToken();
         int recordPK = -1;
 
-        //synchronized(initLock){
-            recordPK = ++AccessRecordsRecordPK;
-        //}
-        
+        recordPK = ++AccessRecordsRecordPK;
+
         try {
             PreparedStatement pstmt = (PreparedStatement)threadLocalPstmt.get();
             pstmt.setInt(1, recordPK);
@@ -285,7 +283,9 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         	+":SessionID:"+fk.fkSessionID
         	+":Machine:"+fk.fkMachineID+":AppID:"+fk.fkAppID+":BranchTagID:"+fk.fkBranchTagID+":loadTime:"+record.getLoadTime()+":requestToken:"+requestToken);
         }
+
         QueryParameterProcessingQueue.getInstance().addLast(new QueryParameters(qParam,recordPK));
+
         return true;
     }
 }

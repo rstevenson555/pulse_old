@@ -108,18 +108,13 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
                     logger.error("removeFirst Returned Null!");
                     continue;
                 }
-                //if (o instanceof QueryParameters) {
-                    long sTime = System.currentTimeMillis();
-                   // QueryParameters qp = (QueryParameters) o;
+                long sTime = System.currentTimeMillis();
 
-                    qp.processQueryParameters();
-                    long sTime2 = System.currentTimeMillis();
+                qp.processQueryParameters();
+                long sTime2 = System.currentTimeMillis();
 
-                    ++objectsProcessed;
-                    totalSysTime += (sTime2 - sTime);
-                //} else {
-                 //   logger.error("removeFirst gave " + o.getClass().getName());
-                //}
+                ++objectsProcessed;
+                totalSysTime += (sTime2 - sTime);
             } catch (Throwable t) {
                 logger.error("Throwable in QueryParameterProcessingQueue Thread! " + Thread.currentThread().getName() + ":", t);
             }

@@ -205,7 +205,7 @@ public class Engine {
 
         props.put("logAbandoned", "true");
         props.put("poolPreparedStatements","true");
-        props.put("maxOpenPreparedStatements", "100");
+        props.put("maxOpenPreparedStatements", "200");
         props.put("removeAbandoned", "true");
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, props);
 

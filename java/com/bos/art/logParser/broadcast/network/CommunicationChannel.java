@@ -43,56 +43,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
     private CopyOnWriteArrayList<TransferBean> browserBuffer = new CopyOnWriteArrayList<TransferBean>();
     private CopyOnWriteArrayList<TransferBean> memoryBuffer = new CopyOnWriteArrayList<TransferBean>();
     
-    private static final String PROTOCOL = /*
-             * tunnelling with tcp
-             *
-             * "TUNNEL(router_host="+ Engine.JAVA_GROUPS_ROUTER_SERVER +";router_port=22001):"
-             + "PING(gossip_host="+ Engine.JAVA_GROUPS_GOSSIP_SERVER +";gossip_port=22001;num_initial_members=3;gossip_refresh=10000;timeout=6000):"
-             + "MERGE2(max_interval=10000;min_interval=5000):"
-             + "FD(timeout=3000;max_tries=4):"
-             + "VERIFY_SUSPECT(timeout=1500;up_thread=false;down_thread=false):"
-             + "pbcast.NAKACK(gc_lag=100;retransmit_timeout=600,1200,2400,4800):"
-             + "pbcast.STABLE(desired_avg_gossip=20000;max_bytes=0;stability_delay=1000;up_thread=false;down_thread=false):"
-             + "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=true;print_local_addr=true)";
-             */ /*
-             * tunnelling with SMACK
-             *
-             * "TUNNEL(router_host="+ Engine.JAVA_GROUPS_ROUTER_SERVER +";router_port=22001):" +
-             "FD(timeout=3000;max_tries=4):" +
-             "UNICAST(timeout=1200,2400,3000;down_thread=false;up_thread=false;use_gms=false):" +
-             "FRAG(frag_size=8192;down_thread=false;up_thread=false):" +
-             "SMACK(max_xmits=20;timeout=1000,1500,2000;down_thread=false;up_thread=false)";
-             */ /*
-             *  tcp gossipping
-             *
-             "TCP(start_port=7800):" +
-             "TCPGOSSIP(timeout=3000;initial_hosts=prod-art-app1[22001];num_initial_members=2):" +
-             "FD(timeout=2000;max_tries=4):" +
-             "VERIFY_SUSPECT(timeout=1500;down_thread=false;up_thread=false):" +
-             "pbcast.NAKACK(gc_lag=100;retransmit_timeout=600,1200,2400,4800):" +
-             "pbcast.STABLE(stability_delay=1000;desired_avg_gossip=20000;down_thread=false;max_bytes=0;up_thread=false):"+
-             "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=true;print_local_addr=true):" +
-             "VIEW_ENFORCER:" +
-             "QUEUE";
-             */ /*
-             * UDP gossipping
-             *
-             **/ /* "UDP(mcast_addr=224.0.0.35;mcast_port=45566;ip_ttl=32;"+
-             "ucast_recv_buf_size=64000;ucast_send_buf_size=32000;" +
-             "mcast_send_buf_size=5000;mcast_recv_buf_size=10000;loopback=true;" +
-             "use_incoming_packet_handler=true;use_outgoing_packet_handler=false):" +
-             "PING(timeout=2000;num_initial_members=3):" +
-             "FD(timeout=2000;max_tries=3;shun=false):" +
-             "VERIFY_SUSPECT(timeout=1500):" +
-             "pbcast.NAKACK(gc_lag=50;retransmit_timeout=600,1200,2400,4800;max_xmit_size=8192):" +
-             "UNICAST(timeout=1200,2400,3600):" +
-             "pbcast.STABLE(desired_avg_gossip=20000;max_bytes=0;stability_delay=1000):" +
-             "FRAG(frag_size=8192;down_thread=false;up_thread=false):" +
-             "pbcast.GMS(join_timeout=3000;join_retry_timeout=2000;shun=true;print_local_addr=true):" +
-             "VIEW_ENFORCER:"+
-             "QUEUE";  */ /**
-             * tcp
-             **/
+    private static final String PROTOCOL =
             "TCP(start_port=" + Engine.JAVA_GROUPS_ROUTER_SERVER_PORT + ";bind_addr=" + Engine.JAVA_GROUPS_ROUTER_SERVER + ";loopback=false):" +
             "TCPPING(initial_hosts=" + Engine.JAVA_GROUPS_ROUTER_SERVER + "[" + Engine.JAVA_GROUPS_ROUTER_SERVER_PORT + "]):" + 
             "MERGE2():" +
@@ -103,12 +54,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             "UNICAST():" +
             "pbcast.STABLE():" +
             "pbcast.GMS()";
-//            "FC(max_credits=2000000;min_threshold=0.10):" +
-//            "FRAG2(frag_size=60000)";
-
         
     private static CommunicationChannel instance = null;
-    private java.util.List<Address> allViewMembers = null;
+    private List<Address> allViewMembers = null;
 
     private JChannel channel = null;
     private static Timer timer = null;
@@ -117,8 +65,6 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
     static {
         try {
             timer = new Timer();
-            //reconnectTask = new ReconnectTask();
-
             instance = new CommunicationChannel();
         } catch (Throwable e) {
             e.printStackTrace();
@@ -138,12 +84,6 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 
             TCP tcp = new TCP();
             tcp.setBindToAllInterfaces(false);
-//            try { 
-//                InetAddress router_server = InetAddress.getByName(Engine.JAVA_GROUPS_ROUTER_SERVER);
-//                tcp.setBindAddress(router_server);               
-//            } catch (UnknownHostException ex) {
-//                java.util.logging.Logger.getLogger(CommunicationChannel.class.getName()).log(Level.SEVERE, null, ex);
-//            }
             tcp.setBindPort(Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             tcp.setLoopback(false);
             tcp.setEnableBundling(false);
