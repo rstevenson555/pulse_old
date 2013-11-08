@@ -98,7 +98,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         return;
     }
 
-    synchronized private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
+    /*synchronized */private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         UserRequestTiming urt = (UserRequestTiming) record;
         String key =
                 sdf.print(record.getEventTime().getTime().getTime())

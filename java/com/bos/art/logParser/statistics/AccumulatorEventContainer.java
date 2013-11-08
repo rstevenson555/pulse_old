@@ -99,7 +99,7 @@ public class AccumulatorEventContainer implements Serializable,IEventContainer{
         accumulationCount = cnt;
 	}
 	
-	synchronized public void tally(int value, String function){
+	public void tally(int value, String function){
         accumulationCount++;
 		dirty = true;
 		databaseDirty = true;

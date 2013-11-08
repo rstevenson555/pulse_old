@@ -107,7 +107,7 @@ public class DailyEventContainer implements Serializable, IEventContainer {
 		tmLoadTimes = new TreeSet(new IntegerComparitor());
 	}
 	
-	synchronized public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage, String browser, int page_id, int user_id){
+	/*synchronized */public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage, String browser, int page_id, int user_id){
 		
 		lastModDate = new java.util.Date();
 		closeTimeForMod.setTime(lastModDate);

@@ -159,7 +159,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
         this.setTimesPersisted(1);
 	}
 
-	synchronized public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage, int userId, int pageID){
+	/*synchronized */public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage, int userId, int pageID){
 		tally(loadtime,firstTimeUser,isErrorPage);
 		if(loadtime > maxLoadTime){
 			maxLoadTimeUserID = userId;
@@ -167,7 +167,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer{
 		}
 	}
     
-	synchronized public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage){
+	/*synchronized */public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage){
 		dirty = true;
 		databaseDirty = true;
 		lastModDate = new java.util.Date();

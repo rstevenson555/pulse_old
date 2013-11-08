@@ -76,7 +76,7 @@ public class SimpleEventContainer implements Serializable, IEventContainer {
         isNew = b;
     }
 	
-	synchronized public void tally(int ct){
+	/*synchronized */public void tally(int ct){
         count+=ct;
         isDirty = true;
 	}

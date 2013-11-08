@@ -93,7 +93,7 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
 		return;
 	}
 	
-	synchronized private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record){
+	/*synchronized */private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record){
 		String key = sdf.print(record.getEventTime().getTime().getTime()) + record.getServerName() + record.getInstance();
 		TimeSpanEventContainer container = (TimeSpanEventContainer)hours.get(key);
 		if(container == null){
