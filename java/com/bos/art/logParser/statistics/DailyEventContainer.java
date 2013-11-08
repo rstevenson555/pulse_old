@@ -7,10 +7,9 @@
 package com.bos.art.logParser.statistics;
 
 import java.io.Serializable;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.GregorianCalendar;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 
 /**
@@ -77,7 +76,8 @@ public class DailyEventContainer implements Serializable, IEventContainer {
 	private int maxLoadTimeUserID;
 	private int maxLoadTimePageID;
 	//  Used for 90%, 75%, 50%, 25%
-	private TreeSet tmLoadTimes;
+	//private TreeSet tmLoadTimes;
+    private ConcurrentSkipListSet<Integer> tmLoadTimes;
 	private Integer[] arrayLoadTimes;
 	//  Used only for Reloads
 	private int reload90Percentile;
@@ -104,7 +104,9 @@ public class DailyEventContainer implements Serializable, IEventContainer {
 		this.remoteHost = remoteHost;
 		this.time = time;
 		this.hashLookupKey = ""+machine+app+context+remoteHost+time;
-		tmLoadTimes = new TreeSet(new IntegerComparitor());
+		tmLoadTimes = new ConcurrentSkipListSet<Integer>();
+        //private ConcurrentSkipListMap<Integer,Integer> tmTimeSliceBuckets = new ConcurrentSkipListMap<Integer,Integer>();
+
 	}
 	
 	/*synchronized */public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage, String browser, int page_id, int user_id){
@@ -365,7 +367,7 @@ public class DailyEventContainer implements Serializable, IEventContainer {
 	/**
 	 * @return
 	 */
-	public java.util.Date getLastModDate() {
+	public Date getLastModDate() {
 		return lastModDate;
 	}
 

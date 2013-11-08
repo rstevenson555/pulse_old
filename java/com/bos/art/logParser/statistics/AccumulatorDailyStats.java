@@ -132,7 +132,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
 		return;
 	}
 	
-	/*synchronized */private AccumulatorEventContainer getAccumulatorEventContainer(AccumulatorEventTiming record){
+	/*synchronized*/ private AccumulatorEventContainer getAccumulatorEventContainer(AccumulatorEventTiming record){
         //String dateKey = sdf.format(record.getEventTime().getTime());
         String dateKey = sdf.print(record.getEventTime().getTime().getTime());
         String context = record.getContext();
