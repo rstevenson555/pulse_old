@@ -19,11 +19,15 @@ public class PatchFilterInputStream extends FilterInputStream {
 
         int b = in.read();
 
-        if (b == (byte) '\u0000') {
-            return (byte) ' ';
-        } else   if (b == (byte) '\u001f')   {
-            return (byte) ' ';
+        switch(b) {
+            case (byte) '\u0000':
+                return (byte)' ';
+            case (byte) '\u001f':
+                return (byte)' ';
+            case (byte) '\u001e':
+                return (byte)' ';
         }
+
 
         return b;
     }
@@ -34,11 +38,14 @@ public class PatchFilterInputStream extends FilterInputStream {
         int result = in.read(data, offset, length);
         for (int i = offset; i < offset + result; i++) {
             // do nothing with the printing characters
-            // carriage return, linefeed, tab, and end of file      
-            if (data[i] == (byte) '\u0000') {
-                data[i] = (byte) ' ';
-            } else if (data[i] == (byte) '\u001f') {
-                data[i] = (byte) ' ';
+            // carriage return, linefeed, tab, and end of file
+            switch(data[i]) {
+                case (byte) '\u0000':
+                    data[i] = (byte)' ';
+                case (byte) '\u001f':
+                    data[i] = (byte)' ';
+                case (byte) '\u001e':
+                    data[i] = (byte)' ';
             }
         }
         return result;
