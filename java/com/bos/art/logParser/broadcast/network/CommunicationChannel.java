@@ -107,9 +107,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             nakack2.setUseMcastXmit(false);  
                        
             GMS gms = new GMS();
-            gms.setJoinTimeout(8000);
+            gms.setJoinTimeout(10000);
             gms.setViewAckCollectionTimeout(5000);
-            gms.setMergeTimeout(8000);
+            gms.setMergeTimeout(10000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
             //gms.setMaxBundlingTime(5000);
