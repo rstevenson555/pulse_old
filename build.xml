@@ -116,6 +116,38 @@
         </java>
     </target>
 
+    <target name="start-collector-sol" description="Start the logServer...">
+        <echo message="${ant.java.version}"/>
+        <java  classname="com.bos.art.logServer.main.Collector"
+              fork="true"
+              failonerror="true" >
+            <jvmarg line="-server -Dbase64Encoded=true -DCONFIG_OVERRIDE=./solutions_collector_config.yml -DLOG4J_OVERRIDE=./solutions_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9801 -Dcom.sun.management.jmxremote.ssl=false  -XX:GCTimeRatio=95 -Xmx768m"/>
+            <arg value="${param}"/>
+            <arg value="${param2}"/>
+            <classpath>
+                <pathelement location="dist/LiveLogParser.jar"/>
+            </classpath>
+            <classpath refid="classpath"/>
+        </java>
+    </target>
+
+    <target name="start-collector-omx" description="Start the logServer...">
+        <echo message="${ant.java.version}"/>
+        <java  classname="com.bos.art.logServer.main.Collector"
+              fork="true"
+              failonerror="true" >
+           <!--<jvmarg line="-Xmx128m -XX:NewSize=16m -XX:MaxNewSize=32m"/> -->
+           <!--<jvmarg line="-server -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -Xmx1900m -Xms680m -XX:NewSize=32m -XX:MaxNewSize=64m -Xloggc:gcFile.log"/> -->
+            <jvmarg line="-server -Dbase64Encoded=false -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9805 -Dcom.sun.management.jmxremote.ssl=false -XX:GCTimeRatio=95 -Xmx768m"/>
+            <arg value="${param}"/>
+            <arg value="${param2}"/>
+            <classpath>
+                <pathelement location="dist/LiveLogParser.jar"/>
+            </classpath>
+            <classpath refid="classpath"/>
+        </java>
+    </target>
+
     <!-- <target name="start-stressArtEngine" description="Start this in prod">
         <java  classname="com.bos.art.logParser.server.Engine"
               fork="true"
@@ -302,38 +334,6 @@
             <jvmarg line="-server -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties"/>
               
             <arg value="-h"/> 
-            <classpath>
-                <pathelement location="dist/LiveLogParser.jar"/>
-            </classpath>
-            <classpath refid="classpath"/>
-        </java>
-    </target>
-
-    <target name="start-collector-sol" description="Start the logServer...">
-        <echo message="${ant.java.version}"/>
-        <java  classname="com.bos.art.logServer.main.Collector"
-              fork="true"
-              failonerror="true" >
-            <jvmarg line="-server -Dbase64Encoded=true -DCONFIG_OVERRIDE=./solutions_collector_config.yml -DLOG4J_OVERRIDE=./solutions_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9801 -Dcom.sun.management.jmxremote.ssl=false  -XX:GCTimeRatio=95 -Xmx768m"/>
-            <arg value="${param}"/> 
-            <arg value="${param2}"/> 
-            <classpath>
-                <pathelement location="dist/LiveLogParser.jar"/>
-            </classpath>
-            <classpath refid="classpath"/>
-        </java>
-    </target>
-    
-     <target name="start-collector-omx" description="Start the logServer...">
-        <echo message="${ant.java.version}"/>
-        <java  classname="com.bos.art.logServer.main.Collector"
-              fork="true"
-              failonerror="true" >
-           <!--<jvmarg line="-Xmx128m -XX:NewSize=16m -XX:MaxNewSize=32m"/> -->
-           <!--<jvmarg line="-server -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -Xmx1900m -Xms680m -XX:NewSize=32m -XX:MaxNewSize=64m -Xloggc:gcFile.log"/> -->
-            <jvmarg line="-server -Dbase64Encoded=false -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9805 -Dcom.sun.management.jmxremote.ssl=false -XX:GCTimeRatio=95 -Xmx768m"/>
-            <arg value="${param}"/> 
-            <arg value="${param2}"/> 
             <classpath>
                 <pathelement location="dist/LiveLogParser.jar"/>
             </classpath>
