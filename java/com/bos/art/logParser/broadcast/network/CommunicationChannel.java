@@ -153,7 +153,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                 System.err.println(ex);
             }
             
-            allViewMembers = new ArrayList<Address>();
+            allViewMembers = new CopyOnWriteArrayList<Address>();
             
             channel.connect("ART-DATA");            
             channel.addChannelListener(this);
@@ -189,7 +189,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
     synchronized public void restart() {
         try {
             channel = new JChannel(PROTOCOL);
-            allViewMembers = new ArrayList<Address>();
+            allViewMembers = new CopyOnWriteArrayList<Address>();
 
             channel.setReceiver(this);
             channel.connect("ART-DATA");
@@ -230,9 +230,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
         List<Address> new_mbrs = new_view.getMembers();
 
         if (new_mbrs != null) {
-            synchronized (allViewMembers) {
-                sendViewChangedNotifications(new_mbrs);             
-            }
+            sendViewChangedNotifications(new_mbrs);
         }
     }
         
