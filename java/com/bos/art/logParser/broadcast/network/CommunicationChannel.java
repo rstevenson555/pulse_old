@@ -86,9 +86,10 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             tcp.setBindToAllInterfaces(false);
             tcp.setBindPort(Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             tcp.setLoopback(false);
-            tcp.setEnableBundling(false);
+            tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
             tcp.setMaxBundleSize(64000);
+            tcp.use_send_queues = false;
             //tcp.setReaperInterval(300000);
             
             InetSocketAddress serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
