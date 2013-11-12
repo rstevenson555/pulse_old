@@ -311,8 +311,8 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
                 if ( pagehtml.indexOf("<U+0089>PNG")==0)
                     pagehtml = "";
 
-                byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
-                pagehtml = new String(bytes,0,pagehtml.length()).replace('\u0000',' ');  //strip null byte                
+                //byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(pagehtml.toCharArray())).array();
+                //pagehtml = new String(bytes,0,pagehtml.length()).replace('\u0000',' ');  //strip null byte
 
                 experience = determineUserExperience(pagehtml, experience);
                 
