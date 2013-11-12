@@ -89,7 +89,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
             tcp.setMaxBundleSize(64000);
-            tcp.use_send_queues = false;
+            tcp.use_send_queues = true;
             //tcp.setReaperInterval(300000);
             
             InetSocketAddress serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
@@ -131,7 +131,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             //merge2.setMinInterval(20000);
             merge2.setMinInterval(30000);
 
-            UNICAST2 unicast2 = new UNICAST2();
+            UNICAST unicast = new UNICAST();
 
             stack.addProtocol(tcp).
                     addProtocol(gossip).
@@ -140,7 +140,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
-                    addProtocol(unicast2).
+                    addProtocol(unicast).
                     addProtocol(new STABLE()).
                     addProtocol(gms);
 //                    addProtocol(new UFC()).
