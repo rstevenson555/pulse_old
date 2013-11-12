@@ -41,7 +41,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
     protected static boolean unloadDB = true;
-    private static final int MAX_DB_QUEUE_SIZE = 10000;
+    private static final int MAX_DB_QUEUE_SIZE = 5000;
     private static DateTime now = null;
     private static DateTime oneMinute = new DateTime().plusMinutes(1);
     private static long recordsPerMinute = 0;
