@@ -108,9 +108,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             nakack2.setUseMcastXmit(false);  
                        
             GMS gms = new GMS();
-            gms.setJoinTimeout(10000);
+            gms.setJoinTimeout(15000);
             gms.setViewAckCollectionTimeout(5000);
-            gms.setMergeTimeout(10000);
+            gms.setMergeTimeout(15000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
             //gms.setMaxBundlingTime(5000);
@@ -129,16 +129,16 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             //vsuspect.use_icmp = true;
             
             MERGE2 merge2 = new MERGE2();
-            merge2.setMaxInterval(100000);
+            merge2.setMaxInterval(30000);
             //merge2.setMinInterval(20000);
-            merge2.setMinInterval(30000);
+            merge2.setMinInterval(10000);
 
             UNICAST unicast = new UNICAST();
 
             stack.addProtocol(tcp).
                     addProtocol(gossip).
                     addProtocol(merge2).
-//                    addProtocol(fdsock).
+                    addProtocol(fdsock).
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
