@@ -121,6 +121,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 //            fd.setTimeout(5000);
             //fd.setMaxTries(3);
             FD_ALL fd = new FD_ALL();
+            fd.setTimeout(40000);
+            fd.setInterval(8000);
             
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
             vsuspect.setValue("timeout", 4500);
