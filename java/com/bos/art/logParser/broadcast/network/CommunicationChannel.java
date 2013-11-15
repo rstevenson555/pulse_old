@@ -101,8 +101,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             TCPGOSSIP gossip = new TCPGOSSIP();
             gossip.setInitialHosts(serverList);
-            gossip.setNumInitialMembers(2);
-            gossip.setTimeout(8000);
+            gossip.setNumInitialMembers(1);
+            gossip.setTimeout(6000);
             
             NAKACK2 nakack2 = new NAKACK2();
 
