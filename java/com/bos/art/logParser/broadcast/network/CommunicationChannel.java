@@ -101,7 +101,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             TCPGOSSIP gossip = new TCPGOSSIP();
             gossip.setInitialHosts(serverList);
-            gossip.setNumInitialMembers(11);
+            gossip.setNumInitialMembers(2);
             gossip.setTimeout(8000);
             
             NAKACK2 nakack2 = new NAKACK2();
@@ -110,9 +110,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             nakack2.setUseMcastXmit(false);  
                        
             GMS gms = new GMS();
-            gms.setJoinTimeout(15000);
-            gms.setViewAckCollectionTimeout(5000);
-            gms.setMergeTimeout(15000);
+            gms.setJoinTimeout(8000);
+            gms.setViewAckCollectionTimeout(3000);
+            gms.setMergeTimeout(8000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
             //gms.setMaxBundlingTime(5000);
