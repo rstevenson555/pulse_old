@@ -90,6 +90,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             tcp.setDiscardIncompatiblePackets(true);
             tcp.setMaxBundleSize(64000);
             tcp.use_send_queues = true;
+            tcp.sock_conn_timeout = 300;
+            
             //tcp.setReaperInterval(300000);
             
             InetSocketAddress serveraddr = new InetSocketAddress(Engine.JAVA_GROUPS_ROUTER_SERVER,Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
