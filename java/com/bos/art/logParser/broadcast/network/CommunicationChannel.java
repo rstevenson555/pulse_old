@@ -88,7 +88,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
-            tcp.setMaxBundleSize(64000);
+            tcp.setMaxBundleSize(128000);
             tcp.use_send_queues = true;
             tcp.sock_conn_timeout = 300;
             
