@@ -137,6 +137,9 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 
             UNICAST unicast = new UNICAST();
 
+            FRAG2 frag2 = new FRAG2();
+            frag2.setFragSize(64000);
+
             stack.addProtocol(tcp).
                     addProtocol(gossip).
                     addProtocol(merge2).
@@ -149,7 +152,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(gms).
 //                    addProtocol(new UFC()).
                     addProtocol(new MFC()).
-                    addProtocol(new FRAG2());
+                    addProtocol(frag2);
                     //addProtocol(new FLUSH());
             
             try {
@@ -244,7 +247,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 
         List<Address> joined, left;
 
-        logger.warn(" Backfill Beans Broadcast Detected.... ");
+        logger.warn(" ViewChange Detected.... ");
             
         if (allViewMembers == null || new_mbrs == null || new_mbrs.isEmpty()) {
             return;
