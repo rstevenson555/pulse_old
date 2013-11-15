@@ -149,8 +149,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
                     addProtocol(gms).
 //                    addProtocol(new UFC()).
                     addProtocol(new MFC()).
-                    addProtocol(new FRAG2()).
-                    addProtocol(new FLUSH());
+                    addProtocol(new FRAG2());
+                    //addProtocol(new FLUSH());
             
             try {
                 stack.init();                         // 5
