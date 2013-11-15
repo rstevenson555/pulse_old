@@ -84,7 +84,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
 
             TCP tcp = new TCP();
             tcp.setBindToAllInterfaces(false);
-            tcp.setBindPort(Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
+            //tcp.setBindPort(Engine.JAVA_GROUPS_ROUTER_SERVER_PORT);
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
