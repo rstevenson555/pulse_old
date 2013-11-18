@@ -64,7 +64,8 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
-            con = ConnectionPoolT.getConnection();
+            //con = ConnectionPoolT.getConnection();
+            con = (Connection)threadLocalCon.get();
             //pstmt = con.prepareStatement("Select max(RecordPK) from AccessRecords");
             pstmt = con.prepareStatement("select recordpk from accessrecords order by recordpk desc limit 1");
             rs = pstmt.executeQuery();
@@ -81,9 +82,9 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
                 if (pstmt != null) {
                     pstmt.close();
                 }
-                if (con != null) {
-                    con.close();
-                }
+//                if (con != null) {
+//                    con.close();
+//                }
             } catch (SQLException e1) {
                 e1.printStackTrace();
             }
