@@ -8,8 +8,6 @@ package com.bos.art.logParser.db;
 
 
 import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,7 +15,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
-import org.apache.commons.codec.binary.Hex;
+
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
@@ -61,7 +60,8 @@ public abstract class BasePersistanceStrategy {
     
     protected static final Logger logger = (Logger) Logger.getLogger(BasePersistanceStrategy.class.getName());
     public static final int DATABASE_MISS_THRESHOLD = 1000000;
-    
+    private static final Charset DEFAULT_CHARSET = Charset.forName("UTF8");
+
     static {
         initMaps();
     }
@@ -128,16 +128,23 @@ public abstract class BasePersistanceStrategy {
                 resultValue = rs.getInt(1);
                 //logger.warn("sequenceval: " + resultValue);
             }
-//            String seqName = (String) sequenceNameHashMap.get(sqlInsert);
-//
-//            if (seqName != null) {
-//                resultValue = selectLastInsert(con, seqName);
-//            } 
             if (rs!=null) rs.close();
         }
         return resultValue;
     }
-    
+
+    private static ThreadLocal threadLocalFKCon = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+
     protected int insertForeignKey(String sqlSelect, List selectValues, String sqlInsert, List insertValues) {
         Connection con = null;
         int resultValue = 0;
@@ -153,7 +160,7 @@ public abstract class BasePersistanceStrategy {
 
         while(retries++<5) {
             try {
-                con = ConnectionPoolT.getConnection();
+                con = (Connection)threadLocalFKCon.get();
                 if (selectMis < DATABASE_MISS_THRESHOLD) {
                     PreparedStatement pstmt = con.prepareStatement(sqlSelect);
 
@@ -218,12 +225,12 @@ public abstract class BasePersistanceStrategy {
                         java.util.logging.Logger.getLogger(BasePersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     logger.error("insertForeignKey: invalid byte sequence, for select: [" + sqlSelect + "], will retry");
-                    try {
-                        if ( con!=null) con.close();
-                        con = null;
-                    } catch (Throwable t) {
-                        logger.error("Throwable ", t);
-                    }
+//                    try {
+//                        if ( con!=null) con.close();
+//                        con = null;
+//                    } catch (Throwable t) {
+//                        logger.error("Throwable ", t);
+//                    }
                     escapeString = true;
                     continue;
                 } else {
@@ -232,12 +239,12 @@ public abstract class BasePersistanceStrategy {
                 }
             }
             finally {
-                try {
-                    if ( con!=null) con.close();
-                    con = null;
-                } catch (Throwable t) {
-                    logger.error("Throwable ", t);
-                }
+//                try {
+//                    if ( con!=null) con.close();
+//                    con = null;
+//                } catch (Throwable t) {
+//                    logger.error("Throwable ", t);
+//                }
             }
         }
         return resultValue;
@@ -291,106 +298,25 @@ public abstract class BasePersistanceStrategy {
             
     }
     
-    //protected int insertQueryParameter(String queryParameter) {
     protected int insertQueryParameter(String queryParameters) {
         String sqlSelect = FK_QUERY_PARAMETERS_SELECT;
         String sqlInsert = FK_QUERY_PARAMETERS_INSERT;
-        
 
-        /*
-         *       "password": null, \n\
-      "/atg/userprofiling/ProfileFormHandler.value.password": null, \n\
-      "/atg/userprofiling/ProfileFormHandler.oldPassword": null, \n\
-      "/atg/userprofiling/ProfileFormHandler.value.confirmPassword": null, \n\
+        String md5_str = md5(queryParameters);
 
-         */
-        
-        //int start = 0,equalSign;
-        
-
-/*        if ( (start = queryParameter.indexOf("Password"))!=-1) {
-            // now find the equal sign
-            equalSign = queryParameter.indexOf('=', start);
-            if (equalSign !=-1) {
-                queryParameter = queryParameter.substring(0,equalSign);
-                queryParameter += "=wiped";
-            }
-        }       
-        if ( (start = queryParameter.indexOf("password"))!=-1) {
-            // now find the equal sign
-            equalSign = queryParameter.indexOf('=', start);
-            if (equalSign !=-1) {
-                queryParameter = queryParameter.substring(0,equalSign);
-                queryParameter += "=wiped";
-            }
-        }    
-        if ( (start = queryParameter.indexOf("creditCardNumber"))!=-1) {
-            // now find the equal sign
-            equalSign = queryParameter.indexOf('=', start);
-            if (equalSign !=-1) {
-                queryParameter = queryParameter.substring(0,equalSign);
-                queryParameter += "=wiped";
-            }
-        }
-        if ( (start = queryParameter.indexOf("giftCard"))!=-1) {
-            // now find the equal sign
-            equalSign = queryParameter.indexOf('=', start);
-            if (equalSign !=-1) {
-                queryParameter = queryParameter.substring(0,equalSign);
-                queryParameter += "=wiped";
-            }
-        }
-        if ( (start = queryParameter.indexOf("giftCardNo"))!=-1) {
-            // now find the equal sign
-            equalSign = queryParameter.indexOf('=', start);
-            if (equalSign !=-1) {
-                queryParameter = queryParameter.substring(0,equalSign);
-                queryParameter += "=wiped";
-            }
-        } 
-        * //insert into QueryParameters (queryParams,queryparams_key,value_hash) values (?,?,?)
-*/
-        
-//        int equals = queryParameter.indexOf("=");
-//        String queryValue = "";
-//        String queryKey = "";
-//        
-//        if ( equals!=-1) {
-//            queryValue = queryParameter.substring(equals+1);
-//            queryKey = queryParameter.substring(0,equals);
-//        } else {
-//            queryKey = queryParameter;
-//        }
-//
-          String md5_str = md5(queryParameters);
-//        
-//        List insertBindParams = Arrays.asList(queryValue,queryKey,md5_str);               
-//        List selectBindParams = Arrays.asList(md5_str); 
         List insertBindParams = Arrays.asList(queryParameters,md5_str);
         List selectBindParams = Arrays.asList(md5_str);
         
         return insertForeignKey(sqlSelect, selectBindParams, sqlInsert, insertBindParams);
     }
-    
+
     /**
      * return a md5 hash
      * @param str
      * @return 
      */
     private String md5(String str) {
-        try {
-            final MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-
-            messageDigest.reset();
-            messageDigest.update(str.getBytes(Charset.forName("UTF8")));
-            final byte[] resultByte = messageDigest.digest();
-            final String result = new String(Hex.encodeHex(resultByte));                               
-
-            return result;
-        } catch (NoSuchAlgorithmException ex) {
-            java.util.logging.Logger.getLogger(BasePersistanceStrategy.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return "";
+        return DigestUtils.md5Hex(str);
     }
 
     protected int insertStackTraceRow(String queryParameter) {
@@ -402,58 +328,18 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
 
-//    private static ThreadLocal foreignKeyConnections = new ThreadLocal() {
-//        @Override
-//        protected synchronized Object initialValue() {
-//            try {
-//                return ConnectionPoolT.getConnection();
-//            } catch (SQLException se) {
-//                logger.error("SQL Exception ", se);
-//            }
-//            return null;
-//        }
-//    };
-//    
-//    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
-//        @Override
-//        protected synchronized Object initialValue() {
-//            try {
-//                return ((Connection)foreignKeyConnections.get()).prepareStatement(FK_SESSIONS_INSERT,Statement.RETURN_GENERATED_KEYS);
-//            } catch (SQLException se) {
-//                logger.error("SQL Exception ", se);
-//            }
-//            return null;
-//        }
-//    };
-//
-//     public void resetThreadLocalPstmt() {
-//        logger.info("Resetting the Pstmt!");
-//        PreparedStatement ps = (PreparedStatement)threadLocalPstmt.get();
-//        Connection con = (Connection)foreignKeyConnections.get();
-//        try {
-//            try {
-//                if (ps != null) {
-//                    ps.close();
-//                    ps = null;
-//                }
-//                if (con != null) {
-//                    con.close();
-//                    con = null;
-//                }
-//            } catch (SQLException se) {
-//                logger.error("Exception resetting the ThreadLocal PreparedStatement", se);
-//            }
-//            con = ConnectionPoolT.getConnection();
-//            ps =
-//                con.prepareStatement(
-//                    FK_SESSIONS_INSERT);
-//            foreignKeyConnections.set(con);
-//            threadLocalPstmt.set(ps);
-//        } catch (Exception e) {
-//            logger.error("Exception ", e);
-//        }
-//    }
-     
+    private static ThreadLocal threadLocalSessionCon = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+
     protected int insertSession(String sessiontxt, String ip, String browser, int userID) {
         String sqlInsert = FK_SESSIONS_INSERT;
         List bindParams = Arrays.asList(ip,sessiontxt,browser,new Integer(userID));
@@ -462,7 +348,7 @@ public abstract class BasePersistanceStrategy {
         int resultValue = 0;
         PreparedStatement pstmt = null;
         try {
-            con = ConnectionPoolT.getConnection();
+            con = (Connection)threadLocalSessionCon.get();
             pstmt = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS);                
             
             resultValue = insertForeignKeyWithPreparedStatement(pstmt, sqlInsert, bindParams, con);
@@ -472,7 +358,7 @@ public abstract class BasePersistanceStrategy {
         } finally {
             try {
                 if (pstmt!=null) pstmt.close();
-                if (con!=null) con.close();
+//                if (con!=null) con.close();
             } catch (SQLException ex) {
                 logger.error("insertSession SQLException", ex);
             }
