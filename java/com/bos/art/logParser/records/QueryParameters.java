@@ -26,10 +26,11 @@ import org.apache.log4j.Logger;
 public class QueryParameters {
 
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameters.class.getName());
-    private String queryParameters;
+    private StringBuilder queryParameters;
     private Integer recordPK;
     private static final PersistanceStrategy pStrat = AccessRecordPersistanceStrategy.getInstance();
     private static boolean base64Encoded = true; // default to true
+
     static {
         if (System.getProperty("base64Encoded")!=null)
             base64Encoded = Boolean.parseBoolean(System.getProperty("base64Encoded"));
@@ -43,9 +44,9 @@ public class QueryParameters {
        
         recordPK = new Integer(rPK);
         if (qp != null && qp.indexOf("#P#") < 0) {
-            queryParameters = decode(qp);
+            queryParameters = new StringBuilder(decode(qp));
         } else {
-            queryParameters = qp;
+            queryParameters = new StringBuilder(qp);
         }
     }
 
@@ -86,7 +87,7 @@ public class QueryParameters {
         if (queryParameters != null) {
             if (queryParameters.indexOf(PARAM_MARKER) > -1) {
                 int sep = queryParameters.indexOf(PARAM_MARKER);
-                queryParameters = queryParameters.substring(0, sep) + "&" + queryParameters.substring(sep + 3);
+                queryParameters = new StringBuilder(queryParameters.substring(0, sep)).append("&").append(queryParameters.substring(sep + 3));
             }
             int seplength = AMP_SEP.length();
             int sep = 0, asep = 0;
@@ -101,14 +102,14 @@ public class QueryParameters {
                     }
                     seplength = AMP_SEP.length();
                     String currentParameter = queryParameters.substring(0, sep);
-                    queryParameters = queryParameters.substring(sep + seplength);
+                    queryParameters = new StringBuilder(queryParameters.substring(sep + seplength));
                     if (!"".equals(currentParameter)) {
                         stringSet.append(currentParameter).append("||||");
                         set.add(currentParameter);
                     }
                     start = 0;
                 } else {
-                    String currentParameter = queryParameters;
+                    String currentParameter = queryParameters.toString();
                     queryParameters = null;
                     stringSet.append(currentParameter).append("||||");
                     set.add(currentParameter);
@@ -117,8 +118,6 @@ public class QueryParameters {
         }
         // this does the lookup and insert
         Integer queryParameterID = null;
-        //byte []bytes = Charset.forName("UTF8").encode(CharBuffer.wrap(stringSet.toString().toCharArray())).array();
-        //String queryString = new String(bytes).replace('\u0000',' ');  //strip null byte
 
         queryParameterID = getQueryParameterId( stringSet.toString() );
         QueryParameterWriteQueue.getInstance().addLast(new DBQueryParamRecord(queryParameterID, recordPK));

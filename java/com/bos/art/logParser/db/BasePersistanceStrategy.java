@@ -162,6 +162,10 @@ public abstract class BasePersistanceStrategy {
             try {
                 con = (Connection)threadLocalFKCon.get();
                 if (selectMis < DATABASE_MISS_THRESHOLD) {
+                    if ( con == null || con.isClosed()) {
+                        con = ConnectionPoolT.getConnection();
+                        threadLocalFKCon.set(con);
+                    }
                     PreparedStatement pstmt = con.prepareStatement(sqlSelect);
 
                     for (int i = 0,tot = selectValues.size(); i < tot; ++i) {
@@ -349,6 +353,10 @@ public abstract class BasePersistanceStrategy {
         PreparedStatement pstmt = null;
         try {
             con = (Connection)threadLocalSessionCon.get();
+            if ( con==null || con.isClosed()) {
+                con = ConnectionPoolT.getConnection();
+                threadLocalSessionCon.set(con);
+            }
             pstmt = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS);                
             
             resultValue = insertForeignKeyWithPreparedStatement(pstmt, sqlInsert, bindParams, con);
