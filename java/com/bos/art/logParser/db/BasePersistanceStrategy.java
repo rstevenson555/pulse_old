@@ -216,8 +216,8 @@ public abstract class BasePersistanceStrategy {
                     }
                     logger.error("insertForeignKey: Duplicate key violation will retry");
                     try {
-                        if ( con!=null) con.close();
-                        con = null;
+                        //if ( con!=null) con.close();
+                        //con = null;
                     } catch (Throwable t) {
                         logger.error("Throwable ", t);
                     }
