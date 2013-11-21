@@ -30,7 +30,8 @@ public class EngineClientHandler implements Runnable {
     private Socket incoming;
     private int counter;
     private static final Logger logger = (Logger) Logger.getLogger(EngineClientHandler.class.getName());
-    
+    private static int SOCKET_BUFFER = 262144;
+
     public EngineClientHandler(Socket i, int c) {
         incoming = i;
         counter = c;
@@ -46,7 +47,8 @@ public class EngineClientHandler implements Runnable {
         LiveLogPriorityQueue systemTaskQueue = LiveLogPriorityQueue.getSystemTaskQueue();
         ObjectInputStream in = null;
         try {
-            in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),1024*16)); // 16k
+            incoming.setReceiveBufferSize(SOCKET_BUFFER);
+            in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream())); // 16k
 
             while (true) {
                 try {

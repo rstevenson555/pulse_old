@@ -41,7 +41,7 @@ public class Engine {
     private static final String LOCALCONFIG = "localconfig";
     public static int ART_ENGINE_PORT=0;
     public static String ART_ENGINE_MACHINE="";
-    static int SOCKET_BUFFER = 262144;
+    private static int SOCKET_BUFFER = 262144;
     
 
     static public void init() {
