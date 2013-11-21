@@ -41,7 +41,8 @@ public class Engine {
     private static final String LOCALCONFIG = "localconfig";
     public static int ART_ENGINE_PORT=0;
     public static String ART_ENGINE_MACHINE="";
-
+    static int SOCKET_BUFFER = 262144;
+    
 
     static public void init() {
         String gossipServer;
@@ -183,6 +184,7 @@ public class Engine {
         logger.debug("Done.");
     }
 
+
     public static void setupDriver(String connectURI) {
         //
         // First, we'll need a ObjectPool that serves as the
@@ -207,6 +209,8 @@ public class Engine {
         props.put("poolPreparedStatements","true");
         props.put("maxOpenPreparedStatements", "200");
         props.put("removeAbandoned", "true");
+        props.put("sendBufferSize",String.valueOf(SOCKET_BUFFER));
+        props.put("recvBufferSize",String.valueOf(SOCKET_BUFFER));
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, props);
 
         // connectionFactory.
