@@ -28,6 +28,7 @@ public class MessageUnloader extends java.lang.Thread {
     private int failCount = 0;
     //private int MESSAGE_QUEUE_SIZE = 300000;
     private int MESSAGE_QUEUE_SIZE = 5000;
+    private static int SOCKET_BUFFER = 262144;
     
     static public MessageUnloader getInstance() {
         return instance;
@@ -92,8 +93,9 @@ public class MessageUnloader extends java.lang.Thread {
                     socket = new Socket(address, port);
 
                     synchronized (this) {
+                        socket.setSendBufferSize(SOCKET_BUFFER);
 
-                        outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(), ENGINE_OUTPUT_BUFFER_SIZE));
+                        outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
                         connector = null;
                         break;
@@ -170,7 +172,9 @@ public class MessageUnloader extends java.lang.Thread {
 
         try {
             logger.info("trying to connect to ArtEngine at: " + address + " port: " + port);
-            outputStream = new ObjectOutputStream(new BufferedOutputStream(new Socket(address, port).getOutputStream(), ENGINE_OUTPUT_BUFFER_SIZE));
+            Socket socket = new Socket(address,port);
+            socket.setSendBufferSize(SOCKET_BUFFER);
+            outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(), ENGINE_OUTPUT_BUFFER_SIZE));
             logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
         } catch (IOException io) {
             logger.error("Error connecting to : " + address + " " + io);
