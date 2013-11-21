@@ -578,7 +578,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             }
             
             boolean tone = false;
-            con = ConnectionPoolT.getConnection();
+            con = (Connection)threadLocalCon.get();
             pstmt = con.prepareStatement(UPDATE_SESSIONS);
 
             int batchCount = 0;
@@ -613,14 +613,14 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                     java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            if ( con!=null) {
-                try {
-                    con.close();
-                } catch (SQLException ex) {
-                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            
+//            if ( con!=null) {
+//                try {
+//                    con.close();
+//                } catch (SQLException ex) {
+//                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
+//            
         }
         
         broadcastSessionDataBeans(htSessionCounts);
@@ -749,10 +749,23 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             + "sessionDuration = ? "
             + " where Session_ID=?";
 
+    private static ThreadLocal threadLocalCon = new ThreadLocal() {
+
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+
     private void updateSessionRecord(SessionDataClass sdc) {
         Connection con = null;
         try {
-            con = ConnectionPoolT.getConnection();
+            con = (Connection)threadLocalCon.get();
             PreparedStatement pstmt = con.prepareStatement(UPDATE_SESSIONS);
             updateSessionRecordWithConnection(con, pstmt, sdc);
             con.commit();
@@ -767,15 +780,15 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 sse.printStackTrace();
             }
         } finally {
-            if (con != null) {
-                try {
-                    //					con.commit();
-                    con.close();
-                } catch (Throwable t) {
-                    logger.error("exception trying to close a connection", t);
-                    //TODO Logger
-                }
-            }
+//            if (con != null) {
+//                try {
+//                    //					con.commit();
+//                    con.close();
+//                } catch (Throwable t) {
+//                    logger.error("exception trying to close a connection", t);
+//                    //TODO Logger
+//                }
+//            }
         }
     }
     
