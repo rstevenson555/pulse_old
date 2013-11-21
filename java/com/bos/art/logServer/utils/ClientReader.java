@@ -51,7 +51,8 @@ public class ClientReader implements Runnable {
     private static int filecounter = 0;
     private static final Object ulock = new Object();
     private boolean encode_input = false;
-    
+    static int SOCKET_BUFFER = 262144;
+
     /**
      * this map is used to remove duplicate records
      * @param <K>
@@ -149,7 +150,7 @@ public class ClientReader implements Runnable {
 
                 //reader.setEntityResolver(new DefaultEntityResolver());
                 reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
-                reader.setProperty("http://apache.org/xml/properties/input-buffer-size", new Integer(PARSER_BUFFER_SIZE));
+                //reader.setProperty("http://apache.org/xml/properties/input-buffer-size", new Integer(PARSER_BUFFER_SIZE));
 
                 return parser;
             } catch (javax.xml.parsers.ParserConfigurationException e) {
@@ -536,10 +537,14 @@ public class ClientReader implements Runnable {
             if (mode == SOCKET_MODE) {
 
                 PushbackInputStream pinput = null;
+                logger.warn("Socket Receive Buffer Size: " + inputSocket.getReceiveBufferSize());
+                inputSocket.setReceiveBufferSize(SOCKET_BUFFER);
+                logger.warn("Socket Receive Buffer Size changed to : " + inputSocket.getReceiveBufferSize());
+                
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
                             new PatchFilterInputStream(
-                          new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER)),
+                          new BufferedInputStream(inputSocket.getInputStream())),
                     50);
 
                 } else {
@@ -548,7 +553,7 @@ public class ClientReader implements Runnable {
                                 new Base64EncodedInputStream(
                                     new Base64EncodedInputStream(
                                         //new XMLEncodedInputStream(
-                                            new BufferedInputStream(inputSocket.getInputStream(), COLLECTOR_INPUT_BUFFER),
+                                            new BufferedInputStream(inputSocket.getInputStream()),
                                             //"<Payload>", "</Payload>"),
                                     "<startBase64EncodedSection>", "</startBase64EncodedSection>"), /* error */
                             "<ExceptionEvent message=\"", "\">"), /* exception */
@@ -560,7 +565,6 @@ public class ClientReader implements Runnable {
                 if (debugging) {
                     System.out.println("Debug filename: " + dfilename);
                 }
-
 
                 pinput.unread(new String("<?xml version=\"1.0\"?>\n<FILESTARTXML>").getBytes());
 
