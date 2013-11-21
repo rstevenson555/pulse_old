@@ -93,7 +93,9 @@ public class MessageUnloader extends java.lang.Thread {
                     socket = new Socket(address, port);
 
                     synchronized (this) {
-                        //socket.setSendBufferSize(64536);
+                        logger.warn("Socket Buffer Size: " + socket.getReceiveBufferSize());
+                        socket.setSendBufferSize(262144);
+                        logger.warn("Socket Buffer Size after change: " + socket.getReceiveBufferSize());
 
                         outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
@@ -174,7 +176,9 @@ public class MessageUnloader extends java.lang.Thread {
             logger.info("trying to connect to ArtEngine at: " + address + " port: " + port);
             Socket socket = new Socket(address,port);
             logger.warn("Socket Buffer Size: " + socket.getReceiveBufferSize());
-            socket.setSendBufferSize(64532);
+            socket.setSendBufferSize(262144);
+            logger.warn("Socket Buffer Size after change: " + socket.getReceiveBufferSize());
+
             outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
         } catch (IOException io) {
