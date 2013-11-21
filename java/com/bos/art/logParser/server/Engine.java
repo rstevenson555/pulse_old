@@ -210,7 +210,7 @@ public class Engine {
         props.put("maxOpenPreparedStatements", "200");
         props.put("removeAbandoned", "true");
         props.put("sendBufferSize",String.valueOf(SOCKET_BUFFER));
-        props.put("recvBufferSize",String.valueOf(SOCKET_BUFFER));
+        props.put("receiveBufferSize",String.valueOf(SOCKET_BUFFER));
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, props);
 
         // connectionFactory.
