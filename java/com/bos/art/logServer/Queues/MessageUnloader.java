@@ -28,7 +28,7 @@ public class MessageUnloader extends java.lang.Thread {
     private int failCount = 0;
     //private int MESSAGE_QUEUE_SIZE = 300000;
     private int MESSAGE_QUEUE_SIZE = 5000;
-    private static int SOCKET_BUFFER = 262144;
+    private static int SOCKET_BUFFER = 256 * 1024;
     
     static public MessageUnloader getInstance() {
         return instance;
