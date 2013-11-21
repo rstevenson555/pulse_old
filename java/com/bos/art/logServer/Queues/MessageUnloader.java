@@ -93,7 +93,7 @@ public class MessageUnloader extends java.lang.Thread {
                     socket = new Socket(address, port);
 
                     synchronized (this) {
-                        socket.setSendBufferSize(262144);
+                        socket.setSendBufferSize(64536);
 
                         outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
