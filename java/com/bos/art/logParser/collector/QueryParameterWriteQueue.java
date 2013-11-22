@@ -35,9 +35,9 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private int objectsWritten;
     private long totalWriteTime;
 
-    private final static int MAXBATCHINSERTSIZE = 9000;
+    private final static int MAXBATCHINSERTSIZE = 5000;
     private final static int INCREMENT_AMOUNT = 100;
-    private final static int MINBATCHINSERTSIZE = 4000;
+    private final static int MINBATCHINSERTSIZE = 3000;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
     protected static boolean unloadDB = true;
