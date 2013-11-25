@@ -22,6 +22,8 @@ public class PatchFilterInputStream extends FilterInputStream {
         switch(b) {
             case (byte) '\u0000':
                 return (byte)' ';
+            case (byte) '\u0002':
+                return (byte)' ';
             case (byte) '\u001f':
                 return (byte)' ';
             case (byte) '\u001e':
@@ -49,6 +51,8 @@ public class PatchFilterInputStream extends FilterInputStream {
             // carriage return, linefeed, tab, and end of file
             switch(data[i]) {
                 case (byte) '\u0000':
+                    data[i] = (byte)' ';
+                case (byte) '\u0002':
                     data[i] = (byte)' ';
                 case (byte) '\u001f':
                     data[i] = (byte)' ';
