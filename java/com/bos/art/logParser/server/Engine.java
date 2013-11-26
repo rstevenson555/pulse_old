@@ -110,7 +110,8 @@ public class Engine {
         DBDriverName = (String)dbsettings.get("drivername");        
         DB_URL = (String)dbsettings.get("driver") + "://" + (String)dbsettings.get("host") + ":"
                     + dbsettings.get("port") + "/" + dbsettings.get("instance") + "?user="
-                    + dbsettings.get("login") + "&password=" + dbsettings.get("pwd");
+                    + dbsettings.get("login") + "&password=" + dbsettings.get("pwd")
+                    + "&sendBufferSize=" +SOCKET_BUFFER + "&receiveBufferSize=" +SOCKET_BUFFER;
         
         Map javagroups = (Map) config.get("javagroups");
         gossipServer = (String) javagroups.get("gossipserver");
@@ -233,7 +234,7 @@ public class Engine {
         //
         // ...and register our pool with it.
         //
-        driver.registerPool("art-db-pool", connectionPool);
+        driver.registerPool("art-db-pool", connectionPoolFactory);
 
     }
 
