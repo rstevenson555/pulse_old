@@ -54,14 +54,20 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
+import java.util.Iterator;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.DialShape;
+import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jgroups.Message;
 
@@ -99,8 +105,10 @@ public class LiveSessions extends JApplet implements SessionDataDelegate, Memory
      */
     public JPanel getMainPanel() {
         mainPanel = new JPanel(new GridLayout(1, 3, 0, 0));
+        this.setBackground(Color.black);
+        ChartFactory.setChartTheme(StandardChartTheme.createDarknessTheme());
 
-        chartPanel = new ChartPanel(displayMeterChart(100.0, DialShape.CIRCLE));
+        chartPanel = new ChartPanel(display3DContextChart(100.0, DialShape.CIRCLE));
 
         popupMenu = chartPanel.getPopupMenu();
         expandGraphItem.setText("Maximize Graph");
@@ -132,8 +140,17 @@ public class LiveSessions extends JApplet implements SessionDataDelegate, Memory
                 ;
             }
 
-            bos.getChart().setBackgroundImage(image);
-            bos2.getChart().setBackgroundImage(image);
+            //bos.getChart().setBackgroundImage(image);
+            //bos2.getChart().setBackgroundImage(image);
+//            bos.getChart().setBackgroundPaint(Color.black);
+//            bos.getChart().getPlot().setBackgroundPaint(Color.black);
+//            bos2.getChart().setBackgroundPaint(Color.black);
+//            bos2.getChart().getPlot().setBackgroundPaint(Color.black);
+//            ((PiePlot)bos.getChart().getPlot()).setLabelLinkPaint(Color.white);
+//            ((PiePlot)bos2.getChart().getPlot()).setLabelLinkPaint(Color.white);
+            ((PiePlot)bos2.getChart().getPlot()).setLabelLinkStroke(new BasicStroke(1.5f));
+            ((PiePlot)bos.getChart().getPlot()).setLabelLinkStroke(new BasicStroke(1.5f));
+
         } catch (java.net.MalformedURLException mfue) {
             System.err.println(mfue);
         }
@@ -174,13 +191,23 @@ public class LiveSessions extends JApplet implements SessionDataDelegate, Memory
      * @param value the value.
      * @param shape the dial shape.
      */
-    private JFreeChart displayMeterChart(double value, DialShape shape) {
+    private JFreeChart display3DContextChart(double value, DialShape shape) {
 
         userDataSet = new DefaultCategoryDataset();
+        ChartFactory.setChartTheme(StandardChartTheme.createDarknessTheme());
 
         JFreeChart chart = ChartFactory.createBarChart3D("Users By Context", null, null, userDataSet, PlotOrientation.HORIZONTAL, false, true, false);
 
         chart.getPlot().setNoDataMessage("No data received yet...");
+        //System.out.println(this.chartPanel.getChart().getPlot());
+//        CategoryPlot plot = (CategoryPlot)this.chartPanel.getChart().getPlot();
+//        CategoryAxis domainAxis = (CategoryAxis)plot.getDomainAxis();
+//        if ( domainAxis!=null) {
+//            domainAxis.setLabelPaint(Color.white);
+//        } else {
+//            System.out.println("Domain axis is null");
+//        }
+
 
         try {
             MediaTracker mt = new MediaTracker(this);
@@ -193,7 +220,10 @@ public class LiveSessions extends JApplet implements SessionDataDelegate, Memory
                 ;
             }
 
-            chart.setBackgroundImage(image);
+            //chart.setBackgroundImage(image);
+            chart.setBackgroundPaint(Color.black);
+
+            
         } catch (java.net.MalformedURLException mfue) {
             System.err.println(mfue);
         }
@@ -229,12 +259,32 @@ public class LiveSessions extends JApplet implements SessionDataDelegate, Memory
     public void didReceiveSessionDataBean(org.jgroups.Message msg, TransferBean obj) {
         SessionDataBean sdb = (SessionDataBean) obj;
         if (userDataSet == null) {
-            userDataSet = new DefaultCategoryDataset();
+            userDataSet = new DefaultCategoryDataset();            
         }
         if (sdb.getContext().equalsIgnoreCase("ALL_CONTEXTS") || sdb.getContext().equalsIgnoreCase("notinarttree")) {
             return;
-        } else {
-            userDataSet.setValue(new Integer(sdb.getFiveMinSessions()), series2, sdb.getContext());
+        } else {            
+            userDataSet.setValue(new Integer(sdb.getFiveMinSessions()), series2, sdb.getContext());            
+//            CategoryPlot plot = (CategoryPlot)this.chartPanel.getChart().getPlot();
+//            //BarRenderer renderer = (BarRenderer)plot.getRenderer();
+//            System.out.println("renderer count: " +plot.getRendererCount());
+//            for(int i = 0,tot = plot.getRendererCount();i<tot;i++) {
+//                BarRenderer renderer =(BarRenderer) plot.getRenderer(i);
+//                renderer.setBaseItemLabelPaint(Color.white);
+//                //plot.set
+//            }
+//            CategoryAxis domainAxis = plot.getDomainAxis();
+//            System.out.println("setting domainAxis lable paint: ");
+//            domainAxis.setLabelPaint(Color.white);
+//            java.util.List list = plot.getCategories();
+//            for(Iterator iter = list.iterator();iter.hasNext();) {
+//                Object o = iter.next();
+//                System.out.println(o);
+//                System.out.println(o.getClass().getName());
+//
+//            }
+//            System.out.println(list);
+            
         }
 
     }

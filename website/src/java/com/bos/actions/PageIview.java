@@ -26,14 +26,15 @@ public class PageIview extends BaseAction {
 		logger =
 			(Logger) Logger.getLogger(PageIview.class.getName());
 	}
-	
+    private static final String DOMAIN = "http://maxbuyer.officemax.com/shop/";
+
     public static void main(String[] args) {
         String page = "<html><css href=\"menus.css\"><a /><img src=\"pic.jpg\">";
         page = page.replaceAll("href=\"(.*?)\"", "href=\"http://maxbuyer.officemax.com/shop/$1\"");
-        page = page.replaceAll("src=\"(.*?)\"", "href=\"http://maxbuyer.officemax.com/shop/$1\"");
+        page = page.replaceAll("src=\"(.*?)\"", "src=\"http://maxbuyer.officemax.com/shop/$1\"");
         System.out.println(page);
     }
-	
+
 	/**
 	 * Process the specified HTTP request, and create the corresponding HTTP
 	 * response (or forward to another web component that will create it).
@@ -51,21 +52,54 @@ public class PageIview extends BaseAction {
 		actionForward = mapping.findForward("success");
 
         String pageid = request.getParameter("HtmlPage_ID");
-                
-        HtmlPageHelper pageHelper = new HtmlPageHelper();        
-        //String page = pageHelper.getPage(pageid);
-        HtmlPageHelperResponse pageResponse = pageHelper.getPage(pageid);
-        String page = pageResponse.getPage();
-        
-        Document doc = Jsoup.parse(page); 
-        parseDoc(doc);
-        page = doc.toString();        
-        
-        request.setAttribute(HTML_PAGE, page);
+        Integer requestTokenCount = Integer.parseInt(request.getParameter("requestTokenCount"));
+        String nocontent = request.getParameter("nocontent");
+
+        System.out.println("pageid: " + pageid);
+        System.out.println("nocontent: " + nocontent);
+
+//        if ( pageid.equals("0")) {
+//            String page = "<html><body><h1>Page Output Not Recorded for this Session</h1></body></html>";
+//
+//            request.setAttribute(HTML_PAGE, page);
+//
+//        } else if (pageid.equals("-1") || (nocontent!=null && nocontent.equals("true"))) {
+//            //String page = pageHelper.getPage(pageid);
+//            String page = "<html><body><h1>[REDIRECT]</h1></body></html>";
+//
+//            request.setAttribute(HTML_PAGE, page);
+//        if ( requestTokenCount>0) {
+//            String page = "<html><body><h1>[REDIRECT]</h1></body></html>";
+//
+//            request.setAttribute(HTML_PAGE, page);
+//            return actionForward;
+//
+//        }
+        if ( pageid.equals("0")) {
+            String page = "<html><body><h1>No Page Output</h1></body></html>";
+
+            request.setAttribute(HTML_PAGE, page);
+        } else if (pageid.equals("-1") || (nocontent!=null && nocontent.equals("true"))) {
+            //String page = pageHelper.getPage(pageid);
+            String page = "<html><body><h1>[Redirect]</h1></body></html>";
+
+            request.setAttribute(HTML_PAGE, page);
+        } else {
+            HtmlPageHelper pageHelper = new HtmlPageHelper();
+            //String page = pageHelper.getPage(pageid);
+            HtmlPageHelperResponse pageResponse = pageHelper.getPage(pageid);
+            String page = pageResponse.getPage();
+
+            Document doc = Jsoup.parse(page);
+            sanitizeDocument(doc);
+
+            page = doc.toString();
+            request.setAttribute(HTML_PAGE, page);
+        }
 
 		return actionForward;
 	}
-	
+
 	/**
  	 * Scan the entire HTML page and convert the proper <code>src</code> and <code>href</code>
      * attributes from relative paths to absolute paths.
@@ -73,65 +107,102 @@ public class PageIview extends BaseAction {
      * checking which style sheet is being used since it is unique on both sites.
      * The default domain is set to officemax.com, however, if we find that "defaultStyle.css" is
      * referenced in any of the <code>link</code> tags, we can assume the domain is maxbuyer.officemax.com.
-     * Finally, we retrieve every link, img, and input element that contains a <code>src</code> and/or 
-     * <code>href</code> attribute. If the attribute is already an absolute path, do not modify it. 
+     * Finally, we retrieve every link, img, and input element that contains a <code>src</code> and/or
+     * <code>href</code> attribute. If the attribute is already an absolute path, do not modify it.
      * If it is relative, then we pre-append the domain string to it
-     * 
+     *
      * @author I081299
 	 * @param doc    - The page used to read elements and make modifications on these elements
-	 */	
-	private void parseDoc(Document doc) {
-		String domain = "http://www.officemax.com/";
-		
+	 */
+	private void sanitizeDocument(Document doc) {
+		String domain = DOMAIN;
+
 		// Retrieve page elements
-        Elements headElement = doc.getElementsByTag("head");
-        Elements linkElements = headElement.get(0).getElementsByTag("link");
-        Elements imgElements = doc.getElementsByTag("img");
-        Elements inputElements = doc.getElementsByTag("input");
-        Elements scriptElements = doc.getElementsByTag("script");
-        Elements anchorElements = doc.getElementsByTag("a");
-      
+        //Elements formElements = doc.getElementsByTag("form");
+
+        //Elements headElement = doc.getElementsByTag("head");
+        //Elements linkElements = headElement.get(0).getElementsByTag("link");
+
+        Elements linkElements = doc.select("head > link");
 	    // Scan link elements to see if "defaultStyle.css" is being referenced
         // then, trim whitespace and convert to absolute path
-	    for (int i = 0; i < linkElements.size(); i++) {
-	    	if (linkElements.get(i).attr("href").equals("defaultStyle.css"))
-	            domain = "http://maxbuyer.officemax.com/shop/"; 
-	    	
-	    	Element linkElement = linkElements.get(i);
+        for(Element linkElement:linkElements) {
+	    	if (linkElement.attr("href").equals("defaultStyle.css"))
+	            domain = DOMAIN;
+
 	    	if (!linkElement.attr("href").startsWith("http"))
 	        	linkElement.attr("href", domain + linkElement.attr("href").trim());
 	    }
-	    
+
+         // Scan link elements to see if "defaultStyle.css" is being referenced
+        // then, trim whitespace and convert to absolute path
+        Elements formElements = doc.select("form[action]");
+        for(Element formElement:formElements) {
+	    	if (!formElement.attr("action").equals(""))
+        		formElement.attr("action", "javascript:void(0)");
+
+	    }
+
         // For each element with 'img' tag, trim whitespace and convert to absolute path
-        for (int i = 0; i < imgElements.size(); i++) {
-	     	Element imgElement = imgElements.get(i);
+        Elements imgElements = doc.select("img[src]");
+        for(Element imgElement:imgElements) {
 	     	if (!imgElement.attr("src").startsWith("http"))
 	        	imgElement.attr("src", domain + imgElement.attr("src").trim());
         }
-        
+
         // For each element with 'input' tag, trim whitespace and convert to absolute path
-        for (int i = 0; i < inputElements.size(); i++) {
-        	Element inputElement = inputElements.get(i);
+        Elements inputElements = doc.getElementsByTag("input");
+        for(Element inputElement:inputElements) {
         	if (!inputElement.attr("src").startsWith("http"))
         		inputElement.attr("src", domain + inputElement.attr("src").trim());
+        	if (!inputElement.attr("onclick").equals(""))
+        		inputElement.attr("onclick", "javascript:void(0)");
         }
-        
+
         // For each script element, check if there is a src attribute and set it to an empty string
-        for (int i = 0; i < scriptElements.size(); i++) {
-        	Element scriptElement = scriptElements.get(i);
+        Elements scriptElements = doc.select("script[src]");
+        for(Element scriptElement:scriptElements) {
         	if (!scriptElement.attr("src").equals("")) {
         		scriptElement.attr("src", "javascript:void(0)");
-        	}        		
+        	}
+    	}
+
+//        Elements msgArea = doc.select("div.checkoutMsgCart");
+//        for(Element msgDiv:msgArea) {
+//            msgDiv.attr("style","visiblity:visible");
+//    	}
+
+        Elements errorElements = doc.select("div > span.errortxt");
+        //System.out.println("span elements: " + errorElements);
+        for(Element msgDiv:errorElements) {
+            //System.out.println("parent: " + msgDiv.parent());
+            msgDiv.parent().attr("style","visiblity:visible");
     	}
 
         // For each anchor element, check if there is a src attribute and set it to an empty string
-        for (int i = 0; i < anchorElements.size(); i++) {
-        	Element anchorElement = anchorElements.get(i);
+        Elements anchorElements = doc.getElementsByTag("a");
+        for(Element anchorElement:anchorElements) {
         	if (!anchorElement.attr("href").equals("")) {
         		anchorElement.attr("href", "javascript:void(0)");
         		anchorElement.attr("onclick", "javascript:void(0)");
-        	}        		
+        	}
     	}
+
+        // For each select element, check if there is a onchange and set it to not function
+        Elements selectElements = doc.select("select[onchange]");
+        for(Element selectElement:selectElements) {
+        	if (!selectElement.attr("onchange").equals("")) {
+        		selectElement.attr("onchange", "javascript:void(0)");
+        	}
+    	}
+
+                // For each element with 'input' tag, trim whitespace and convert to absolute path
+        Elements bodyElement = doc.select("body[onload]");
+        for(Element body:bodyElement) {
+        	if (!body.attr("onload").equals(""))
+        		body.attr("onload", "javascript:void(0)");
+        }
+
 	}
 }
 

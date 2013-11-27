@@ -1,7 +1,7 @@
 /* mozilla.org css
 by dave shea, http://www.mezzoblue.com/ */
 /* Modified L. David Baron. */
-/* vim:ts=8:noet: 
+/* vim:ts=8:noet:
 */
 /* see bug 225032 for css validation issues */
 
@@ -33,7 +33,7 @@ by dave shea, http://www.mezzoblue.com/ */
  * white-space
  * other text
  * content
- * 
+ *
  */
 
 /* TOC:
@@ -50,7 +50,7 @@ by dave shea, http://www.mezzoblue.com/ */
    Meta
 */
 /* Random HTML Styles */
-	
+
 	dt {
 		font-weight: bold;
 	}
@@ -182,12 +182,12 @@ by dave shea, http://www.mezzoblue.com/ */
 /* Emphasis */
 
 	/* em, strong */
-	
+
 	strong.stronger {
 		font-style: italic;
 		font-weight: bold;
 	}
-	
+
 	strong.very-strong {
 		font-weight: bold;
 		text-transform: uppercase;
@@ -261,7 +261,7 @@ by dave shea, http://www.mezzoblue.com/ */
 	pre.incorrect-code .note:before {
 		content: "";
 	}
-	
+
 
 /* Examples and Figures */
 
@@ -422,7 +422,7 @@ by dave shea, http://www.mezzoblue.com/ */
 /* end new */
 
 
-	
+
 
 /* ART Data Tables */
 	table {
@@ -445,7 +445,7 @@ by dave shea, http://www.mezzoblue.com/ */
 /* 	    background: #E1A745; */
 	    background-color: rgb(41, 41, 41);
 	    color: white;
-	    
+
 	}
 	tfoot {
 	    background: #000;
@@ -456,7 +456,7 @@ by dave shea, http://www.mezzoblue.com/ */
 	    background: rgb(100, 100, 100);
 	    text-align: right;
 	    font-family:"Lucida Grande", "Lucida Sans Unicode",Arial, Verdana, Helvetica, sans-serif;
-	    font-size: 12px; 
+	    font-size: 12px;
 	    padding-left: 10px;
 	    padding-right: 10px;
 	}
@@ -464,23 +464,23 @@ by dave shea, http://www.mezzoblue.com/ */
 	    background: rgb(70, 70, 70);
 	    text-align: right;
 	    font-family:"Lucida Grande", "Lucida Sans Unicode",Arial, Verdana, Helvetica, sans-serif;
-	    font-size: 12px; 
+	    font-size: 12px;
 	    padding-left: 10px;
 	    padding-right: 10px;
-	    
+
 	}
 	tbody.one td.fl {
 	    background: rgb(100, 100, 100);
 	    text-align: left !important;
 	    font-family:"Lucida Grande", "Lucida Sans Unicode",Arial, Verdana, Helvetica, sans-serif;
-	    font-size: 12px; 
+	    font-size: 12px;
 	}
 	tbody.two td.fl {
 	    background: rgb(70, 70, 70);
 	    text-align: left !important;
 	    font-family:"Lucida Grande", "Lucida Sans Unicode",Arial, Verdana, Helvetica, sans-serif;
-	    font-size: 12px; 
-	    
+	    font-size: 12px;
+
 	}
         #subcomment {
 	    background: #E9E9E9;
@@ -575,7 +575,7 @@ by dave shea, http://www.mezzoblue.com/ */
 	    border-bottom-style: none;
 	}
     table.detaildata a:link {
-		color: black; 
+		color: black;
 		text-decoration: none;
 		font-weight: normal;
     }
@@ -624,7 +624,7 @@ body {
 	font-family: Verdana,Sans-serif;
 	font-size: 90%;
 	background: #535353;
-	
+
 	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#BEBEBE), to(#535353));
 	background: -webkit-linear-gradient(right, #535353, #BEBEBE);
 	background: -moz-linear-gradient(right, #535353, #BEBEBE);
@@ -712,12 +712,12 @@ hr {
 }
 #side {
 	background: #EEEAE4;
- 	position: absolute; 
+ 	position: absolute;
 	left: 0;
 	top: 0;
-	padding: 10px 15px; 
+	padding: 10px 15px;
 	voice-family: "\"}\""; voice-family:inherit; /* Tantek's hack */
-	width: 176px; 
+	width: 176px;
 } #ignored {}
 .nomenu #side {
 	display: none;
@@ -869,7 +869,7 @@ hr {
 	background: transparent url(../images/bg6.gif) top left repeat-x;
 	left: 0;
 	top: 0;
-	float: left;	
+	float: left;
 	border-right: 3px solid #9A9A9A;
 	width: 206px;
 	min-height: 100%;
@@ -946,7 +946,7 @@ hr {
 	padding: 1px;
 	padding-left: 10px;
 	white-space: nowrap;
-	
+
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;
@@ -960,7 +960,7 @@ hr {
 }
 
 .greenBtn {
-	cursor: pointer;	
+	cursor: pointer;
 	border-radius: 5px;
 	border: 1px solid #3EA32A;
 	background: url('../images/searchBtnbg.png') repeat-x;
@@ -971,13 +971,13 @@ hr {
 	margin-left: 40px;
 	padding-bottom: 2px;
 	text-decoration: none;
-	color: white;	
+	color: white;
 }
 
 a#searchButton span {
-	background: url('../images/searchArrow.png') no-repeat 50px 1px;	
+	background: url('../images/searchArrow.png') no-repeat 50px 1px;
 	padding: 1px 22px 0px 6px;
-	background-size: 14px 80px;	
+	background-size: 14px 80px;
 	font-size: 12px;
 	font-family: arial;
 }
@@ -993,6 +993,15 @@ a#searchButton span {
     padding-bottom: 1px;
     width: 75px;
 }
+
+#searchForm input.reset {
+	color: white;
+    font-family: arial;
+    margin: 10px 0 5px 5px;
+    padding-bottom: 1px;
+    width: 75px;
+}
+
 
 #searchContainer {
 	display: inline;
@@ -1020,7 +1029,7 @@ fieldset#body {
 
 fieldset#body input,label,em {
 	color: #6D6C6B;
-	
+
 }
 
 #searchForm {
@@ -1161,16 +1170,31 @@ span.deleteicon span {
 }
 
 .leftCell {
-	width: 50px;
+	width: 20px;
 	float: left;
-	padding-left: 30px;	
-	text-align: center;
+	padding-left: 5px;
+	text-align: left;
 }
 
 .rightCell {
-	margin-left: 150px;
+	margin-left: 0px;
 	text-align: left;
+    width: 150px;
 }
+
+.rightTimeCell {
+	margin-left: 0px;
+	text-align: left;
+    width: 15px;
+}
+
+.rightStatusCell {
+	margin-left:10px;
+	text-align: left;
+    width: 30px;
+}
+
+
 
 .queryNameCell{
 	width: 50%;
@@ -1184,14 +1208,14 @@ span.deleteicon span {
 	border-top: none !important;
 	width: 30em;
 	border-radius: 0px 0px 5px 5px !important;
-	max-height: 600px;
-	overflow-y: auto; 
+	max-height: 150px;
+	overflow-y: auto;
 }
 
 .queryParamsTableFrame {
 	width: 30em;
-	max-height: 132px;
-	overflow-y: auto; 
+	max-height: 149px;
+	overflow-y: auto;
 }
 
 .queryParamsPanel div.rightCell {
@@ -1230,7 +1254,7 @@ table.artTable tfoot {
     color: black;
     font-weight: bold;
 }
-table.artTable tbody.one td {    
+table.artTable tbody.one td {
 	font-family: "Lucida Grande", "Lucida Sans Unicode",Arial, Verdana, Helvetica, sans-serif;
 	font-size: 9px;
 	background: rgb(100, 100, 100);
@@ -1276,11 +1300,11 @@ table.artTable caption {
     border-bottom-style: none;
 }
 
-table.artTable a:link { 	  
- 	color: #73C7FF;  
+table.artTable a:link {
+ 	color: #73C7FF;
 	text-decoration: none;
 	font-weight: normal;
-	
+
 }
 table.artTable a:visited {
 	color: #FF8176;
@@ -1345,7 +1369,7 @@ table.artTable tbody.bigFont td {
 	line-height: 1.5;
 	margin-left: 206px;
 	voice-family: "\"}\""; voice-family:inherit; /* Tantek's hack */
-} 
+}
 
 #maincontent * p {
 	color: white;
@@ -1422,7 +1446,7 @@ table.artTable tbody.bigFont td {
 	padding: 1px;
 	padding-left: 10px;
 	white-space: nowrap;
-	
+
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;

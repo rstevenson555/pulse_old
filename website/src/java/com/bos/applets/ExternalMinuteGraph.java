@@ -17,10 +17,14 @@ import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -39,6 +43,7 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.jgroups.Message;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -50,13 +55,132 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecordsDelegate,ErrorStatDelegate {
     private static final double MILLI_RESOLUTION = 1000.0;
+    private static final int SIXTY_MINUTES = 60;
     private static final int THIRTY_SECONDS = 30 * 1000;
+    private static final int VIEWABLE_MINUTES =  SIXTY_MINUTES;
 
     private ExternalMinuteGraph instance = null;
     private TimeSeriesCollection dataset[];
     private ArrayList<ExternalMinuteGraph.TimeSeriesCompareWrapper> orderedSeries[];
-    private HashMap<String,TimeSeries> machineMap = new HashMap();
-    private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMddHHmm"); 
+    private Map<String,TimeSeries> machineMap = new HashMap<String,TimeSeries>();
+    private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMddHHmm");
+    private int MAX_HISTORY_TO_KEEP = 1440; // 24 hours
+    private ScrollableChartPanel scrollableChartPanel[];
+    private boolean realtime = true;
+    private String plot_bgcolor;
+    private String chart_bgcolor;
+    private java.awt.Image image;
+    private int[] classifications;
+    private JFreeChart[] charts;
+    private TimeSeries[] requestVolumeServedSeries;
+    private Map<Minute,Double>[] movingVolumeAverage;
+    private Map<Minute,Double>[] movingAverage;
+    private Map<Date,HashMap>[] requestsServedMap;
+    private TimeSeries[] averageSeries;
+    private String[] classificationTitles;
+    private long startTimeLong;
+    private boolean isAutoRanging = false;
+    private DateAxis[] dateAxis;
+    private NumberAxis[] timeRangeAxis;
+    private NumberAxis[] requestVolumeRangeAxis;
+    private JPanel mainPanel[];
+    private ChartPanel chartPanel[];
+    private JPopupMenu popupMenu[];
+    private JMenuItem expandGraphItem[];
+
+    static private class LRUMap<K, V> extends LinkedHashMap<K, V>
+    {
+      private int maxCapacity;
+      public LRUMap(int maxCapacity)
+      {
+            super(0, 0.75F, true);
+            this.maxCapacity = maxCapacity;
+      }
+      @Override
+      protected boolean removeEldestEntry(Map.Entry<K, V> eldest)
+      {
+            return size() >= this.maxCapacity;
+      }
+    }
+
+    private void adjustDateRange() {
+        DateTime begin = new DateTime().plusMinutes(1);
+        DateTime end = begin.minusMinutes(VIEWABLE_MINUTES);
+
+        for(DateAxis da:dateAxis) {
+            // the range moves so this should not be fixed
+            da.setRange(end.withSecondOfMinute(0).toDate(), begin.withSecondOfMinute(0).toDate());
+        }
+    }
+
+    class ScrollableChartPanel extends JPanel implements ChangeListener
+    {
+        private JSlider slider;
+        private DateAxis axis;
+
+         ScrollableChartPanel(DateAxis axis) {
+            setLayout(new BorderLayout(0, 0));
+            this.axis = axis;
+
+            slider = new JSlider(-MAX_HISTORY_TO_KEEP, 0, 0);
+            slider.setPaintLabels(true);
+            slider.setMinorTickSpacing(30);
+            slider.setMajorTickSpacing(60);
+            slider.setPaintTicks(true);
+            //slider.setSnapToTicks(true);
+            slider.addChangeListener(this);
+            Map<Integer,JLabel> sliderLabelMap = slider.createStandardLabels(60);
+            Map<Integer,JLabel> newSliderLabelMap = new Hashtable();
+            for(Map.Entry<Integer,JLabel> entry:sliderLabelMap.entrySet()) {
+                JLabel cc = entry.getValue();
+                Integer value = entry.getKey();
+
+                int positiveValue = value.intValue() * -1;
+                JLabel label = new JLabel(String.valueOf(positiveValue/60.0)+ "h");
+                label.setForeground(Color.white);
+                label.setFont(new Font("Verdana", Font.PLAIN, 8));
+                label.setSize( label.getPreferredSize() );
+                newSliderLabelMap.put(value,label);
+            }
+            slider.setLabelTable(new Hashtable(newSliderLabelMap));
+            slider.setPaintLabels(true);
+            slider.setBackground(Color.black);
+
+            // add the slider to the south
+            add(BorderLayout.SOUTH, slider);
+
+         }
+
+                    /**
+         * Handles a state change event.
+         *
+         * @param event the event.
+         */
+        public void stateChanged(ChangeEvent event) {
+            int value = slider.getValue();
+            JSlider slider = (JSlider)event.getSource();
+            // value is in minutes
+
+            DateTime begin = new DateTime(), end = new DateTime();
+            if (value > 0) {
+                //end = new DateTime().plusMinutes(60).plusMinutes((value ));
+                //begin = end.minusMinutes(60);
+            } else if ( value <0) {
+                realtime = false;
+                //System.out.println("value: " + (value * -1));
+                end = end.minusMinutes( (value *-1));
+                begin = end.minusMinutes( VIEWABLE_MINUTES );
+            } else if ( value == 0) {
+                realtime = true;
+                begin = begin.minusMinutes(VIEWABLE_MINUTES);
+
+            }
+            // the range moves so this should not be fixed
+            //for(DateAxis da:dateAxis) {
+                axis.setRange(begin.withSecondOfMinute(0).toDate(), end.toDate());
+            //}
+        }
+    }
 
     class TimeSeriesCompareWrapper implements Comparator {
 
@@ -110,19 +234,24 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
         this.chart_bgcolor = chart_bgcolor;
         this.image = image;
         this.classifications = Classifications;
-        pagesServed = new TimeSeries[this.classifications.length];
-        pagesServedHashMap = new HashMap[this.classifications.length];
+        requestVolumeServedSeries = new TimeSeries[this.classifications.length];
+        requestsServedMap = new HashMap[this.classifications.length];
+        movingVolumeAverage = new LRUMap[this.classifications.length];
+        movingAverage = new LRUMap[this.classifications.length];
         averageSeries = new TimeSeries[this.classifications.length];
         charts = new JFreeChart[this.classifications.length];
         dateAxis = new DateAxis[this.classifications.length];
-        volumeRangeAxis = new NumberAxis[this.classifications.length];
+        timeRangeAxis = new NumberAxis[this.classifications.length];
+        requestVolumeRangeAxis = new NumberAxis[this.classifications.length];
         startTimeLong = System.currentTimeMillis();
-        chartPanel = new ChartPanel[this.classifications.length];        
+        chartPanel = new ChartPanel[this.classifications.length];
         popupMenu = new JPopupMenu[this.classifications.length];
         expandGraphItem = new javax.swing.JMenuItem[this.classifications.length];
         mainPanel = new JPanel[this.classifications.length];
         dataset = new TimeSeriesCollection[this.classifications.length];
         orderedSeries = new ArrayList[this.classifications.length];
+        scrollableChartPanel = new ExternalMinuteGraph.ScrollableChartPanel[this.classifications.length];
+
         init();
 
     }
@@ -132,31 +261,37 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
      */
     public void init() {
         setLayout(new GridLayout(4, 1, 5, 5));
-        setBackground(Color.decode("#8D8D8D"));
+        //setBackground(Color.decode("#8D8D8D"));
+        setBackground(Color.black);
         boolean isPricing = false;
+        ChartFactory.setChartTheme(StandardChartTheme.createDarknessTheme());
 
         for (int i = 0; i < classifications.length; ++i) {
             if (classifications[i] == 1 || classifications[i] == 2 || classifications[i] == 3) {
 
                 isPricing = true;
-                if (maxVolumePricing == null) {
-                    maxVolumePricing = new TimeSeries("");
-                    maxVolumePricing.setMaximumItemAge(60);                   
-                }
-
-                if (maxAveragePricing == null) {
-                    maxAveragePricing = new TimeSeries("");
-                    maxAveragePricing.setMaximumItemAge(60);
-                }
+//                if (maxVolumePricing == null) {
+//                    maxVolumePricing = new TimeSeries("");
+//                    maxVolumePricing.setMaximumItemAge(60);
+//                }
+//
+//                if (maxAveragePricing == null) {
+//                    maxAveragePricing = new TimeSeries("");
+//                    maxAveragePricing.setMaximumItemAge(60);
+//                }
 
             }
 
-            pagesServed[i] = new TimeSeries("Total Requests");
-            pagesServed[i].setMaximumItemAge(60);
-            pagesServedHashMap[i] = new HashMap<Date,HashMap>();
+            requestVolumeServedSeries[i] = new TimeSeries("Total Requests");
+            requestVolumeServedSeries[i].setMaximumItemAge(MAX_HISTORY_TO_KEEP);
+            requestsServedMap[i] = new HashMap<Date,HashMap>();
+
+            // sixty minutes
+            movingVolumeAverage[i] = new LRUMap<Minute,Double>(SIXTY_MINUTES);
+            movingAverage[i] = new LRUMap<Minute,Double>(SIXTY_MINUTES);
 
             averageSeries[i] = new TimeSeries("Average");
-            averageSeries[i].setMaximumItemAge(60);
+            averageSeries[i].setMaximumItemAge(MAX_HISTORY_TO_KEEP);
 
             dataset[i] = new TimeSeriesCollection();
             TimeSeriesCollection volumeDataSet = new TimeSeriesCollection();
@@ -164,9 +299,9 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
 
             if (isPricing) {
                 // volumeDataSet.addSeries(maxVolumePricing);
-                volumeDataSet.addSeries(pagesServed[i]);
+                volumeDataSet.addSeries(requestVolumeServedSeries[i]);
             } else {
-                volumeDataSet.addSeries(pagesServed[i]);
+                volumeDataSet.addSeries(requestVolumeServedSeries[i]);
             }
             dataset[i].addSeries(averageSeries[i]);
             // create two series that automatically discard data more than 30 seconds old...
@@ -179,109 +314,106 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             dateAxis[i].setLabelPaint(Color.white);
     		dateAxis[i].setTickLabelPaint(Color.white);
     		dateAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
+            //dateAxis[i].setAutoRange(true);
 
-            NumberAxis timeRangeAxis = new NumberAxis("Time (Sec)");
-            timeRangeAxis.setLabelPaint(Color.white);
-            timeRangeAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
-            timeRangeAxis.setTickLabelPaint(Color.white);
+            timeRangeAxis[i] = new NumberAxis("Time (Sec)");
+            timeRangeAxis[i].setLabelPaint(Color.white);
+            timeRangeAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
+            timeRangeAxis[i].setTickLabelPaint(Color.white);
             java.text.DecimalFormat format = new java.text.DecimalFormat("0.000");
 
-            timeRangeAxis.setAutoRange(true);
-            timeRangeAxis.setAutoTickUnitSelection(true);
-            timeRangeAxis.setAutoRangeIncludesZero(true);
-            timeRangeAxis.setNumberFormatOverride(format);
-            timeRangeAxis.setLowerMargin(0.00);
-            timeRangeAxis.setUpperMargin(0.2);
-            timeRangeAxis.setLabelPaint(Color.white);
-            timeRangeAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
-            timeRangeAxis.setTickLabelPaint(Color.white);
+            timeRangeAxis[i].setAutoRange(true);
+            timeRangeAxis[i].setAutoTickUnitSelection(true);
+            timeRangeAxis[i].setAutoRangeIncludesZero(true);
+            timeRangeAxis[i].setNumberFormatOverride(format);
+            timeRangeAxis[i].setLowerMargin(0.00);
+            timeRangeAxis[i].setUpperMargin(1.5);
+            timeRangeAxis[i].setLabelPaint(Color.white);
+            timeRangeAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
+            timeRangeAxis[i].setTickLabelPaint(Color.white);
 
-            XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
+            XYLineAndShapeRenderer lineRenderer = new XYLineAndShapeRenderer(true, false);
 
-            renderer.setToolTipGenerator(
+            lineRenderer.setToolTipGenerator(
                     new StandardXYToolTipGenerator(
                     "{0}: ({1}, {2})",
                     new SimpleDateFormat("HH:mm"),
-                    new java.text.DecimalFormat("#0.000")));
+                    new java.text.DecimalFormat("0.0")));
 
 //            renderer.setSeriesPaint(0, Color.black);
-            renderer.setSeriesPaint(0, new Color(0, 143, 255));
+            //renderer.setSeriesPaint(0, new Color(0, 143, 255));
+            lineRenderer.setSeriesPaint(0, Color.magenta);
+            lineRenderer.setSeriesStroke(0, new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
             if (isPricing) {
                 Range range = new Range(0.0, 1.50);
 
-                timeRangeAxis.setRange(range, true, true);
+                timeRangeAxis[i].setRange(range, true, true);
             }
 
             // set the first color in the series after average
-            renderer.setSeriesPaint(1, Color.magenta);
+            //renderer.setSeriesPaint(1, Color.magenta);
 
-            renderer.setSeriesStroke(0, new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            for (int j = 1; j < 10; j++) {
-                renderer.setSeriesStroke(j, new BasicStroke(3f, BasicStroke.CAP_ROUND,
+            for (int j = 1; j < 30; j++) {
+                lineRenderer.setSeriesStroke(j, new BasicStroke(1.5f, BasicStroke.CAP_ROUND,
                         BasicStroke.JOIN_ROUND, 0, new float[]{10.0f, 5.0f}, 0));
             }
 
-            XYBarRenderer renderer2 = new XYBarRenderer(0.20);
-            renderer2.setShadowVisible(false);
-            renderer2.setDrawBarOutline(false);
-            renderer2.setMargin(0);
+            XYBarRenderer barRenderer = new XYBarRenderer(0.20);
+            barRenderer.setShadowVisible(false);
+            barRenderer.setDrawBarOutline(false);
+            barRenderer.setMargin(0);
 
-            renderer2.setToolTipGenerator(
+            barRenderer.setToolTipGenerator(
                     new StandardXYToolTipGenerator(
-                    "{0}: ({1}, {2}/min)",
+                    "{0}: ({1}, {2}/sec)",
                     new SimpleDateFormat("HH:mm"),
-                    new java.text.DecimalFormat("#000")));
+                    new java.text.DecimalFormat("0.0")));
 
-//            renderer2.setSeriesPaint(0, new Color(43, 217, 0));
-            renderer2.setSeriesPaint(0, Color.decode("#979797"));
-            renderer2.setSeriesOutlinePaint(0, Color.black);
+            barRenderer.setSeriesPaint(0, Color.decode("#979797"));
+            barRenderer.setSeriesOutlinePaint(0, Color.black);
             //
             //
-            volumeRangeAxis[i] = new NumberAxis("Requests / Minute");
-            volumeRangeAxis[i].setLabelPaint(Color.white);
-            volumeRangeAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
-            volumeRangeAxis[i].setTickLabelPaint(Color.white);
-            java.text.DecimalFormat format2 = new java.text.DecimalFormat("#000");
+            requestVolumeRangeAxis[i] = new NumberAxis("Req / Sec");
+            requestVolumeRangeAxis[i].setLabelPaint(Color.white);
+            requestVolumeRangeAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
+            requestVolumeRangeAxis[i].setTickLabelPaint(Color.white);
+            java.text.DecimalFormat requestVolumeNumberFormat = new java.text.DecimalFormat("###.##");
 
-            volumeRangeAxis[i].setNumberFormatOverride(format2);
-            volumeRangeAxis[i].setUpperMargin(0.2); // to leave room for price line
+            requestVolumeRangeAxis[i].setNumberFormatOverride(requestVolumeNumberFormat);
+            requestVolumeRangeAxis[i].setUpperMargin(0.2); // to leave room for price line
             if (isPricing) {
                 Range range = new Range(0.0, MILLI_RESOLUTION);
 
-                volumeRangeAxis[i].setRange(range, true, true);
-                volumeRangeAxis[i].setAutoRange(true);
+                requestVolumeRangeAxis[i].setRange(range, true, true);
+                requestVolumeRangeAxis[i].setAutoRange(true);
             }
 
-            XYPlot xyplot = new XYPlot(volumeDataSet, dateAxis[i], volumeRangeAxis[i], renderer2);
-
+            XYPlot xyplot = new XYPlot(volumeDataSet, dateAxis[i], requestVolumeRangeAxis[i], barRenderer);
             xyplot.setBackgroundPaint(Color.black);
-            
             xyplot.setRangeAxisLocation(org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
 
-            xyplot.setRenderer(1, renderer);
+            xyplot.setRenderer(1, lineRenderer);
             xyplot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_RIGHT);
-            xyplot.setRangeAxis(1, timeRangeAxis);
+            xyplot.setRangeAxis(1, timeRangeAxis[i]);
             xyplot.setDataset(1, dataset[i]);
             xyplot.mapDatasetToRangeAxis(1, 1);
 
             xyplot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
             xyplot.setSeriesRenderingOrder(SeriesRenderingOrder.REVERSE);
 
-            //String title = classificationTitles[classifications[i]];
-            String title = classificationTitles[i];            
-            if (title == null) 
-                title = "No Title";            
-            
+            String title = classificationTitles[i];
+            if (title == null)
+                title = "No Title";
+
             TextTitle chartTitle = new TextTitle(title);
             chartTitle.setPaint(Color.white);
-            chartTitle.setFont(new Font("Verdana", Font.BOLD, 20));            
-            
+            chartTitle.setFont(new Font("Verdana", Font.BOLD, 20));
+
             charts[i] = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT, xyplot, false);
             charts[i].getPlot().setNoDataMessage("No data received yet...");
             charts[i].setTitle(chartTitle);
-            charts[i].setBackgroundImage(image);
-            charts[i].setBackgroundPaint(new Color(70, 70, 70));
+            charts[i].setBackgroundPaint(Color.black);
 
             Calendar begin = Calendar.getInstance();
             Date beginDate = begin.getTime();
@@ -289,22 +421,18 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             begin.add(Calendar.HOUR_OF_DAY, -1);
             Date endDate = begin.getTime();
 
+            // the range moves so this should not be fixed
             dateAxis[i].setRange(endDate, beginDate);
 
             chartPanel[i] = new ChartPanel(charts[i]);
 
-            //System.out.println("downArrowIcon: " + downArrowIcon );
-            //chartPanel.setImageIcon( downArrowIcon );
-
-
-            //StandardLegend legend = new StandardLegend();
-            //legend.setAnchor(Legend.WEST);
             LegendTitle legend = new LegendTitle(charts[i].getPlot());
+            legend.setItemFont(new Font("Verdana", Font.BOLD, 6));
+
             charts[i].addLegend(legend);
             charts[i].getLegend().setFrame(new LineBorder());
             charts[i].getLegend().setBackgroundPaint(Color.decode("#CFCFCF"));
-            charts[i].getLegend().setPosition(RectangleEdge.LEFT);
-            
+            charts[i].getLegend().setPosition(RectangleEdge.BOTTOM);
 
             popupMenu[i] = chartPanel[i].getPopupMenu();
             expandGraphItem[i] = new javax.swing.JMenuItem();
@@ -322,7 +450,9 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             mainPanel[i] = new JPanel();
             mainPanel[i].setLayout(new BorderLayout(0, 0));
 
-            mainPanel[i].add(BorderLayout.CENTER, chartPanel[i]);
+            scrollableChartPanel[i] = new ExternalMinuteGraph.ScrollableChartPanel(dateAxis[i]);
+            scrollableChartPanel[i].add(BorderLayout.CENTER, chartPanel[i]);
+            mainPanel[i].add(BorderLayout.CENTER, scrollableChartPanel[i]);
 
             add(mainPanel[i]);
 
@@ -335,39 +465,31 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
 
     public void didReceiveErrorStatBean(Message msg, TransferBean bean) {
         ErrorStatBean esb = (ErrorStatBean)bean;
-      
+
         if (!isAutoRanging) {
             if (System.currentTimeMillis() - THIRTY_SECONDS > startTimeLong) {
                 for (int i = 0; i < classifications.length; ++i) {
-                    dateAxis[i].setAutoRange(true);
-                    volumeRangeAxis[i].setAutoRange(true);
+                    //dateAxis[i].setAutoRange(true);
+                    //requestVolumeRangeAxis[i].setAutoRange(true);
                 }
                 isAutoRanging = true;
             }
         }
         // System.out.println("got external access bean");
         try {
-            Date volumeServedDate = new Date(esb.getEventTime());
+            Date volumeServedDate = new DateTime(esb.getEventTime()).withSecondOfMinute(0).toDate();
             Minute minute = new Minute(volumeServedDate);
 
             int classify = esb.getClassification();
 
             for (int i = 0; i < classifications.length; ++i) {
                 if (classifications[i] == classify) {
-                   
-                    // ********************************************
 
-                    // do volume served calcs 
                     // ********************************************
-                    HashMap currentMinHashMap = pagesServedHashMap[i].get(volumeServedDate);
-                    //long volumeSnapShotNow = System.currentTimeMillis();
-                    if (currentMinHashMap == null) {
-                        currentMinHashMap = new HashMap();
-                        pagesServedHashMap[i].put(volumeServedDate, currentMinHashMap);
-                    }
-                    Double minuteVolume = updateMinuteVolumeData(currentMinHashMap, esb);
-
-                    pagesServed[i].addOrUpdate(minute, minuteVolume);
+                    // do volume served calcs
+                    // ********************************************
+                    Double minuteVolume = calcVolumePerMinute( esb, volumeServedDate, minute, i);
+                    calcAndSetVolumeAxisRange(minute, i, minuteVolume);
                     // ********************************************
                 }
 
@@ -377,7 +499,6 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
         }
     }
 
-        
     /**
      * called by the receiver when objects are received we can then decide if we want to deal with this message or not
      *
@@ -387,13 +508,14 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
         if (!isAutoRanging) {
             if (System.currentTimeMillis() - THIRTY_SECONDS > startTimeLong) {
                 for (int i = 0; i < classifications.length; ++i) {
-                    dateAxis[i].setAutoRange(true);
-                    volumeRangeAxis[i].setAutoRange(true);
+                    //dateAxis[i].setAutoRange(true);
+                    //requestVolumeRangeAxis[i].setAutoRange(true);
                 }
                 isAutoRanging = true;
             }
         }
-        // System.out.println("got external access bean");
+        adjustDateRange();
+
         try {
             ExternalAccessRecordsMinuteBean armb = (ExternalAccessRecordsMinuteBean) obj;
             Date volumeServedDate = sdf.parseDateTime(armb.getTimeString()).toDate();
@@ -404,48 +526,34 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             for (int i = 0; i < classifications.length; ++i) {
                 if (classifications[i] == classify) {
 
-                    // do average series calcs
-                    // ********************************************
-                    Double runningAvg = (Double) averageSeries[i].getValue(minute);
-
-                    if (runningAvg == null) {
-                        runningAvg = new Double(((double) armb.getAverageLoadTime()) / MILLI_RESOLUTION);
-                    }
-
-                    Double curravg = new Double(((double) armb.getAverageLoadTime()) / MILLI_RESOLUTION);
-                    runningAvg = new Double((runningAvg.doubleValue() + curravg.doubleValue()) / 2);
-
-                    averageSeries[i].addOrUpdate(minute, runningAvg);
-                    // ********************************************
+                    Double runningAvg = calcAveragePerMinute(armb, minute, averageSeries[i]);
+                    /** now do rolling 60 minute average for fixing scale **/
+                    calcAndSetAverageAxisRange(minute, i, runningAvg);
 
                     // do 90 percent calcs
                     // ********************************************
-                    TimeSeries i90perc = machineMap.get(armb.getMachine() + classifications[i]);
+                    String seriesKey = armb.getMachine() + armb.getInstance() + classifications[i];
+                    TimeSeries i90perc = machineMap.get(seriesKey);
 
                     if (i90perc == null) {
-                        i90perc = new TimeSeries(formatMachine(armb.getMachine()));
-                        i90perc.setMaximumItemAge(60);
+                        String timeSeriesName = formatMachine(armb.getMachine(),armb.getInstance());
+                        i90perc = new TimeSeries(timeSeriesName);
+                        i90perc.setMaximumItemCount(MAX_HISTORY_TO_KEEP);
 
-                        machineMap.put(armb.getMachine() + classifications[i], i90perc);
-                        orderedSeries[i].add(new ExternalMinuteGraph.TimeSeriesCompareWrapper(armb.getMachine(), i90perc));
+                        machineMap.put(seriesKey, i90perc);
 
-                        //System.out.println("orderSeries size: " + orderedSeries[i].size());
+                        String seriesComparison = armb.getMachine() + armb.getInstance();
+                        orderedSeries[i].add(new ExternalMinuteGraph.TimeSeriesCompareWrapper(seriesComparison, i90perc));
 
                         try {
                             // first remove all the series that were added dynamically
                             // then re-add them in a sorted fashion
-//                            for (int j = 0, tot = orderedSeries[i].size(); j < tot; j++) {
-//                                dataset[i].removeSeries(((TimeSeriesCompareWrapper) orderedSeries[i].get(j)).getTimeSeries());
-//                            }
                             for(ExternalMinuteGraph.TimeSeriesCompareWrapper wrapper:orderedSeries[i]) {
                                 dataset[i].removeSeries(wrapper.getTimeSeries());
                             }
 
                             Collections.sort(orderedSeries[i], new ExternalMinuteGraph.TimeSeriesCompareWrapper());
 
-//                            for (int j = 0, tot = orderedSeries[i].size(); j < tot; j++) {
-//                                dataset[i].addSeries(((TimeSeriesCompareWrapper) orderedSeries[i].get(j)).getTimeSeries());
-//                            }
                             for(ExternalMinuteGraph.TimeSeriesCompareWrapper wrapper:orderedSeries[i]) {
                                 dataset[i].addSeries(wrapper.getTimeSeries());
                             }
@@ -453,72 +561,151 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                         } catch (Throwable t) {
                             t.printStackTrace();
                         }
-
                     }
 
-                    //System.out.println("armb.90% "+(double)armb.getI90Percentile());
                     Double curr90pct = new Double(((double) armb.getI90Percentile()) / MILLI_RESOLUTION);
+                    i90perc.removeAgedItems(false);
                     i90perc.addOrUpdate(minute, curr90pct);
 
                     // ********************************************
 
-                    // do volume served calcs 
+                    // do volume served calcs
                     // ********************************************
-                    HashMap<String,Double> currentMinHashMap = pagesServedHashMap[i].get(volumeServedDate);
-                    //long volumeSnapShotNow = System.currentTimeMillis();
-                    if (currentMinHashMap == null) {
-                        currentMinHashMap = new HashMap<String,Double>();
-                        pagesServedHashMap[i].put(volumeServedDate, currentMinHashMap);
-                    }
-                    Double minuteVolume = updateMinuteVolumeData(currentMinHashMap, armb);
-
-                    pagesServed[i].addOrUpdate(minute, minuteVolume);
-                    // ********************************************
+                    Double minuteVolume = calcVolumePerMinute(armb, volumeServedDate, minute, i);
+                    calcAndSetVolumeAxisRange(minute, i, minuteVolume);
                 }
-
             }
+
         } catch (IllegalArgumentException pe) {
             System.out.println("AvgLoadTime.process Error parsing data received " + pe);
         }
     }
 
-    private String formatMachine(String machine) {
+    private Double calcVolumePerMinute(ExternalAccessRecordsMinuteBean armb, Date volumeServedDate, Minute minute, int i) {
+        HashMap<String,Double> currentMinHashMap = requestsServedMap[i].get(volumeServedDate);
+        if (currentMinHashMap == null) {
+            currentMinHashMap = new HashMap<String,Double>();
+            requestsServedMap[i].put(volumeServedDate, currentMinHashMap);
+        }
+        Double minuteVolume = updateMinuteVolumeData(currentMinHashMap, armb);
+
+        requestVolumeServedSeries[i].addOrUpdate(minute, minuteVolume);
+        return minuteVolume;
+    }
+
+    private Double updateMinuteVolumeData(HashMap<String,Double> currentMinHashMap, ExternalAccessRecordsMinuteBean armb) {
+        String machine = armb.getMachine();
+        Double volume = (double) armb.getTotalUsers();
+        Double currVolume = currentMinHashMap.get(machine);
+        if ( currVolume == null) {
+            currVolume = 0.0;
+        }
+        currentMinHashMap.put(machine, volume);
+        return getVolumeForMinute(currentMinHashMap);
+    }
+
+    private Double calcAveragePerMinute(ExternalAccessRecordsMinuteBean armb, Minute minute, TimeSeries averageSeries) {
+        // do average series calcs
+        // ********************************************
+        Double runningAvg = (Double) averageSeries.getValue(minute);
+
+        if (runningAvg == null) {
+            runningAvg = new Double(((double) armb.getAverageLoadTime()) / MILLI_RESOLUTION);
+        }
+
+        Double curravg = new Double(((double) armb.getAverageLoadTime()) / MILLI_RESOLUTION);
+        runningAvg = new Double((runningAvg.doubleValue() + curravg.doubleValue()) / 2);
+
+        averageSeries.addOrUpdate(minute, runningAvg);
+        return runningAvg;
+    }
+
+    private Double calcVolumePerMinute(ErrorStatBean armb, Date volumeServedDate, Minute minute, int i) {
+        HashMap<String,Double> currentMinHashMap = requestsServedMap[i].get(volumeServedDate);
+        if (currentMinHashMap == null) {
+            currentMinHashMap = new HashMap<String,Double>();
+            requestsServedMap[i].put(volumeServedDate, currentMinHashMap);
+        }
+        Double minuteVolume = updateMinuteVolumeData(currentMinHashMap, armb);
+
+        requestVolumeServedSeries[i].addOrUpdate(minute, minuteVolume);
+        return minuteVolume;
+    }
+
+    private void calcAndSetAverageAxisRange(Minute minute, int i, Double runningAvg) {
+        movingAverage[i].put(minute,runningAvg);
+        Double avgMaxValue = 0.0;
+        for(Map.Entry<Minute,Double> entry: movingAverage[i].entrySet()) {
+            avgMaxValue = Math.max(avgMaxValue,entry.getValue());
+        }
+        avgMaxValue += (avgMaxValue * .50);
+        timeRangeAxis[i].setRange(0.0,avgMaxValue);
+        // ********************************************
+    }
+
+    private void calcAndSetVolumeAxisRange(Minute minute, int i, Double minuteVolume) {
+        movingVolumeAverage[i].put(minute,minuteVolume);
+
+        Double volumeMaxValue = 0.0;
+        for(Map.Entry<Minute,Double> entry: movingVolumeAverage[i].entrySet()) {
+            volumeMaxValue = Math.max(volumeMaxValue,entry.getValue());
+        }
+        // add 2% so the chart does not go all the way to the top
+        volumeMaxValue += (volumeMaxValue * 0.2);
+        requestVolumeRangeAxis[i].setRange(0.0,volumeMaxValue);
+        // ********************************************
+    }
+
+    private String formatMachine(String machine,String instance) {
         int pos = machine.indexOf("-");
+        String nMachine = "";
+        //System.out.println("raw machine: " + machine);
+
         if (pos != -1) {
             pos = machine.indexOf("-", pos + 1);
             if (pos != -1) {
-                return machine.substring(pos + 1) + "-90%";
+                nMachine = machine.substring(pos + 1) + "-90%";
             } else {
-                return machine;
+                nMachine = machine;
             }
         } else {
-            return machine;
+            //return machine
         }
+        int dot = nMachine.indexOf(".");
+        if (dot!=-1) {
+            //pos = machine.indexOf("-", pos + 1);
+
+            nMachine = nMachine.substring(0,dot );
+            nMachine += "-" + instance;
+            nMachine += "_90%";
+
+        } else {
+            //return machine;
+        }
+        return nMachine;
     }
 
     private Double updateMinuteVolumeData(HashMap<String,Double> currentMinHashMap, ErrorStatBean armb) {
         String machine = armb.getServer();
         Double volume = Double.parseDouble(armb.getValue());
-        currentMinHashMap.put(machine, volume);
-        return getVolumeForMinute(currentMinHashMap);
-    }
-    
-    private Double updateMinuteVolumeData(HashMap<String,Double> currentMinHashMap, ExternalAccessRecordsMinuteBean armb) {
-        String machine = armb.getMachine();
-        Double volume = new Double((double) armb.getTotalUsers());
-        currentMinHashMap.put(machine, volume);
+        Double currVolume = currentMinHashMap.get(machine);
+        if ( currVolume == null) {
+            currVolume = 0.0;
+        }
+
+        currentMinHashMap.put(machine, volume );
         return getVolumeForMinute(currentMinHashMap);
     }
 
     private Double getVolumeForMinute(HashMap<String,Double> currentMinHashMap) {
-        Double runningTotal = new Double(0.0);
-        for(String machine:currentMinHashMap.keySet()) {
-            Double val = (Double) currentMinHashMap.get(machine);
+        Double runningTotal = 0.0;
+        for(Map.Entry<String,Double> e:currentMinHashMap.entrySet()) {
+            Double val = e.getValue();
             if (val != null) {
-                runningTotal = new Double(runningTotal.doubleValue() + val.doubleValue());
+                runningTotal += val;
             }
         }
-        return runningTotal;
+        return runningTotal / 60.0;
     }
 
     class SymPopupMenu implements PopupMenuListener {
@@ -565,7 +752,7 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                 if (object == expandGraphItem[i]) {
                     if (event.getActionCommand().equals("ExpandGraph")) {
 
-                        GraphingFrame.getInstance().addGraphPanel(chartPanel[i], mainPanel[i]);
+                        GraphingFrame.getInstance().addGraphPanel(scrollableChartPanel[i], mainPanel[i]);
                         GraphingFrame.getInstance().show();
 
                     } else if (event.getActionCommand().equals("RemoveGraph")) {
@@ -581,26 +768,6 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
 
     void expand_actionPerformed(java.awt.event.ActionEvent event) {// to do: code goes here.
     }
-    
-    //private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-    private String plot_bgcolor;
-    private String chart_bgcolor;
-    private java.awt.Image image;
-    private int[] classifications;
-    private JFreeChart[] charts;
-    private TimeSeries[] pagesServed;
-    private HashMap<Date,HashMap>[] pagesServedHashMap;
-    private TimeSeries[] averageSeries;
-    private TimeSeries maxAveragePricing;
-    private TimeSeries maxVolumePricing;
-    private String[] classificationTitles;
-    private long startTimeLong;
-    private boolean isAutoRanging = false;
-    private DateAxis[] dateAxis;
-    private NumberAxis[] volumeRangeAxis;
-    private JPanel mainPanel[];
-    private ChartPanel chartPanel[];
-    private JPopupMenu popupMenu[];
-    private JMenuItem expandGraphItem[];
+
 }
 

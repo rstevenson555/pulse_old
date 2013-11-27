@@ -42,24 +42,12 @@ package com.bos.applets;
 
 import com.bos.applets.arch.AppletMessageListener;
 import com.bos.art.logParser.broadcast.beans.AccessRecordsMinuteBean;
-import com.bos.art.logParser.broadcast.beans.HistoryBean;
 import com.bos.art.logParser.broadcast.beans.TransferBean;
 import com.bos.art.logParser.broadcast.beans.delegate.AccessRecordsDelegate;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import javax.swing.*;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
+import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.block.LineBorder;
@@ -79,6 +67,17 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 /**
  * A demo application showing a dynamically updated chart that displays the current JVM memory usage.
  *
@@ -87,340 +86,139 @@ import org.joda.time.format.DateTimeFormatter;
  * @author Will Webb
  */
 public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
+    private static final double MILLI_RESOLUTION = 1000.0;
+    private static final int SIXTY_MINUTES = 60;
+    private static final int THIRTY_SECONDS = 30 * 1000;
+    private static final int VIEWABLE_MINUTES =  SIXTY_MINUTES;
 
-    public class HotSpotChartPanel extends ChartPanel {
-
-        private JButton historyButton = null;
-
-        public HotSpotChartPanel(JFreeChart chart) {
-            super(chart);
-
-            historyButton = new JButton("History Mode");
-            historyButton.setVisible(false);
-
-            JPanel northPanel = new JPanel(new BorderLayout(5, 5));
-            add(northPanel, BorderLayout.NORTH);
-            northPanel.setOpaque(false);
-            northPanel.add(historyButton, BorderLayout.WEST);
-        }
-
-        @Override
-        public void paint(java.awt.Graphics g) {
-            if (inHotSpotRange) {
-                // now draw on top of the chart
-                super.paint(g);
-
-                historyButton.setVisible(true);
-                // draw a snapshot of the chart on the bufferedimage
-            } else {
-                super.paint(g);
-                historyButton.setVisible(false);
-            }
-        }
-
-        class HistoryVisibleAction implements java.awt.event.ActionListener {
-
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                Object object = e.getSource();
-                if ("history_mode_on".equals(e.getActionCommand())) {
-                }
-            }
-
-            public void setImageIcon(ImageIcon image) {
-                //this.icon = image;
-                //historyButton = new JButton(image);
-                //historyButton.setText("Show History");
-                //historyButton.setVisible(false);
-                historyButton.setIcon(image);
-
-            }
-        }
-    }
-
-    public class WrapperPanel extends JPanel {
-
-        public WrapperPanel(java.awt.LayoutManager layout) {
-            super(layout);
-        }
-
-        @Override
-        public void paintComponent(Graphics g) {
-            if (historyNavShown == true && chartImageBitmap != null) {
-                // now draw the chartpanel onto the bufferedimage
-                //
-                super.paintComponent(g);
-
-                Graphics2D g2d = (Graphics2D) chartImageBitmap.getGraphics();
-
-                g.drawImage(chartImageBitmap, 0, 0, null);
-            }
-        }
-    }
-
-    public class TransparentPanel extends JPanel {
-
-        public TransparentPanel() {
-            super();
-            //setDebugGraphicsOptions( DebugGraphics.FLASH_OPTION|DebugGraphics.LOG_OPTION);
-        }
-
-        public TransparentPanel(java.awt.LayoutManager layout) {
-            super(layout);
-        }
-
-        @Override
-        public void paint(Graphics g) {
-            super.paint(g);
-        }
-
-        @Override
-        public void paintComponent(Graphics g) {
-            if (isOpaque() == true) {
-                //g.setColor( new Color(125,125,125,60));
-                //g.setColor( new Color(125,125,125,200));
-                // Alpha of 0 is completly transparent, 255 is completely solid (opaque)
-                //g.setColor( new Color(0,0,0,200));
-                g.setColor(new Color(0, 0, 0, 60));
-                //g.setColor( Color.black);
-                ((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .65f));
-                g.fill3DRect(0, 0, (int) getBounds().getWidth(), (int) getBounds().getHeight(), true);
-            }
-            //
-            ((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .65f));
-            super.paintComponent(g);
-        }
-    }
     private JFreeChart chart = null;
     private JApplet applet = null;
     private int timeOffset = -60; // in minutes
     private long startTimeLong;
     private boolean isAutoRanging = false;
-    private AvgLoadTime.HotSpotChartPanel chartPanel;
+    private ChartPanel chartPanel;
     private DateAxis dateAxis = null;
+    private NumberAxis requestVolumeRangeAxis;
+    private NumberAxis timeRangeAxis;
     private javax.swing.JMenuItem expandGraphItem = new javax.swing.JMenuItem();
     private JPopupMenu popupMenu;
     /**
      * Time series for total memory used.
      */
-    private TimeSeries pagesServed;
+    private TimeSeries requestVolumeServedSeries;
+    private Map<Minute,Double> movingVolumeAverage;
+    private Map<Minute,Double> movingAverage;
+
     /**
      * Time series for free memory.
      */
     private TimeSeries averageSeries;
-    //private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-    private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMddHHmm"); 
-
+    private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMddHHmm");
     private JPanel mainPanel = null;
     private ImageIcon downArrowIcon = null;
-    BufferedImage chartImageBitmap = null;
     private int precisionView = Calendar.MINUTE;
-    //private boolean drawBImg = false;
-    private boolean inHotSpotRange = false;    
-    private String lastActionMode = "realtime";
-    private boolean historyNavShown = false;
-    private AvgLoadTime.TransparentPanel historyPanel = null;
-    private JButton backTime,forwardTime,realTime;
-    private AvgLoadTime.WrapperPanel wrapperPanel = null;
     private AvgLoadTime instance = null;
     private TimeSeriesCollection dataset = new TimeSeriesCollection();
-    private HashMap machineMap = new HashMap();
+    private Map<String,TimeSeries> machineMap = new HashMap<String,TimeSeries>();
+    private int MAX_HISTORY_TO_KEEP = 1440; // 24 hours
+    private ScrollableChartPanel scrollableChartPanel;
+    private boolean realtime = true;
+    private InstanceStatsGraph instanceStatsGraph;
 
-    private void buildHistoryPanel() {
-        historyPanel = new AvgLoadTime.TransparentPanel(new BorderLayout(5, 5));
-        AvgLoadTime.HistoryAction haction = new AvgLoadTime.HistoryAction();
+    /**
+     * this map is used to remove duplicate records
+     * @param <K>
+     * @param <V>
+     */
+    static private class LRUMap<K, V> extends LinkedHashMap<K, V>
+    {
+      private int maxCapacity;
+      public LRUMap(int maxCapacity)
+      {
+            super(0, 0.75F, true);
+            this.maxCapacity = maxCapacity;
+      }
+      @Override
+      protected boolean removeEldestEntry(Map.Entry<K, V> eldest)
+      {
+            return size() >= this.maxCapacity;
+      }
+    }
+    private LRUMap<MinuteMachineKey,Double> requestsServedMap = new LRUMap(10000);
+    private LRUMap<MinuteMachineKey,Double> averageSeriesMap = new LRUMap(10000);
+    private LRUMap<MinuteMachineKey,Double> ninetySeriesMap = new LRUMap(10000);
 
-        AvgLoadTime.TransparentPanel buttonPanel = new AvgLoadTime.TransparentPanel(new BorderLayout(5, 5));
-        buttonPanel.setOpaque(false);
-        historyPanel.add(buttonPanel, BorderLayout.NORTH);
+    private void initializeAxisRange() {
 
-        backTime = new JButton("< 1 hour");
-        backTime.setBorderPainted(false);
-        backTime.setFocusPainted(false);
-        backTime.setBackground(Color.black);
-        backTime.setForeground(Color.white);
+        DateTime beginDate = new DateTime(), endDate = new DateTime();
+        beginDate = beginDate.minusMinutes(60);
 
-        forwardTime = new JButton("> 1 hour");
-        forwardTime.setBorderPainted(false);
-        forwardTime.setFocusPainted(false);
-        forwardTime.setBackground(Color.black);
-        forwardTime.setForeground(Color.white);
-
-        AvgLoadTime.TransparentPanel centerPanel = new AvgLoadTime.TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-        centerPanel.setOpaque(false);
-
-        AvgLoadTime.TransparentPanel nestedCenterPanel = new AvgLoadTime.TransparentPanel(new FlowLayout(FlowLayout.CENTER));
-        nestedCenterPanel.setOpaque(false);
-
-        JButton graphMode = new JButton("[Minute Mode]");
-        graphMode.setBorderPainted(false);
-        graphMode.setFocusPainted(false);
-        graphMode.setBackground(Color.black);
-        graphMode.setForeground(Color.white);
-        graphMode.setActionCommand("minute_mode");
-        graphMode.addActionListener(haction);
-        graphMode.setVisible(false);
-
-        nestedCenterPanel.add(graphMode);
-        nestedCenterPanel.add(Box.createRigidArea(new Dimension(1, 30)));
-
-        buttonPanel.add(nestedCenterPanel, BorderLayout.CENTER);
-
-        AvgLoadTime.TransparentPanel westPanel = new AvgLoadTime.TransparentPanel(new FlowLayout());
-        westPanel.setOpaque(false);
-        buttonPanel.add(westPanel, BorderLayout.WEST);
-
-        // add a little padding to the left of the button
-        westPanel.add(Box.createRigidArea(new Dimension(10, 10)));
-
-        AvgLoadTime.TransparentPanel westButtonPanel = new AvgLoadTime.TransparentPanel(new GridLayout(2, 1));
-        westButtonPanel.setOpaque(false);
-
-        westButtonPanel.add(backTime);
-        westButtonPanel.add(forwardTime);
-
-        westPanel.add(westButtonPanel);
-
-        Component spacer = Box.createRigidArea(new Dimension(30, 60));
-        historyPanel.add(spacer, BorderLayout.CENTER);
-
-        backTime.setActionCommand("back_time");
-        backTime.addActionListener(haction);
-
-        forwardTime.setActionCommand("forward_time");
-        forwardTime.addActionListener(haction);
-
-        realTime = new JButton("Realtime");
-        realTime.setBackground(Color.black);
-        realTime.setForeground(Color.white);
-        realTime.setBorderPainted(false);
-        realTime.setFocusPainted(false);
-
-        realTime.setActionCommand("realtime");
-        realTime.addActionListener(haction);
-
-        AvgLoadTime.TransparentPanel eastPanel = new AvgLoadTime.TransparentPanel(new FlowLayout());
-        eastPanel.setOpaque(false);
-
-        buttonPanel.add(eastPanel, BorderLayout.EAST);
-        eastPanel.add(realTime);
-        eastPanel.add(Box.createRigidArea(new Dimension(10, 10)));
+        dateAxis.setRange(beginDate.withSecondOfMinute(0).toDate(), endDate.toDate());
     }
 
-    class HistoryAction implements java.awt.event.ActionListener {
+    class ScrollableChartPanel extends JPanel implements ChangeListener
+    {
+        private JSlider slider;
+        private DateAxis axis;
 
-        private DateTimeFormatter subtitleDateFormat = DateTimeFormat.forPattern("MM-dd-yyyy HH:mm:SS"); 
+         ScrollableChartPanel(DateAxis axis) {
+            setLayout(new BorderLayout(0, 0));
+            this.axis = axis;
 
-        public void actionPerformed(java.awt.event.ActionEvent e) {
-            Object object = e.getSource();
-            if ("back_time".equals(e.getActionCommand())) {
-                forwardTime.setEnabled(false);
-                backTime.setEnabled(false);
-                realTime.setEnabled(false);
+            slider = new JSlider(-MAX_HISTORY_TO_KEEP, 0, 0);
+            slider.setPaintLabels(true);
+            slider.setMinorTickSpacing(30);
+            slider.setMajorTickSpacing(60);
+            slider.setPaintTicks(true);
+            //slider.setSnapToTicks(true);
+            slider.addChangeListener(this);
+            Map<Integer,JLabel> sliderLabelMap = slider.createStandardLabels(60);
+            Map<Integer,JLabel> newSliderLabelMap = new Hashtable();
+            for(Map.Entry<Integer,JLabel> entry:sliderLabelMap.entrySet()) {
+                JLabel cc = entry.getValue();
+                Integer value = entry.getKey();
 
-                timeOffset -= 60;
+                int positiveValue = value.intValue() * -1;
+                JLabel label = new JLabel(String.valueOf(positiveValue/60)+ "h");
+                label.setForeground(Color.white);
+                label.setFont(new Font("Verdana", Font.PLAIN, 8));
+                label.setSize( label.getPreferredSize() );
+                newSliderLabelMap.put(value,label);
+            }
+            slider.setLabelTable(new Hashtable(newSliderLabelMap));
+            slider.setPaintLabels(true);
+            slider.setBackground(Color.black);
 
-                TimeSeries series = null;
-                if ((series = (TimeSeries) machineMap.get("90 %ile")) != null) {
-                    series.clear();
-                }
-                averageSeries.clear();
-                pagesServed.clear();
+            // add the slider to the south
+            add(BorderLayout.SOUTH, slider);
 
-                updateDateRange();
+         }
 
-                HistoryBean hbean = new HistoryBean();
-                hbean.setChartName("AVG_CHART");
-                Calendar begin = Calendar.getInstance();
-                begin.add(Calendar.MINUTE, (int) timeOffset);
-                hbean.setDate(begin.getTime());
-                hbean.setDirection("F");
-                hbean.setDataPoints(60);
-                hbean.setDataPrecision("min");
-                lastActionMode = "history";
-                AppletMessageListener.getInstance().sendHistoryBean(hbean);
-                
-                chart.clearSubtitles();
-                DateTime dt = new DateTime(begin.getTime());
-                TextTitle title = new TextTitle(subtitleDateFormat.print(dt));
-                title.setHorizontalAlignment(org.jfree.ui.HorizontalAlignment.CENTER);
-                title.setVerticalAlignment(org.jfree.ui.VerticalAlignment.BOTTOM);
-                chart.addSubtitle(title);
+                    /**
+         * Handles a state change event.
+         *
+         * @param event the event.
+         */
+        public void stateChanged(ChangeEvent event) {
+            int value = slider.getValue();
+            // value is in minutes
 
-            } else if ("forward_time".equals(e.getActionCommand())) {
-                forwardTime.setEnabled(false);
-                backTime.setEnabled(false);
-                realTime.setEnabled(false);
-                timeOffset += 60;
-
-                TimeSeries series = null;
-                if ((series = (TimeSeries) machineMap.get("90 %ile")) != null) {
-                    series.clear();
-                }
-                averageSeries.clear();
-                pagesServed.clear();
-
-                updateDateRange();
-
-                HistoryBean hbean = new HistoryBean();
-                hbean.setChartName("AVG_CHART");
-                Calendar begin = Calendar.getInstance();
-                begin.add(Calendar.MINUTE, (int) timeOffset);
-                hbean.setDate(begin.getTime());
-                hbean.setDirection("F");
-                hbean.setDataPoints(60);
-                hbean.setDataPrecision("min");
-                lastActionMode = "history";
-                AppletMessageListener.getInstance().sendHistoryBean(hbean);
-                
-                chart.clearSubtitles();
-                DateTime dt = new DateTime(begin.getTime());
-                TextTitle title = new TextTitle(subtitleDateFormat.print(dt));
-                title.setHorizontalAlignment(org.jfree.ui.HorizontalAlignment.CENTER);
-                title.setVerticalAlignment(org.jfree.ui.VerticalAlignment.BOTTOM);
-                chart.addSubtitle(title);
-                
-            } else if ("minute_mode".equals(e.getActionCommand())) {
-                ((JButton) object).setActionCommand("hour_mode");
-                ((JButton) object).setText("[ Hour Mode ]");
-
-            } else if ("hour_mode".equals(e.getActionCommand())) {
-                ((JButton) object).setActionCommand("day_mode");
-                ((JButton) object).setText("[ Day Mode  ]");
-
-            } else if ("day_mode".equals(e.getActionCommand())) {
-                ((JButton) object).setActionCommand("minute_mode");
-                ((JButton) object).setText("[Minute Mode]");
-
-            } else if ("realtime".equals(e.getActionCommand())) {
-                TimeSeries series = null;
-                if ((series = (TimeSeries) machineMap.get("90 %ile")) != null) {
-                    series.clear();
-                }
-                averageSeries.clear();
-                pagesServed.clear();
-
-                hideHistoryPanel();
-                
-                chart.clearSubtitles();
-                TextTitle title = new TextTitle("(Realtime)");
-                title.setFont(new Font("Verdana", Font.BOLD, 14));
-                title.setPaint(Color.white);
-                title.setHorizontalAlignment(org.jfree.ui.HorizontalAlignment.CENTER);
-                title.setVerticalAlignment(org.jfree.ui.VerticalAlignment.BOTTOM);                
-                chart.addSubtitle(title);                
-
-                HistoryBean hbean = new HistoryBean();
-                hbean.setChartName("AVG_CHART");
-                Calendar begin = Calendar.getInstance();
-                begin.add(Calendar.MINUTE, -60);
-                hbean.setDate(begin.getTime());
-                hbean.setDirection("F");
-                hbean.setDataPoints(60);
-                hbean.setDataPrecision("min");
-                lastActionMode = "realtime";
-                AppletMessageListener.getInstance().sendHistoryBean(hbean);
+            DateTime begin = new DateTime(), end = new DateTime();
+            if (value > 0) {
+                //end = new DateTime().plusMinutes(60).plusMinutes((value ));
+                //begin = end.minusMinutes(60);
+            } else if ( value <0) {
+                realtime = false;
+                //System.out.println("value: " + (value * -1));
+                end = end.minusMinutes( (value *-1));
+                begin = end.minusMinutes( 60 );
+            } else if ( value == 0) {
+                realtime = true;
+                begin = begin.minusMinutes(60);
 
             }
+            // the range moves so this should not be fixed
+            dateAxis.setRange(begin.withSecondOfMinute(0).toDate(), end.toDate());
         }
     }
 
@@ -430,20 +228,22 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
     public JPanel getMainPanel() {
         mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout(0, 0));
+        ChartFactory.setChartTheme(StandardChartTheme.createDarknessTheme());
 
-        chartImageBitmap = initGraphicsEnv().createCompatibleImage((int) 1, (int) 1);
-        buildHistoryPanel();
         instance = this;
 
         // create two series that automatically discard data more than 30 seconds old...
-        pagesServed = new TimeSeries("Total Pages");
-        pagesServed.setMaximumItemCount(60);
+        requestVolumeServedSeries = new TimeSeries("Total Pages");
+        requestVolumeServedSeries.setMaximumItemAge(MAX_HISTORY_TO_KEEP);
         averageSeries = new TimeSeries("Average");
-        averageSeries.setMaximumItemCount(60);
+        averageSeries.setMaximumItemAge(MAX_HISTORY_TO_KEEP);
+
+        movingVolumeAverage = new LRUMap(SIXTY_MINUTES);
+        movingAverage = new LRUMap(SIXTY_MINUTES);
 
         TimeSeriesCollection volumeDataSet = new TimeSeriesCollection();
 
-        volumeDataSet.addSeries(pagesServed);
+        volumeDataSet.addSeries(requestVolumeServedSeries);
         dataset.addSeries(averageSeries);
 
         dateAxis = new DateAxis();
@@ -452,21 +252,21 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         dateAxis.setUpperMargin(0.0);
         dateAxis.setTickLabelsVisible(true);
         dateAxis.setLabelPaint(Color.white);
-		dateAxis.setTickLabelPaint(Color.white);
-		dateAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
+        dateAxis.setTickLabelPaint(Color.white);
+        dateAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
 
-        NumberAxis rangeAxis = new NumberAxis("Time (Sec)");
-        rangeAxis.setLabelPaint(Color.white);
-        rangeAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
-        rangeAxis.setTickLabelPaint(Color.white);
+        timeRangeAxis = new NumberAxis("Time (Sec)");
+        timeRangeAxis.setLabelPaint(Color.white);
+        timeRangeAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
+        timeRangeAxis.setTickLabelPaint(Color.white);
         java.text.DecimalFormat format = new java.text.DecimalFormat("0.000");
-        rangeAxis.setAutoRange(true);
-        rangeAxis.setAutoTickUnitSelection(true);
-        rangeAxis.setAutoRangeIncludesZero(true);
-        rangeAxis.setNumberFormatOverride(format);
-        rangeAxis.setLowerMargin(0.00);
-        rangeAxis.setLowerMargin(0.20);
-        rangeAxis.setUpperMargin(0.5);
+        timeRangeAxis.setAutoRange(true);
+        timeRangeAxis.setAutoTickUnitSelection(true);
+        timeRangeAxis.setAutoRangeIncludesZero(true);
+        timeRangeAxis.setNumberFormatOverride(format);
+        timeRangeAxis.setLowerMargin(0.00);
+        timeRangeAxis.setLowerMargin(0.20);
+        timeRangeAxis.setUpperMargin(1.5);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
         renderer.setToolTipGenerator(
@@ -476,29 +276,28 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
                 new java.text.DecimalFormat("#0.000")));
 
 //        renderer.setSeriesPaint(0, Color.black);
-        renderer.setSeriesPaint(0, new Color(0, 143, 255));
-        renderer.setSeriesStroke(0, new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        //renderer.setSeriesPaint(0, new Color(0, 143, 255));
+        renderer.setSeriesPaint(0, Color.magenta);
+        renderer.setSeriesStroke(0, new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
-        renderer.setSeriesPaint(1, Color.magenta);
-        for (int j = 1; j < 10; j++) {
-            renderer.setSeriesStroke(j, new BasicStroke(3f, BasicStroke.CAP_ROUND,
+        //renderer.setSeriesPaint(1, Color.magenta);
+        for (int j = 1; j < 30; j++) {
+            renderer.setSeriesStroke(j, new BasicStroke(1.5f, BasicStroke.CAP_ROUND,
                     BasicStroke.JOIN_ROUND, 0, new float[]{10.0f, 5.0f}, 0));
         }
 
-        NumberAxis rangeAxis2 = new NumberAxis("Page Volume");
-        rangeAxis2.setLabelPaint(Color.white);
-        rangeAxis2.setLabelFont(new Font("Arial", Font.BOLD, 12));
-        rangeAxis2.setTickLabelPaint(Color.white);
+        requestVolumeRangeAxis = new NumberAxis("Page Volume");
+        requestVolumeRangeAxis.setLabelPaint(Color.white);
+        requestVolumeRangeAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
+        requestVolumeRangeAxis.setTickLabelPaint(Color.white);
         java.text.DecimalFormat format2 = new java.text.DecimalFormat("#000");
-        rangeAxis2.setNumberFormatOverride(format2);
-        rangeAxis2.setUpperMargin(0.20);  // to leave room for price line       
+        requestVolumeRangeAxis.setNumberFormatOverride(format2);
+        requestVolumeRangeAxis.setUpperMargin(0.20);  // to leave room for price line
 
         XYBarRenderer renderer2 = new XYBarRenderer(0.20);
         renderer2.setShadowVisible(false);
         renderer2.setDrawBarOutline(false);
         renderer2.setMargin(0);
-
-
 
         renderer2.setToolTipGenerator(
                 new StandardXYToolTipGenerator(
@@ -510,12 +309,12 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         renderer2.setSeriesPaint(0, Color.decode("#979797"));
         renderer2.setSeriesOutlinePaint(0, Color.black);
 
-        XYPlot xyplot = new XYPlot(volumeDataSet, dateAxis, rangeAxis2, renderer2);
+        XYPlot xyplot = new XYPlot(volumeDataSet, dateAxis, requestVolumeRangeAxis, renderer2);
         String plot_bgcolor = "#000000";
         xyplot.setBackgroundPaint(Color.decode(plot_bgcolor));
         xyplot.setRangeAxisLocation(org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
 
-        xyplot.setRangeAxis(1, rangeAxis); // 1 is left axis, 
+        xyplot.setRangeAxis(1, timeRangeAxis); // 1 is left axis,
         xyplot.setRangeAxisLocation(org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
         xyplot.setDataset(1, dataset);
         xyplot.mapDatasetToRangeAxis(1, 1);
@@ -530,19 +329,11 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
                 JFreeChart.DEFAULT_TITLE_FONT,
                 xyplot,
                 false);
-        
-        TextTitle chartTitle = new TextTitle("App-Server Page Execution");
+
+        TextTitle chartTitle = new TextTitle("Page Execution");
         chartTitle.setPaint(Color.white);
         chartTitle.setFont(new Font("Verdana", Font.BOLD, 20));
-        chart.setTitle(chartTitle); 
-                
-        chart.clearSubtitles();
-        TextTitle subtitle = new TextTitle("(Realtime)");
-        subtitle.setFont(new Font("Verdana", Font.BOLD, 14));
-        subtitle.setPaint(Color.white);
-        subtitle.setHorizontalAlignment(org.jfree.ui.HorizontalAlignment.CENTER);
-        subtitle.setVerticalAlignment(org.jfree.ui.VerticalAlignment.BOTTOM);
-        chart.addSubtitle(subtitle);
+        chart.setTitle(chartTitle);
 
         chart.getPlot().setNoDataMessage("No data received yet...");
 
@@ -557,23 +348,19 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
             } catch (InterruptedException ie) {
                 ;
             }
-            chart.setBackgroundImage(image);
+            //chart.setBackgroundImage(image);
         } catch (java.net.MalformedURLException mfue) {
             System.err.println(mfue);
         }
 
-        chart.setBackgroundPaint(new Color(70, 70, 70));
-        mainPanel.setBackground(new Color(70, 70, 70));
-        historyPanel.setBackground(new Color(70, 70, 70));
+        //chart.setBackgroundPaint(new Color(70, 70, 70));
+        //mainPanel.setBackground(new Color(70, 70, 70));
+        chart.setBackgroundPaint(Color.black);
 
-        wrapperPanel = new AvgLoadTime.WrapperPanel(new BorderLayout(5, 5));
-        chartPanel = new AvgLoadTime.HotSpotChartPanel(chart);
+        chartPanel = new ChartPanel(chart);
         chartPanel.setLayout(new BorderLayout(5, 5));
-
-        //System.out.println("downArrowIcon: " + downArrowIcon );
-        //chartPanel.setImageIcon( downArrowIcon );
-
-        wrapperPanel.add(BorderLayout.CENTER, chartPanel);
+        this.chartPanel.setDomainZoomable(true);
+        this.chartPanel.setRangeZoomable(true);
 
         popupMenu = chartPanel.getPopupMenu();
         expandGraphItem.setText("Maximize Graph");
@@ -587,22 +374,23 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         AvgLoadTime.SymAction lSymAction = new AvgLoadTime.SymAction();
         expandGraphItem.addActionListener(lSymAction);
 
-        mainPanel.add(BorderLayout.CENTER, wrapperPanel);
+        scrollableChartPanel = new ScrollableChartPanel(dateAxis);
+        instanceStatsGraph = new InstanceStatsGraph();
 
-        //StandardLegend legend = new StandardLegend();
-        //legend.setAnchor(Legend.WEST);
+        //mainPanel.add(BorderLayout.CENTER, chartPanel);
+        scrollableChartPanel.add(BorderLayout.CENTER, chartPanel);
+        //mainPanel.setLayout(new BorderLayout(5,5));
+        mainPanel.setLayout(new GridLayout(1,2));
+        mainPanel.add(scrollableChartPanel);
+        mainPanel.add(instanceStatsGraph);
+        mainPanel.validate();
+
         LegendTitle legend = new LegendTitle(chart.getPlot());
         chart.addLegend(legend);
         chart.getLegend().setFrame(new LineBorder());
         chart.getLegend().setBackgroundPaint(Color.decode("#CFCFCF"));
-        
-        
+
         chart.getLegend().setPosition(RectangleEdge.LEFT);
-
-        chartPanel.addMouseMotionListener(new AvgLoadTime.MyMouseMotionListener());
-
-        wrapperPanel.add(BorderLayout.SOUTH, historyPanel);
-        historyPanel.setVisible(false);
 
         return mainPanel;
     }
@@ -639,88 +427,198 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
      *
      */
     public void didCompleteBagProcessing(Message msg) {
-        if (lastActionMode.equals("history")) {
+    }
 
-            // hide the history nav panel
-            historyPanel.setVisible(false);
-            chartPanel.setVisible(true);
-            // show the chart 
-            // paint it to out bufferedImage
-            chartPanel.paint(chartImageBitmap.getGraphics());
-            // hide the chartPanel
-            chartPanel.setVisible(false);
+    private void adjustDateRange() {
+        //for(DateAxis da:dateAxis) {
+            DateTime begin = new DateTime().plusMinutes(1);
+            DateTime end = begin.minusMinutes(60);
+            // the range moves so this should not be fixed
+            dateAxis.setRange(end.withSecondOfMinute(0).toDate(), begin.withSecondOfMinute(0).toDate());
+        //}
+    }
 
-            // show the historyPanel
-            historyPanel.setVisible(true);
-            historyPanel.setPreferredSize(new Dimension(0, 50));
-            
-            forwardTime.setEnabled(true);
-            backTime.setEnabled(true);
-            realTime.setEnabled(true);
+    class MinuteMachineKey
+    {
+        String machine;
+        String instance;
+        Minute minute;
 
-            mainPanel.repaint();
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            MinuteMachineKey that = (MinuteMachineKey) o;
+
+            if (instance != null ? !instance.equals(that.instance) : that.instance != null) return false;
+            if (machine != null ? !machine.equals(that.machine) : that.machine != null) return false;
+            if (minute != null ? !minute.equals(that.minute) : that.minute != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = machine != null ? machine.hashCode() : 0;
+            result = 31 * result + (instance != null ? instance.hashCode() : 0);
+            result = 31 * result + (minute != null ? minute.hashCode() : 0);
+            return result;
         }
     }
+
 
     /**
      * called by the receiver when objects are received we can then decide if we want to deal with this message or not
      *
      */
     public void didReceiveAccessRecordsBean(Message msg, TransferBean obj) {
+        instanceStatsGraph.didReceiveAccessRecordsBean(msg,obj);
+
         if (!isAutoRanging) {
             if (System.currentTimeMillis() - 30 * 1000 > startTimeLong) {
                 dateAxis.setAutoRange(true);
                 isAutoRanging = true;
             }
         }
+        if ( realtime) {
+            adjustDateRange();
+        }
+
         try {
             AccessRecordsMinuteBean armb = (AccessRecordsMinuteBean) obj;
             Date dpdate = sdf.parseDateTime(armb.getTimeString()).toDate();
             Minute minute = new Minute(dpdate);
 
-            if (!inRange(dpdate)) {
-                return;
-            }
-
             TimeSeries series = null;
             if ((series = (TimeSeries) machineMap.get("90 %ile")) == null) {
                 series = new TimeSeries("90 %ile");
-                series.setMaximumItemCount(60);
+                series.setMaximumItemCount(MAX_HISTORY_TO_KEEP);
                 machineMap.put("90 %ile", series);
                 dataset.addSeries(series);
             }
-            series.addOrUpdate(minute, new Double(((double) armb.getI90Percentile()) / 1000.0));
+            //series.addOrUpdate(minute, new Double(((double) armb.getI90Percentile()) / 1000.0));
 
-            averageSeries.addOrUpdate(minute, new Double(((double) armb.getAverageLoadTime()) / 1000.0));
-            pagesServed.addOrUpdate(minute, new Double(armb.getTotalUsers()));
+            MinuteMachineKey minuteKey = new MinuteMachineKey();
+            minuteKey.minute = minute;
+            minuteKey.machine = armb.getMachine();
+            minuteKey.instance = armb.getInstance();
+
+            calc90PercentilePerMinute(armb, minute, series, minuteKey);
+
+            Double runningAvg = calcAveragePerMinute(armb, minute, minuteKey);
+            calcAndSetAverageAxisRange( minute, runningAvg);
+
+            Double runningVolume = calcVolumePerMinute(armb, minute, minuteKey);
+            calcAndSetVolumeAxisRange( minute, runningVolume);
+
         } catch (IllegalArgumentException pe) {
             System.out.println("AvgLoadTime.process Error parsing data received " + pe);
         }
     }
 
-    /**
-     * checks to see if the data-point is within our charts range
-     *
-     */
-    public boolean inRange(Date dpdate) {
-        Calendar beginCal = Calendar.getInstance();
-        beginCal.set(Calendar.SECOND, 0);
-        // go back in time, to the beginning time of the graph
-        beginCal.add(Calendar.MINUTE, timeOffset + -1);
-        Date beginDate = beginCal.getTime();
+    private Double calcVolumePerMinute(AccessRecordsMinuteBean armb, Minute minute, MinuteMachineKey minuteKey) {
+        Double total = updateMinuteVolumeData(armb, minute, minuteKey);
+        requestVolumeServedSeries.addOrUpdate(minute, total);
+        return total;
+    }
 
-        // then add 60 minutes for an hour graph
-        beginCal.add(Calendar.MINUTE, 60 + 1);
-        Date endDate = beginCal.getTime();
+    private Double calcAveragePerMinute(AccessRecordsMinuteBean armb, Minute minute, MinuteMachineKey minuteKey) {
+        Double minuteAverage = updateMinuteAverageData(armb, minute, minuteKey);
+        averageSeries.addOrUpdate(minute, minuteAverage);
+        return minuteAverage;
+    }
 
-        // some basic range checking
-        // this range is NOT inclusive if the data-point is equal to the begindate or the enddate
-        // so we've extended the ranges, by a minute each way
-        if (!(dpdate.after(beginDate) && dpdate.before(endDate))) {
-            // this date is out of range so throw it out.
-            return false;
+    private void calcAndSetVolumeAxisRange(Minute minute, Double minuteVolume) {
+        movingVolumeAverage.put(minute,minuteVolume);
+
+        Double volumeMaxValue = 0.0;
+        for(Map.Entry<Minute,Double> entry: movingVolumeAverage.entrySet()) {
+            volumeMaxValue = Math.max(volumeMaxValue,entry.getValue());
         }
-        return true;
+        // add 2% so the chart does not go all the way to the top
+        volumeMaxValue += (volumeMaxValue * 0.2);
+        requestVolumeRangeAxis.setRange(0.0,volumeMaxValue);
+        // ********************************************
+    }
+
+    private void calcAndSetAverageAxisRange(Minute minute, Double runningAvg) {
+        movingAverage.put(minute,runningAvg);
+        Double avgMaxValue = 0.0;
+        for(Map.Entry<Minute,Double> entry: movingAverage.entrySet()) {
+            avgMaxValue = Math.max(avgMaxValue,entry.getValue());
+        }
+        avgMaxValue += (avgMaxValue * .50);
+        timeRangeAxis.setRange(0.0,avgMaxValue);
+        // ********************************************
+    }
+
+    private Double calc90PercentilePerMinute(AccessRecordsMinuteBean armb, Minute minute, TimeSeries series, MinuteMachineKey minuteKey) {
+        Double minute90Perc = updateMinute90PercentileData(armb, minute, minuteKey);
+        series.addOrUpdate(minute, minute90Perc);
+        return minute90Perc;
+    }
+
+    private Double updateMinuteVolumeData(AccessRecordsMinuteBean armb, Minute minute, MinuteMachineKey minuteKey) {
+        Double num = (double)armb.getTotalUsers();
+        requestsServedMap.put(minuteKey,num);
+        // calc last 1 minutes
+        Double total = getVolumeForMinute(minute);
+        return total;
+    }
+
+    private Double updateMinuteAverageData(AccessRecordsMinuteBean armb, Minute minute, MinuteMachineKey minuteKey) {
+        Double avg = (double) armb.getAverageLoadTime();
+        averageSeriesMap.put(minuteKey,avg);
+        Double minuteAverage = getAverageForMinute(minute);
+        return minuteAverage;
+    }
+
+    private Double updateMinute90PercentileData(AccessRecordsMinuteBean armb, Minute minute, MinuteMachineKey minuteKey) {
+        Double ninety = (double)armb.getI90Percentile();
+        ninetySeriesMap.put(minuteKey,ninety);
+        Double minute90Perc = get90PercentForMinute(minute);
+        return minute90Perc;
+    }
+
+    private Double getAverageForMinute(Minute minute) {
+        int count;// calc last 1 minutes
+        Double avgTot = 0.0;
+        count =1;
+        for(Map.Entry<MinuteMachineKey,Double> val: averageSeriesMap.entrySet()) {
+           if ( val.getKey().minute.equals(minute)) {
+                avgTot += val.getValue();
+                count++;
+           }
+        }
+        avgTot /= count;
+        Double minuteAverage = avgTot / 1000.0;
+        return minuteAverage;
+    }
+
+    private Double getVolumeForMinute(Minute minute) {
+        Double total = 0.0;
+        for(Map.Entry<MinuteMachineKey,Double> val: requestsServedMap.entrySet()) {
+           if ( val.getKey().minute.equals(minute)) {
+            total += val.getValue();
+           }
+        }
+        return total;
+    }
+
+    private Double get90PercentForMinute(Minute minute) {
+        Double ninetyAvg = 0.0;
+        int count =1;
+        for(Map.Entry<MinuteMachineKey,Double> val: ninetySeriesMap.entrySet()) {
+           if ( val.getKey().minute.equals(minute)) {
+               //ninetyArray.add(val.getValue());
+               ninetyAvg += val.getValue();
+               count++;
+           }
+        }
+        ninetyAvg /= count;
+        Double minute90Perc = ninetyAvg / 1000.0;
+        return minute90Perc;
     }
 
     class SymAction implements java.awt.event.ActionListener {
@@ -729,7 +627,7 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
             Object object = event.getSource();
             if (event.getActionCommand().equals("ExpandGraph")) {
 
-                GraphingFrame.getInstance().addGraphPanel(wrapperPanel, mainPanel);
+                GraphingFrame.getInstance().addGraphPanel(scrollableChartPanel, mainPanel);
                 GraphingFrame.getInstance().show();
 
             } else if (event.getActionCommand().equals("RemoveGraph")) {
@@ -761,6 +659,7 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         JFrame frame = new JFrame("Memory Usage Demo");
         AvgLoadTime app = new AvgLoadTime();
         JPanel panel = app.getMainPanel();
+        frame.getContentPane().setLayout(new BorderLayout(5,5));
         frame.getContentPane().add(panel, BorderLayout.CENTER);
         frame.setBounds(200, 120, 600, 200);
         frame.setVisible(true);
@@ -795,17 +694,7 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
 
         applet = this;
 
-        Calendar cal = Calendar.getInstance();
-
-        // go backwards
-        cal.add(Calendar.MINUTE, -60);
-        Date beginDate = cal.getTime();
-
-        // go forward
-        cal.add(Calendar.MINUTE, 60);
-        Date endDate = cal.getTime();
-
-        dateAxis.setRange(beginDate, endDate);
+        initializeAxisRange();
 
         initGraphicsEnv();
     }
@@ -828,51 +717,6 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         super.stop();
     }
 
-    class MyMouseMotionListener implements MouseMotionListener {
-
-        public void mouseMoved(MouseEvent e) {
-            saySomething("Mouse moved", e);
-        }
-
-        public void mouseDragged(MouseEvent e) {
-            saySomething("Mouse dragged", e);
-        }
-
-        void saySomething(String eventDescription, MouseEvent e) {
-            // Y is vertical
-            // X is horizontal
-            if (e.getY() < 40) {
-
-                if (inHotSpotRange == false) {
-                    inHotSpotRange = true;
-                    chartPanel.update(chartPanel.getGraphics());
-                }
-            } else {
-                if (inHotSpotRange == true) {
-                    inHotSpotRange = false;
-                    chartPanel.update(chartPanel.getGraphics());
-                }
-            }
-            if (e.getX() < 15 && e.getY() < 15 && historyNavShown == false) {
-                //System.out.println("panel width , height " + (int)chartPanel.getBounds().getWidth() + "," + (int)chartPanel.getBounds().getHeight());
-
-                historyNavShown = true;
-                // copy the chartPanel image into chartImageBitmap
-                if (chartImageBitmap.getWidth() != wrapperPanel.getBounds().getWidth() || chartImageBitmap.getHeight() != wrapperPanel.getHeight()) {
-                    chartImageBitmap.getGraphics().dispose();
-                    chartImageBitmap = initGraphicsEnv().createCompatibleImage((int) wrapperPanel.getBounds().getWidth(), (int) wrapperPanel.getBounds().getHeight());
-                }
-                chartPanel.paint(chartImageBitmap.getGraphics());
-                chartPanel.hide();
-
-                showHistoryPanel();
-            } else {
-                // moved out
-                //hoverCapture = null;
-            }
-        }
-    }
-
     public GraphicsConfiguration initGraphicsEnv() {
         GraphicsEnvironment ge =
                 GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -881,54 +725,4 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         return gc;
     }
 
-    private void updateDateRange() {
-        Calendar cal = Calendar.getInstance();
-
-        // go backwards
-        cal.add(Calendar.MINUTE, (int) timeOffset);
-        Date beginDate = cal.getTime();
-
-        // go forward
-        int offset = 0;
-        if (precisionView == Calendar.MINUTE) {
-            offset = 60;
-        }
-        cal.add(Calendar.MINUTE, offset);
-        Date endDate = cal.getTime();
-
-        dateAxis.setRange(beginDate, endDate);
-        dateAxis.setAutoRange(false);
-    }
-
-    public void showHistoryPanel() {
-        historyNavShown = true;
-        historyPanel.setVisible(true);
-        historyPanel.setPreferredSize(new Dimension(0, 50));
-        mainPanel.updateUI();
-        isAutoRanging = true;
-    }
-
-    public void hideHistoryPanel() {
-        historyNavShown = false;
-        timeOffset = -60;
-        historyPanel.setVisible(false);
-        chartPanel.setVisible(true);
-        mainPanel.updateUI();
-
-        Calendar cal = Calendar.getInstance();
-
-        // go backwards
-        cal.add(Calendar.MINUTE, -60);
-        Date beginDate = cal.getTime();
-
-        // go forward
-        cal.add(Calendar.MINUTE, 60);
-        Date endDate = cal.getTime();
-
-        dateAxis.setRange(beginDate, endDate);
-        dateAxis.setAutoRange(true);
-
-        wrapperPanel.repaint();
-
-    }
 }

@@ -127,7 +127,7 @@ public class OffBoxGraphingApplet extends JApplet implements ExternalAccessRecor
         graphingTabbedPane.setTitleAt(2, "CustVal (AS400)");
         graphingTabbedPane.setTitleAt(3, "Campaigns");
         //graphingTabbedPane.setTitleAt(2,"Search (Mercado) Pre-SR");
-        graphingTabbedPane.setTitleAt(4, "Search (Mercado)");
+        graphingTabbedPane.setTitleAt(4, "Search");
         //graphingTabbedPane.setTitleAt(5,"Credit Card (Chase)");
         graphingTabbedPane.setTitleAt(5, "Email");
         graphingTabbedPane.setTitleAt(6, "Proof Of Delivery");
