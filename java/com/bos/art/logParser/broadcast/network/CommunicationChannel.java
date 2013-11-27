@@ -115,6 +115,8 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             gms.setMergeTimeout(8000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
+            //gms.leave_timeout = 2000;
+            gms.setValue("leave_timeout",2000);
             //gms.setMaxBundlingTime(5000);
             
             FD_SOCK fdsock = new FD_SOCK();
