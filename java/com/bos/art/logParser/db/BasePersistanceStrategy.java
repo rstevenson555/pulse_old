@@ -169,9 +169,6 @@ public abstract class BasePersistanceStrategy {
                     }
                     PreparedStatement pstmt = con.prepareStatement(sqlSelect);
 
-                    if ( retries>2) {
-                        logger.warn("IN retrying loop");
-                    }
                     for (int i = 0,tot = selectValues.size(); i < tot; ++i) {
                         Object o = selectValues.get(i);                                               
                                
