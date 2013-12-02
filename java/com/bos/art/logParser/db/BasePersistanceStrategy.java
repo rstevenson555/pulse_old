@@ -207,8 +207,10 @@ public abstract class BasePersistanceStrategy {
                         resultValue = insertForeignKey(sqlInsert, insertValues, con);
                     }
                     databaseMisHashtable.put(sqlSelect, new Integer(selectMis));
+                    break;
                 } else {
                     resultValue = insertForeignKey(sqlInsert, insertValues, con);
+                    break;
                 }
             } catch (SQLException se) {                
                 logger.error("SQLException ", se);
