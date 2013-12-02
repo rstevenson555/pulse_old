@@ -108,18 +108,14 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
                         logger.error("removeFirst Returned Null!");
                         continue;
                     }
-                    //if (o instanceof ILiveLogParserRecord) {
-                        long writeStartTime = System.currentTimeMillis();
+                    long writeStartTime = System.currentTimeMillis();
 
-                        if (writeCount++ % 1000 == 0) {
-                            //logger.warn("DatabaseWriteQueue writeToDatabase called");
-                        }
-                        ilpr.writeToDatabase();
-                        totalWriteTime += (System.currentTimeMillis() - writeStartTime);
-                        ++objectsWritten;
-                    //} else {
-                    //    logger.error("removeFirst gave " + o.getClass().getName());
-                    //}
+                    if (writeCount++ % 1000 == 0) {
+                        //logger.warn("DatabaseWriteQueue writeToDatabase called");
+                    }
+                    ilpr.writeToDatabase();
+                    totalWriteTime += (System.currentTimeMillis() - writeStartTime);
+                    ++objectsWritten;
                 } catch (Throwable t) {
                     logger.error("Throwable in DatabaseWriteQueue Thread! " + Thread.currentThread().getName() + ":", t);
                 }
