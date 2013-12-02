@@ -30,7 +30,7 @@ public class EngineClientHandler implements Runnable {
     private Socket incoming;
     private int counter;
     private static final Logger logger = (Logger) Logger.getLogger(EngineClientHandler.class.getName());
-    private static int SOCKET_BUFFER = 262144;
+    private static int SOCKET_BUFFER = 262144;  // 256kb
 
     public EngineClientHandler(Socket i, int c) {
         incoming = i;
