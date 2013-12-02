@@ -159,6 +159,7 @@ public abstract class BasePersistanceStrategy {
         boolean escapeString = false;
 
         while(retries++<5) {
+
             try {
                 con = (Connection)threadLocalFKCon.get();
                 if (selectMis < DATABASE_MISS_THRESHOLD) {
@@ -168,6 +169,9 @@ public abstract class BasePersistanceStrategy {
                     }
                     PreparedStatement pstmt = con.prepareStatement(sqlSelect);
 
+                    if ( retries>2) {
+                        logger.warn("IN retrying loop");
+                    }
                     for (int i = 0,tot = selectValues.size(); i < tot; ++i) {
                         Object o = selectValues.get(i);                                               
                                
@@ -287,20 +291,20 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, bindParams, sqlInsert, bindParams);
     }
     
-    public static void main(String []args) {
-        String queryParameter = "ProfileFormHandler.email.lastName=smith";
-                        int start = 0,equalSign;
-                        String queryParameter2="";
-        if ( (start = queryParameter.indexOf("ProfileFormHandler"))!=-1) {
-            // now find the equal sign
-            equalSign = queryParameter.indexOf('=', start);
-            queryParameter2 = queryParameter.substring(0,equalSign);
-            String value =queryParameter.substring(equalSign+1);
-            queryParameter2 += "=wiped";
-        }
-    System.out.println("queryParameter: " + queryParameter2);
-            
-    }
+//    public static void main(String []args) {
+//        String queryParameter = "ProfileFormHandler.email.lastName=smith";
+//                        int start = 0,equalSign;
+//                        String queryParameter2="";
+//        if ( (start = queryParameter.indexOf("ProfileFormHandler"))!=-1) {
+//            // now find the equal sign
+//            equalSign = queryParameter.indexOf('=', start);
+//            queryParameter2 = queryParameter.substring(0,equalSign);
+//            String value =queryParameter.substring(equalSign+1);
+//            queryParameter2 += "=wiped";
+//        }
+//    System.out.println("queryParameter: " + queryParameter2);
+//
+//    }
     
     protected int insertQueryParameter(String queryParameters) {
         String sqlSelect = FK_QUERY_PARAMETERS_SELECT;
@@ -314,12 +318,23 @@ public abstract class BasePersistanceStrategy {
         return insertForeignKey(sqlSelect, selectBindParams, sqlInsert, insertBindParams);
     }
 
+    public static void main(String []args) {
+        long start = System.currentTimeMillis();
+       String str = md5("\"header.referer=http://omx-01-stress.officemax.com/office-supplies/paper/copy-multipurpose-paper||||header.user-agent=Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.648; .NET CLR 3.5.21022)||||header.Accept-Encoding=gzip, deflate||||header.Accept-Language=en-us||||header.accept=*/*||||header.connection=Keep-Alive||||header.host=omx-01-stress.officemax.com||||header.cookie.JSESSIONID=Tntha9cT07C9fSWo13-MPg__.omx6-app11||||header.content-length=0||||\"");
+               long end = System.currentTimeMillis();
+        System.out.println("elapsed : " + (end - start));
+
+        long start1 = System.currentTimeMillis();
+       String str1 = md5("\"header.referer=http://omx-01-stress.officemax.com/office-supplies/paper/copy-multipurpose-paper||||header.user-agent=Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.648; .NET CLR 3.5.21022)||||header.Accept-Encoding=gzip, deflate||||header.Accept-Language=en-us||||header.accept=*/*||||header.connection=Keep-Alive||||header.host=omx-01-stress.officemax.com||||header.cookie.JSESSIONID=Tntha9cT07C9fSWo13-MPg__.omx6-app11||||header.content-length=0||||\"");
+               long end1 = System.currentTimeMillis();
+        System.out.println("elapsed : " + (end1 - start1));
+    }
     /**
      * return a md5 hash
      * @param str
      * @return 
      */
-    private String md5(String str) {
+    private static String md5(String str) {
         return DigestUtils.md5Hex(str);
     }
 
