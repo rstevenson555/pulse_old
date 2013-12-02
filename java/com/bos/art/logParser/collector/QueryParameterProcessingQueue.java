@@ -14,7 +14,6 @@ import com.bos.art.logParser.records.QueryParameters;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -110,7 +109,9 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
                 }
                 long sTime = System.currentTimeMillis();
 
-                qp.processQueryParameters();
+                String str = qp.processQueryParameters();
+                qp.writeQueryParameter(str);
+                
                 long sTime2 = System.currentTimeMillis();
 
                 ++objectsProcessed;
