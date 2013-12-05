@@ -101,7 +101,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             
             TCPGOSSIP gossip = new TCPGOSSIP();
             gossip.setInitialHosts(serverList);
-            gossip.setNumInitialMembers(1);
+            gossip.setNumInitialMembers(2);
             gossip.setTimeout(6000);
             
             NAKACK2 nakack2 = new NAKACK2();
@@ -142,8 +142,12 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             FRAG2 frag2 = new FRAG2();
             frag2.setFragSize(64000);
 
-            stack.addProtocol(tcp).
-                    addProtocol(gossip).
+            //stack.addProtocol(tcp).
+              //      addProtocol(gossip).
+            TUNNEL tunnel = new TUNNEL();
+            tunnel.setGossipRouterHosts(Engine.JAVA_GROUPS_ROUTER_SERVER+"["+Engine.JAVA_GROUPS_ROUTER_SERVER_PORT+"]");
+            stack.addProtocol(tunnel).
+                    addProtocol(new PING()).             
                     addProtocol(merge2).
                     addProtocol(fdsock).
                     addProtocol(fd).
