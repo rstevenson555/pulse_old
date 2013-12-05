@@ -149,7 +149,7 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
             stack.addProtocol(tunnel).
                     addProtocol(new PING()).             
                     addProtocol(merge2).
-                    addProtocol(fdsock).
+                    //addProtocol(fdsock).
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     addProtocol(nakack2).
