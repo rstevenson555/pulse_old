@@ -65,14 +65,6 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
         public void onEvent(ILiveLogParserRecordEvent event, long sequence, boolean endOfBatch) throws Exception
         {
-//            if (event.sequence != sequence ||
-//                    event.a != sequence + 13 ||
-//                    event.b != sequence - 7 ||
-//                    !("wibble-" + sequence).equals(event.s))
-//            {
-//                failureCount++;
-//            }
-
             ILiveLogParserRecord ilpr = event.record;
             ++objectsRemoved;
 
@@ -81,7 +73,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
             if (writeCount++ % 1000 == 0) {
                 //logger.warn("DatabaseWriteQueue writeToDatabase called");
             }
-            logger.warn("Persisting...");
+            //logger.warn("Persisting...");
             ilpr.writeToDatabase();
             totalWriteTime += (System.currentTimeMillis() - writeStartTime);
             ++objectsWritten;
