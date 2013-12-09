@@ -36,7 +36,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     private static long writeCount = 0;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
-    private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 5000, executor,
+    private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 4*1024, executor,
                 ProducerType.SINGLE, new BusySpinWaitStrategy());
 
     // guards for boundaries
