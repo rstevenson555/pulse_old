@@ -146,8 +146,15 @@ public class CommunicationChannel extends ReceiverAdapter implements ChannelList
               //      addProtocol(gossip).
             TUNNEL tunnel = new TUNNEL();
             tunnel.setGossipRouterHosts(Engine.JAVA_GROUPS_ROUTER_SERVER+"["+Engine.JAVA_GROUPS_ROUTER_SERVER_PORT+"]");
+            tunnel.setEnableBundling(true);
+            tunnel.setDiscardIncompatiblePackets(true);
+            tunnel.setMaxBundleSize(128000);
+
+            PING ping = new PING();
+            ping.setTimeout(6000);
+
             stack.addProtocol(tunnel).
-                    addProtocol(new PING()).             
+                    addProtocol(ping).             
                     addProtocol(merge2).
                     //addProtocol(fdsock).
                     addProtocol(fd).
