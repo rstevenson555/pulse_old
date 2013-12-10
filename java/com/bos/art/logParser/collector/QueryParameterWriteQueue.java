@@ -57,7 +57,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
     private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 2 * 1024, executor,
-            ProducerType.SINGLE, new BlockingWaitStrategy());
+            ProducerType.SINGLE, new SleepingWaitStrategy());
 
     private static class DBQueryParamRecordEvent {
         private QueryParameters.DBQueryParamRecord record;

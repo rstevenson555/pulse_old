@@ -43,7 +43,7 @@ public class MessageUnloader extends java.lang.Thread {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
     private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
-            ProducerType.SINGLE, new BlockingWaitStrategy());
+            ProducerType.SINGLE, new SleepingWaitStrategy());
 
     private static class ObjectEvent {
         private Object record;
