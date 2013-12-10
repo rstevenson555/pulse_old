@@ -9,11 +9,18 @@ package com.bos.art.logParser.collector;
 
 import java.io.Serializable;
 
+import com.bos.art.logParser.records.ILiveLogParserRecord;
+import com.lmax.disruptor.*;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.log4j.Logger;
 import com.bos.art.logParser.records.QueryParameters;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -33,9 +40,65 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private static final int MAX_DB_QUEUE_SIZE = 3000;
     //private static final int MAX_DB_QUEUE_SIZE = 50000;
     private static long fullCount = 0;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
-    private QueryParameterProcessingQueue() {        
-        dequeue = new ArrayBlockingQueue<QueryParameters>(MAX_DB_QUEUE_SIZE);
+    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 4*1024, executor,
+                ProducerType.SINGLE, new BusySpinWaitStrategy());
+
+
+    private static class QueryParametersEvent
+    {
+        private QueryParameters record;
+
+        public static final EventFactory<QueryParametersEvent> FACTORY = new EventFactory<QueryParameterProcessingQueue.QueryParametersEvent>()
+        {
+            public QueryParametersEvent newInstance()
+            {
+                return new QueryParametersEvent();
+            }
+        };
+    };
+
+    private class QueryParametersEventHandler implements EventHandler<QueryParametersEvent>
+    {
+        public int failureCount = 0;
+        public int messagesSeen = 0;
+
+        public QueryParametersEventHandler()
+        {
+        }
+
+        public void onEvent(QueryParametersEvent event, long sequence, boolean endOfBatch) throws Exception
+        {
+            QueryParameters qp = event.record;
+
+                ++objectsRemoved;
+//                if (qp == null) {
+//                    logger.error("removeFirst Returned Null!");
+//                    continue;
+//                }
+
+                long sTime = System.currentTimeMillis();
+
+                String str = qp.processQueryParameters();
+                qp.writeQueryParameter(str);
+
+                long sTime2 = System.currentTimeMillis();
+
+                ++objectsProcessed;
+                totalSysTime += (sTime2 - sTime);
+        }
+    }
+
+    private QueryParameterProcessingQueue() {
+//        dequeue = new ArrayBlockingQueue<QueryParameters>(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue<QueryParameters>(1);
+
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        QueryParametersEventHandler handler = new QueryParametersEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
     }
 
     public static QueryParameterProcessingQueue getInstance() {
@@ -49,8 +112,15 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
          addLast((QueryParameters)o);
     }
 
-    public void addLast(QueryParameters o) {
-        boolean success = dequeue.offer(o);
+    public void addLast(final QueryParameters o) {
+        //boolean success = dequeue.offer(o);
+        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<QueryParametersEvent>() {
+            public void translateTo(QueryParametersEvent event, long sequence)
+            {
+                event.record = o;
+            }
+
+        });
         if (!success && (fullCount++ % 100) == 0) {
             logger.error("Failed adding to the QueryParameterProcessingQueue Queue: ");
         }

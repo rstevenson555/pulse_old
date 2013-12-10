@@ -83,10 +83,11 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
 
     private DatabaseWriteQueue() {
-        dequeue = new ArrayBlockingQueue<ILiveLogParserRecord>(MAX_DB_QUEUE_SIZE);
+//        dequeue = new ArrayBlockingQueue<ILiveLogParserRecord>(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue<ILiveLogParserRecord>(1);
 
-        RingBuffer<ILiveLogParserRecordEvent> ringBuffer = disruptor.getRingBuffer();
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
         LiveLogParserRecordEventHandler handler = new LiveLogParserRecordEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
