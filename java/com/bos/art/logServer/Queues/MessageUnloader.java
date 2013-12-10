@@ -1,14 +1,28 @@
 package com.bos.art.logServer.Queues;
 
+import com.bos.art.logParser.records.QueryParameters;
 import com.bos.art.logServer.main.Collector;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.lmax.disruptor.BusySpinWaitStrategy;
+import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.FatalExceptionHandler;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.log4j.Logger;
 
 public class MessageUnloader extends java.lang.Thread {
@@ -29,7 +43,81 @@ public class MessageUnloader extends java.lang.Thread {
     //private int MESSAGE_QUEUE_SIZE = 300000;
     private int MESSAGE_QUEUE_SIZE = 5000;
     private static int SOCKET_BUFFER = 262144;
-    
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
+            ProducerType.SINGLE, new BusySpinWaitStrategy());
+
+    private static class ObjectEvent {
+        private Object record;
+
+        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
+            public ObjectEvent newInstance() {
+                return new ObjectEvent();
+            }
+        };
+    };
+
+    private class ObjectEventHandler implements EventHandler<ObjectEvent> {
+        public int failureCount = 0;
+        public int messagesSeen = 0;
+
+        public ObjectEventHandler() {
+        }
+
+        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
+            Object event = pevent.record;
+
+            try {
+                event = pevent.record;
+
+                if (outputStream != null) {
+                    //System.out.println(event);
+                    //outputStream.writeObject(event);
+                    writeData(outputStream, event);
+                    // System.out.println("writing object"+writeCount);
+                    if (++writeCount % 1000 == 0) {
+                        outputStream.reset();
+                    }
+                    if (writeCount % 10000 == 0) {
+                        logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
+                                + " millis; leaving [" + queue.size() + "] in the queue");
+
+                        writeTime = System.currentTimeMillis();
+                    }
+                    //System.out.println("writing ojbect to server");
+                } else {
+                    logger.error("outputstream is null");
+                }
+
+                event = null;
+            } catch (IOException io) {
+                try {
+                    outputStream.reset();
+                } catch (IOException i) {
+                }
+                logger.error("IOException in MessageUnloader", io);
+                fireConnector();
+//            } catch (InterruptedException ie) {
+//                try {
+//                    outputStream.reset();
+//                } catch (IOException io) {
+//                }
+//                logger.error("InterruptedException in MessageUnloader", ie);
+//                fireConnector();
+            } catch (Throwable t) {
+                try {
+                    outputStream.reset();
+                } catch (IOException io) {
+                }
+                logger.error("Throwable in MessageUnloader", t);
+                fireConnector();
+            }
+
+        }
+
+    }
+
     static public MessageUnloader getInstance() {
         return instance;
     }
@@ -50,7 +138,14 @@ public class MessageUnloader extends java.lang.Thread {
     }
 
     private MessageUnloader() {
-        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
+//        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
+        queue = new ArrayBlockingQueue(1); //across all jvm's because this is static connection
+
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        ObjectEventHandler handler = new ObjectEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
 
         // connect to the output
 
@@ -71,7 +166,7 @@ public class MessageUnloader extends java.lang.Thread {
      * The Connector will reconnect when the server becomes available again. It does this by attempting to open a new
      * connection every
      * <code>reconnectionDelay</code> milliseconds.
-     *
+     * <p/>
      * <p>It stops trying whenever a connection is established. It will restart to try reconnect to the server when
      * previpously open connection is droppped.
      *
@@ -96,7 +191,7 @@ public class MessageUnloader extends java.lang.Thread {
                     logger.warn("Socket Buffer Size after change: " + socket.getReceiveBufferSize());
 
                     synchronized (this) {
-                        
+
                         outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                         logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
                         connector = null;
@@ -121,6 +216,7 @@ public class MessageUnloader extends java.lang.Thread {
 
         }
     }
+
 
     void fireConnector() {
         if (connector == null) {
@@ -174,8 +270,8 @@ public class MessageUnloader extends java.lang.Thread {
 
         try {
             logger.info("trying to connect to ArtEngine at: " + address + " port: " + port);
-            Socket socket = new Socket(address,port);
-            
+            Socket socket = new Socket(address, port);
+
             logger.warn("Socket Buffer Size: " + socket.getReceiveBufferSize());
             socket.setSendBufferSize(262144);
             logger.warn("Socket Buffer Size after change: " + socket.getReceiveBufferSize());
@@ -189,6 +285,7 @@ public class MessageUnloader extends java.lang.Thread {
     }
 
     // messages going to the ArtEngine
+
     public void addMessage(Object o) {
         if (!queue.offer(o)) {
             failCount++;
@@ -229,7 +326,7 @@ public class MessageUnloader extends java.lang.Thread {
                     if (++writeCount % 1000 == 0) {
                         outputStream.reset();
                     }
-                    if ( writeCount % 10000 == 0) {
+                    if (writeCount % 10000 == 0) {
                         logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
                                 + " millis; leaving [" + queue.size() + "] in the queue");
 
@@ -298,7 +395,6 @@ public class MessageUnloader extends java.lang.Thread {
 
     /**
      * drain the queue out
-     *
      */
     private void drainQueue(ObjectOutputStream outputStream) throws IOException {
         Object event;
@@ -315,7 +411,7 @@ public class MessageUnloader extends java.lang.Thread {
                     if (++writeCount % 1000 == 0) {
                         outputStream.reset();
                     }
-                    if ( writeCount % 10000 ==0) {
+                    if (writeCount % 10000 == 0) {
                         logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
                                 + " millis; leaving [" + queue.size() + "] in the queue");
 

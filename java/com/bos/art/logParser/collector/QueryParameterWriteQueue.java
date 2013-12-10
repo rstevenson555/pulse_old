@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -30,9 +31,9 @@ import org.joda.time.DateTime;
 
 /**
  * @author I0360D3
- *
- * To change the template for this generated type comment go to
- * Window>Preferences>Java>Code Generation>Code and Comments
+ *         <p/>
+ *         To change the template for this generated type comment go to
+ *         Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
@@ -55,61 +56,57 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static long fullCount = 0;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
-    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 2*1024, executor,
-                ProducerType.SINGLE, new BusySpinWaitStrategy());
+    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 2 * 1024, executor,
+            ProducerType.SINGLE, new BusySpinWaitStrategy());
 
-    private static class DBQueryParamRecordEvent
-    {
+    private static class DBQueryParamRecordEvent {
         private QueryParameters.DBQueryParamRecord record;
 
-        public static final EventFactory<DBQueryParamRecordEvent> FACTORY = new EventFactory<DBQueryParamRecordEvent>()
-        {
-            public DBQueryParamRecordEvent newInstance()
-            {
+        public static final EventFactory<DBQueryParamRecordEvent> FACTORY = new EventFactory<DBQueryParamRecordEvent>() {
+            public DBQueryParamRecordEvent newInstance() {
                 return new DBQueryParamRecordEvent();
             }
         };
-    };
+    }
 
-    private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent>
-    {
+    ;
+
+    private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent> {
         public int failureCount = 0;
         public int messagesSeen = 0;
 
-        public DBQueryParamRecordEventHandler()
-        {
+        public DBQueryParamRecordEventHandler() {
         }
 
-        public void onEvent(DBQueryParamRecordEvent event, long sequence, boolean endOfBatch) throws Exception
-        {
+        public void onEvent(DBQueryParamRecordEvent event, long sequence, boolean endOfBatch) throws Exception {
             QueryParameters.DBQueryParamRecord dbqp = event.record;
-                ++objectsRemoved;
+            ++objectsRemoved;
 //                if (dbqp == null) {
 //                    logger.error("removeFirst Returned Null!");
 //                    continue;
 //                }
-                long sTime = System.currentTimeMillis();
-                //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
+            long sTime = System.currentTimeMillis();
+            //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
 
-                try {
-                    PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
+            try {
+                PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
 
-                    pstmt.setInt(1, dbqp.getRecordPK().intValue());
-                    pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
-                    blockInsert(pstmt);
-                    ++objectsWritten;
-                    // requestType, requestToken, userServiceTime
-                } catch (SQLException se) {
-                    logger.error("Exception", se);
-                    resetThreadLocalPstmt();
-                    // return false;
-                }
-                finally {
-                    // Removed because of Thread Local.
-                    long sTime2 = System.currentTimeMillis();
+                pstmt.setInt(1, dbqp.getRecordPK().intValue());
+                pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
+                blockInsert(pstmt);
+                ++objectsWritten;
+                // requestType, requestToken, userServiceTime
+            } catch (SQLException se) {
+                logger.error("Exception", se);
+                resetThreadLocalPstmt();
+                // return false;
+            }
+            finally {
+                // Removed because of Thread Local.
+                long sTime2 = System.currentTimeMillis();
 
-                    totalWriteTime += (sTime2 - sTime);
-                }
+                totalWriteTime += (sTime2 - sTime);
+            }
 
         }
     }
@@ -133,14 +130,13 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     }
 
     public void addLast(Object o) {
-        addLast((QueryParameters.DBQueryParamRecord)o);
+        addLast((QueryParameters.DBQueryParamRecord) o);
     }
 
     public void addLast(final QueryParameters.DBQueryParamRecord o) {
         //boolean success = dequeue.offer(o);
         boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<DBQueryParamRecordEvent>() {
-            public void translateTo(DBQueryParamRecordEvent event, long sequence)
-            {
+            public void translateTo(DBQueryParamRecordEvent event, long sequence) {
                 event.record = o;
             }
 
@@ -189,14 +185,15 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     /* (non-Javadoc)
      * @see java.lang.Runnable#run()
      */
+
     @Override
     public void run() {
         while (unloadDB && !Thread.currentThread().isInterrupted()) {
-            
+
             now = new DateTime();
             recordsPerMinute++;
 
-            if ( now.isAfter(oneMinute)) {
+            if (now.isAfter(oneMinute)) {
                 logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
                 oneMinute = now.plusMinutes(1);
                 recordsPerMinute = 0;
@@ -214,29 +211,29 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                     continue;
                 }
                 //if (o instanceof QueryParameters.DBQueryParamRecord) {
-                    long sTime = System.currentTimeMillis();	
-                    //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
+                long sTime = System.currentTimeMillis();
+                //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
 
-                    try {
-                        PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
+                try {
+                    PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
 
-                        pstmt.setInt(1, dbqp.getRecordPK().intValue());
-                        pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
-                        blockInsert(pstmt);
-                        ++objectsWritten;
-                        // requestType, requestToken, userServiceTime
-                    } catch (SQLException se) {
-                        logger.error("Exception", se);
-                        resetThreadLocalPstmt();
-                        // return false;
-                    }
-                    finally {
-                        // Removed because of Thread Local.
-                        long sTime2 = System.currentTimeMillis();	
+                    pstmt.setInt(1, dbqp.getRecordPK().intValue());
+                    pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
+                    blockInsert(pstmt);
+                    ++objectsWritten;
+                    // requestType, requestToken, userServiceTime
+                } catch (SQLException se) {
+                    logger.error("Exception", se);
+                    resetThreadLocalPstmt();
+                    // return false;
+                }
+                finally {
+                    // Removed because of Thread Local.
+                    long sTime2 = System.currentTimeMillis();
 
-                        totalWriteTime += (sTime2 - sTime);
-                    }
-            
+                    totalWriteTime += (sTime2 - sTime);
+                }
+
                 //} else {
                 //    logger.error("removeFirst gave " + o.getClass().getName());
                 //}
@@ -257,7 +254,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
             return null;
         }
     };
-   
+
     private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
         @Override
         protected synchronized Object initialValue() {
@@ -315,7 +312,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
             int icount = count.intValue() + 1;
 
             batchNow = new DateTime();
-            
+
             threadLocalInserts.set(new Integer(icount));
             if (icount % currentBatchInsertSize == 0) {
                 long startTime = System.currentTimeMillis();
@@ -323,33 +320,33 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 pstmt.executeBatch();
                 batch++;
 
-                if(batchNow.isAfter(batchOneMinute)) {
-                    logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize*batch));
+                if (batchNow.isAfter(batchOneMinute)) {
+                    logger.warn("QueryParameterWriteQueue " + " batch per minute: " + (batch) + " records per minute: " + (currentBatchInsertSize * batch));
 
                     batchOneMinute = batchNow.plusMinutes(1);
                     batch = 0;
                 }
-                
+
                 long elapsed = System.currentTimeMillis() - startTime;
                 double currentTimePerInsert = (double) elapsed / (double) currentBatchInsertSize;
 
                 if (((currentTimePerInsert <= timePerInsert) && (currentBatchInsertSize < MAXBATCHINSERTSIZE - INCREMENT_AMOUNT))) {
                     currentBatchInsertSize += INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + 
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize +
                             " time per insert: " + timePerInsert + " elapsed: " + elapsed);
                 } else if ((currentTimePerInsert * .65) > timePerInsert
                         && (currentBatchInsertSize > MINBATCHINSERTSIZE + INCREMENT_AMOUNT)) {
                     currentBatchInsertSize -= INCREMENT_AMOUNT;
                     timePerInsert = currentTimePerInsert;
-                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize+ " time per insert: " + timePerInsert+ " elapsed: " + elapsed);
+                    logger.warn("QueryParameterWriteQueue currentBatchInsertSize set to-> : " + currentBatchInsertSize + " time per insert: " + timePerInsert + " elapsed: " + elapsed);
                 }
-                
+
 
                 if (icount % 100000 == 0) {
                     logger.warn("QueryParameterWriteQueue currentBatchInsertSize is-> : " + currentBatchInsertSize);
                 }
-                
+
             }
         } catch (SQLException se) {
             logger.error("Exception", se);

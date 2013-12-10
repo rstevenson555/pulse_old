@@ -42,51 +42,47 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private static long fullCount = 0;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
-    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 2*1024, executor,
-                ProducerType.SINGLE, new BusySpinWaitStrategy());
+    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 2 * 1024, executor,
+            ProducerType.SINGLE, new BusySpinWaitStrategy());
 
 
-    private static class QueryParametersEvent
-    {
+    private static class QueryParametersEvent {
         private QueryParameters record;
 
-        public static final EventFactory<QueryParametersEvent> FACTORY = new EventFactory<QueryParameterProcessingQueue.QueryParametersEvent>()
-        {
-            public QueryParametersEvent newInstance()
-            {
+        public static final EventFactory<QueryParametersEvent> FACTORY = new EventFactory<QueryParameterProcessingQueue.QueryParametersEvent>() {
+            public QueryParametersEvent newInstance() {
                 return new QueryParametersEvent();
             }
         };
-    };
+    }
 
-    private class QueryParametersEventHandler implements EventHandler<QueryParametersEvent>
-    {
+    ;
+
+    private class QueryParametersEventHandler implements EventHandler<QueryParametersEvent> {
         public int failureCount = 0;
         public int messagesSeen = 0;
 
-        public QueryParametersEventHandler()
-        {
+        public QueryParametersEventHandler() {
         }
 
-        public void onEvent(QueryParametersEvent event, long sequence, boolean endOfBatch) throws Exception
-        {
+        public void onEvent(QueryParametersEvent event, long sequence, boolean endOfBatch) throws Exception {
             QueryParameters qp = event.record;
 
-                ++objectsRemoved;
+            ++objectsRemoved;
 //                if (qp == null) {
 //                    logger.error("removeFirst Returned Null!");
 //                    continue;
 //                }
 
-                long sTime = System.currentTimeMillis();
+            long sTime = System.currentTimeMillis();
 
-                String str = qp.processQueryParameters();
-                qp.writeQueryParameter(str);
+            String str = qp.processQueryParameters();
+            qp.writeQueryParameter(str);
 
-                long sTime2 = System.currentTimeMillis();
+            long sTime2 = System.currentTimeMillis();
 
-                ++objectsProcessed;
-                totalSysTime += (sTime2 - sTime);
+            ++objectsProcessed;
+            totalSysTime += (sTime2 - sTime);
         }
     }
 
@@ -109,14 +105,13 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     }
 
     public void addLast(Object o) {
-         addLast((QueryParameters)o);
+        addLast((QueryParameters) o);
     }
 
     public void addLast(final QueryParameters o) {
         //boolean success = dequeue.offer(o);
         boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<QueryParametersEvent>() {
-            public void translateTo(QueryParametersEvent event, long sequence)
-            {
+            public void translateTo(QueryParametersEvent event, long sequence) {
                 event.record = o;
             }
 
@@ -181,7 +176,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
 
                 String str = qp.processQueryParameters();
                 qp.writeQueryParameter(str);
-                
+
                 long sTime2 = System.currentTimeMillis();
 
                 ++objectsProcessed;
