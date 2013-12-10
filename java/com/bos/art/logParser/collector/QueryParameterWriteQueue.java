@@ -12,12 +12,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import com.lmax.disruptor.*;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.log4j.Logger;
 
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.joda.time.DateTime;
 
 
@@ -46,9 +53,76 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static DateTime oneMinute = new DateTime().plusMinutes(1);
     private static long recordsPerMinute = 0;
     private static long fullCount = 0;
-    
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+
+    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 2*1024, executor,
+                ProducerType.SINGLE, new BusySpinWaitStrategy());
+
+    private static class DBQueryParamRecordEvent
+    {
+        private QueryParameters.DBQueryParamRecord record;
+
+        public static final EventFactory<DBQueryParamRecordEvent> FACTORY = new EventFactory<DBQueryParamRecordEvent>()
+        {
+            public DBQueryParamRecordEvent newInstance()
+            {
+                return new DBQueryParamRecordEvent();
+            }
+        };
+    };
+
+    private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent>
+    {
+        public int failureCount = 0;
+        public int messagesSeen = 0;
+
+        public DBQueryParamRecordEventHandler()
+        {
+        }
+
+        public void onEvent(DBQueryParamRecordEvent event, long sequence, boolean endOfBatch) throws Exception
+        {
+            QueryParameters.DBQueryParamRecord dbqp = event.record;
+                ++objectsRemoved;
+//                if (dbqp == null) {
+//                    logger.error("removeFirst Returned Null!");
+//                    continue;
+//                }
+                long sTime = System.currentTimeMillis();
+                //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
+
+                try {
+                    PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
+
+                    pstmt.setInt(1, dbqp.getRecordPK().intValue());
+                    pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
+                    blockInsert(pstmt);
+                    ++objectsWritten;
+                    // requestType, requestToken, userServiceTime
+                } catch (SQLException se) {
+                    logger.error("Exception", se);
+                    resetThreadLocalPstmt();
+                    // return false;
+                }
+                finally {
+                    // Removed because of Thread Local.
+                    long sTime2 = System.currentTimeMillis();
+
+                    totalWriteTime += (sTime2 - sTime);
+                }
+
+        }
+    }
+
     private QueryParameterWriteQueue() {
-        dequeue = new ArrayBlockingQueue<QueryParameters.DBQueryParamRecord>(MAX_DB_QUEUE_SIZE);
+//        dequeue = new ArrayBlockingQueue<QueryParameters.DBQueryParamRecord>(MAX_DB_QUEUE_SIZE);
+        dequeue = new ArrayBlockingQueue<QueryParameters.DBQueryParamRecord>(1);
+
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        DBQueryParamRecordEventHandler handler = new DBQueryParamRecordEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
     }
 
     public static QueryParameterWriteQueue getInstance() {
@@ -62,8 +136,15 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         addLast((QueryParameters.DBQueryParamRecord)o);
     }
 
-    public void addLast(QueryParameters.DBQueryParamRecord o) {
-        boolean success = dequeue.offer(o);
+    public void addLast(final QueryParameters.DBQueryParamRecord o) {
+        //boolean success = dequeue.offer(o);
+        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<DBQueryParamRecordEvent>() {
+            public void translateTo(DBQueryParamRecordEvent event, long sequence)
+            {
+                event.record = o;
+            }
+
+        });
         if (!success && (fullCount++ % 100) == 0) {
             logger.error("QueryParameterWriteQueue failed adding to the QueryParameterWriteQueue: ");
         }
