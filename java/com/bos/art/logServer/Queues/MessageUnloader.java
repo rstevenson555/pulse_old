@@ -16,10 +16,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.lmax.disruptor.BusySpinWaitStrategy;
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.FatalExceptionHandler;
+import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
@@ -286,8 +283,15 @@ public class MessageUnloader extends java.lang.Thread {
 
     // messages going to the ArtEngine
 
-    public void addMessage(Object o) {
-        if (!queue.offer(o)) {
+    public void addMessage(final Object o) {
+        //if (!queue.offer(o)) {
+        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<ObjectEvent>() {
+            public void translateTo(ObjectEvent event, long sequence) {
+                event.record = o;
+            }
+
+        });
+        if (!success) {
             failCount++;
             if (++failCount % 100 == 0) {
                 logger.error("Failed to offer in queue to ArtEngine");
