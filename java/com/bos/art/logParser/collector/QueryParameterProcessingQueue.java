@@ -43,7 +43,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
 
     private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 2 * 1024, executor,
-            ProducerType.SINGLE, new BusySpinWaitStrategy());
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
 
     private static class QueryParametersEvent {
