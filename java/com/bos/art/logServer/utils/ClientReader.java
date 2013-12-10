@@ -595,6 +595,8 @@ public class ClientReader implements Runnable {
                 // DebugInputStream dis = new DebugInputStream(insource,System.getProperty("user.dir")+File.separator+Thread.currentThread().getName()+"-"+filecounter++);
 
             } else if (mode == COMMAND_MODE) {
+                unloader.exitOnFinish();
+                
                 command = "<?xml version=\"1.0\"?>\n" + command;
                 // System.out.println(command);
                 insource = new BufferedInputStream(new ByteArrayInputStream(command.getBytes()));
