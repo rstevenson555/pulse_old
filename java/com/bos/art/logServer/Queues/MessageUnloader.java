@@ -323,6 +323,24 @@ public class MessageUnloader extends java.lang.Thread {
 
     public void exitOnFinish() {
         exitOnFinish = true;
+
+        try {
+                drainQueue(outputStream);
+                try {
+                    outputStream.reset();
+                } catch (IOException io) {
+                }
+                outputStream.flush();
+                outputStream.close();
+            } catch (IOException io) {
+                try {
+                    outputStream.reset();
+                } catch (IOException i) {
+                }
+                logger.error("IO Error draining queue " + io);
+            }
+            logger.info("exiting");
+            System.exit(0);
     }
 
     @Override
