@@ -111,6 +111,26 @@ public class MessageUnloader extends java.lang.Thread {
                 fireConnector();
             }
 
+            if (exitOnFinish) {
+                try {
+                    drainQueue(outputStream);
+                    try {
+                        outputStream.reset();
+                    } catch (IOException io) {
+                    }
+                    outputStream.flush();
+                    outputStream.close();
+                } catch (IOException io) {
+                    try {
+                        outputStream.reset();
+                    } catch (IOException i) {
+                    }
+                    logger.error("IO Error draining queue " + io);
+                }
+                logger.info("exiting");
+                System.exit(0);
+                }
+
         }
 
     }
