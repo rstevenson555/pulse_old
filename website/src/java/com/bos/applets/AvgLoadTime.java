@@ -44,24 +44,30 @@ import com.bos.applets.arch.AppletMessageListener;
 import com.bos.art.logParser.broadcast.beans.AccessRecordsMinuteBean;
 import com.bos.art.logParser.broadcast.beans.TransferBean;
 import com.bos.art.logParser.broadcast.beans.delegate.AccessRecordsDelegate;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.*;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.block.LineBorder;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import org.jfree.chart.plot.CrosshairState;
+import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.SeriesRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYItemRendererState;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.title.Title;
 import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.VerticalAlignment;
 import org.jgroups.Message;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -75,8 +81,12 @@ import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Rectangle2D;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * A demo application showing a dynamically updated chart that displays the current JVM memory usage.
@@ -101,6 +111,7 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
     private NumberAxis requestVolumeRangeAxis;
     private NumberAxis timeRangeAxis;
     private javax.swing.JMenuItem expandGraphItem = new javax.swing.JMenuItem();
+    private javax.swing.JMenuItem expandGraphItem2 = new javax.swing.JMenuItem();
     private JPopupMenu popupMenu;
     /**
      * Time series for total memory used.
@@ -266,7 +277,7 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         timeRangeAxis.setNumberFormatOverride(format);
         timeRangeAxis.setLowerMargin(0.00);
         timeRangeAxis.setLowerMargin(0.20);
-        timeRangeAxis.setUpperMargin(1.5);
+        timeRangeAxis.setUpperMargin(0.5);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
         renderer.setToolTipGenerator(
@@ -286,15 +297,20 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
                     BasicStroke.JOIN_ROUND, 0, new float[]{10.0f, 5.0f}, 0));
         }
 
-        requestVolumeRangeAxis = new NumberAxis("Page Volume");
+        requestVolumeRangeAxis = new NumberAxis("Requests / Min");
         requestVolumeRangeAxis.setLabelPaint(Color.white);
         requestVolumeRangeAxis.setLabelFont(new Font("Arial", Font.BOLD, 12));
         requestVolumeRangeAxis.setTickLabelPaint(Color.white);
         java.text.DecimalFormat format2 = new java.text.DecimalFormat("#000");
         requestVolumeRangeAxis.setNumberFormatOverride(format2);
-        requestVolumeRangeAxis.setUpperMargin(0.20);  // to leave room for price line
+        requestVolumeRangeAxis.setUpperMargin(1.5);  // to leave room for price line
 
-        XYBarRenderer renderer2 = new XYBarRenderer(0.20);
+        XYBarRenderer renderer2 = new XYBarRenderer(0.20) {
+            @Override
+            public void drawItem(Graphics2D g2, XYItemRendererState state, Rectangle2D dataArea, PlotRenderingInfo info, XYPlot plot, ValueAxis domainAxis, ValueAxis rangeAxis, XYDataset dataset, int series, int item, CrosshairState crosshairState, int pass) {
+                super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);    //To change body of overridden methods use File | Settings | File Templates.
+            }
+        };
         renderer2.setShadowVisible(false);
         renderer2.setDrawBarOutline(false);
         renderer2.setMargin(0);
@@ -330,12 +346,15 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
                 xyplot,
                 false);
 
-        TextTitle chartTitle = new TextTitle("Page Execution");
+        //TextTitle chartTitle = new TextTitle("Page Execution");
+        TextTitle chartTitle = new TextTitle("Page Execution",
+           new Font("Arial", Font.BOLD, 14), Color.white,
+           RectangleEdge.TOP, HorizontalAlignment.LEFT,
+           VerticalAlignment.CENTER, RectangleInsets.ZERO_INSETS);
         chartTitle.setPaint(Color.white);
-        chartTitle.setFont(new Font("Verdana", Font.BOLD, 20));
+        chartTitle.setFont(new Font("Verdana", Font.BOLD, 18));
         chart.setTitle(chartTitle);
 
-        chart.getPlot().setNoDataMessage("No data received yet...");
 
         try {
             String webCodeBase = getCodeBase().toString();
@@ -363,16 +382,22 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         this.chartPanel.setRangeZoomable(true);
 
         popupMenu = chartPanel.getPopupMenu();
+
         expandGraphItem.setText("Maximize Graph");
         expandGraphItem.setActionCommand("ExpandGraph");
-
         popupMenu.add(expandGraphItem);
+
+        expandGraphItem2.setText("Maximize Graph(2)");
+        expandGraphItem2.setActionCommand("ExpandGraph2");
+
+        popupMenu.add(expandGraphItem2);
 
         AvgLoadTime.SymPopupMenu lSymPopupMenu = new AvgLoadTime.SymPopupMenu();
         popupMenu.addPopupMenuListener(lSymPopupMenu);
 
         AvgLoadTime.SymAction lSymAction = new AvgLoadTime.SymAction();
         expandGraphItem.addActionListener(lSymAction);
+        expandGraphItem2.addActionListener(lSymAction);
 
         scrollableChartPanel = new ScrollableChartPanel(dateAxis);
         instanceStatsGraph = new InstanceStatsGraph();
@@ -512,10 +537,51 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
             Double runningVolume = calcVolumePerMinute(armb, minute, minuteKey);
             calcAndSetVolumeAxisRange( minute, runningVolume);
 
+            Double prevMinuteVolume = movingVolumeAverage.get(minute.previous());
+            if (prevMinuteVolume == null) {
+                prevMinuteVolume = 0.0;
+            }
+//            setSubTitleValues(runningAvg, prevMinuteVolume);
+
+            //chart.getPlot().setNoDataMessage("No data received yet...");
+            setTitles(runningAvg,prevMinuteVolume);
+
+
         } catch (IllegalArgumentException pe) {
             System.out.println("AvgLoadTime.process Error parsing data received " + pe);
         }
     }
+
+    private TextTitle averageTitle = null, requestTitle = null;
+
+    private void setSubTitleValues(Double runningAvg, Double runningVolume) {
+        List<Title> subTitles = new CopyOnWriteArrayList<Title>();
+
+        DecimalFormat formatAvg = new DecimalFormat("#0.000");
+        subTitles.add((averageTitle = new TextTitle("Average " + formatAvg.format(runningAvg),
+           new Font("Arial", Font.BOLD, 16), Color.white,
+           RectangleEdge.TOP, HorizontalAlignment.CENTER,
+           VerticalAlignment.CENTER, RectangleInsets.ZERO_INSETS)));
+
+        DecimalFormat format2 = new DecimalFormat("###.##");
+
+        subTitles.add((requestTitle = new TextTitle("Requests " + format2.format(runningVolume) + " / min",
+            new Font("Arial", Font.BOLD, 16), Color.white,
+            RectangleEdge.TOP, HorizontalAlignment.CENTER,
+            VerticalAlignment.CENTER, RectangleInsets.ZERO_INSETS)));
+
+        chart.setSubtitles(subTitles);
+    }
+
+    private void setTitles(Double runningAvg,Double runningVolume) {
+        DecimalFormat formatAvg = new DecimalFormat("#0.000");
+        DecimalFormat format2 = new DecimalFormat("###.##");
+
+        averageTitle.setText("Average " + formatAvg.format(runningAvg));
+        requestTitle.setText("Requests " + format2.format(runningVolume) + " / min");
+
+    }
+
 
     private Double calcVolumePerMinute(AccessRecordsMinuteBean armb, Minute minute, MinuteMachineKey minuteKey) {
         Double total = updateMinuteVolumeData(armb, minute, minuteKey);
@@ -548,7 +614,7 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         for(Map.Entry<Minute,Double> entry: movingAverage.entrySet()) {
             avgMaxValue = Math.max(avgMaxValue,entry.getValue());
         }
-        avgMaxValue += (avgMaxValue * .50);
+        avgMaxValue += (avgMaxValue * .85);
         timeRangeAxis.setRange(0.0,avgMaxValue);
         // ********************************************
     }
@@ -630,8 +696,19 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
                 GraphingFrame.getInstance().addGraphPanel(scrollableChartPanel, mainPanel);
                 GraphingFrame.getInstance().show();
 
+            } else if (event.getActionCommand().equals("ExpandGraph2")) {
+
+                System.out.println("graphing frame 2");
+                GraphingFrame2.getInstance().addGraphPanel(scrollableChartPanel, mainPanel);
+                GraphingFrame2.getInstance().show();
+
             } else if (event.getActionCommand().equals("RemoveGraph")) {
                 GraphingFrame.getInstance().returnPanel(mainPanel);
+                GraphingFrame2.getInstance().returnPanel(mainPanel);
+
+                mainPanel.updateUI();
+            } else if (event.getActionCommand().equals("RemoveGraph2")) {
+                GraphingFrame2.getInstance().returnPanel(mainPanel);
 
                 mainPanel.updateUI();
             }
@@ -697,6 +774,9 @@ public class AvgLoadTime extends JApplet implements AccessRecordsDelegate {
         initializeAxisRange();
 
         initGraphicsEnv();
+
+        setSubTitleValues(0.0, 0.0);
+
     }
 
     /**

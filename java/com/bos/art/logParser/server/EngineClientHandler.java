@@ -49,7 +49,7 @@ public class EngineClientHandler implements Runnable {
         try {
             incoming.setReceiveBufferSize(SOCKET_BUFFER);
             in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream())); // 16k
-
+            logger.info("EngineClientHandler receiveBufferSize after set: " + incoming.getReceiveBufferSize());
             while (true) {
                 try {
                     Object o = readData(in);

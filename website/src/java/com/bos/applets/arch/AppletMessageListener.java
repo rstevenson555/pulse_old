@@ -104,17 +104,18 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
                 bind_port = (int)((System.currentTimeMillis()+Integer.parseInt(ipWithoutDots)) % 60017);
             while(bind_port <1024);
             
+            InetSocketAddress localaddr2 = new InetSocketAddress(localIp,bind_port);
 
             TCP tcp = new TCP();
             tcp.setBindToAllInterfaces(false);
-            tcp.setBindAddress(localinet);                         
-            tcp.setBindPort(bind_port);
+            tcp.setBindAddress(localaddr2.getAddress());                         
+            //tcp.setBindPort(bind_port);
             tcp.setLoopback(false);
             tcp.setEnableBundling(true);
             tcp.setDiscardIncompatiblePackets(true);
             tcp.setMaxBundleSize(128000);
             //tcp.setReaperInterval(300000);
-            tcp.use_send_queues = true;
+//            tcp.use_send_queues = true;
             tcp.sock_conn_timeout = 300;
                                  
             System.out.println("localip: " + localIp);
@@ -132,8 +133,8 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             TCPGOSSIP gossip = new TCPGOSSIP();
             gossip.setInitialHosts(slist);
             gossip.setNumInitialMembers(2);
-            gossip.setTimeout(8000);
-            
+            gossip.setTimeout(6000);
+
             System.out.println("initial hosts: " + artServerAddress);
             System.out.println("initial hosts: " + mhost);
 
@@ -143,7 +144,8 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 
             GMS gms = new GMS();
             gms.setJoinTimeout(8000);
-            gms.setViewAckCollectionTimeout(2000);
+            gms.leave_timeout = 2000;
+            gms.setViewAckCollectionTimeout(3000);
             gms.setMergeTimeout(8000);
             gms.setMaxJoinAttempts(2);
             gms.setViewBundling(true);
@@ -155,29 +157,43 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             fd.setInterval(8000);
 
             VERIFY_SUSPECT vsuspect = new VERIFY_SUSPECT();
-//            vsuspect.bind_addr = localinet;
+            vsuspect.timeout = 4500;
+            vsuspect.bind_addr = localaddr2.getAddress();
+//            vsuspect.use_icmp = true;
             
-            //vsuspect.setValue("timeout", 4500);
-            
-            //vsuspect.use_icmp = true;
 
             MERGE2 merge2 = new MERGE2();
             merge2.setMaxInterval(30000);
             merge2.setMinInterval(10000);
 
-            UNICAST unicast = new UNICAST();
             FRAG2 frag2 = new FRAG2();
             frag2.setFragSize(60000);
+
+            FD_SOCK fdsock = new FD_SOCK();
+            fdsock.bind_addr = localaddr2.getAddress();
+
+            TUNNEL tunnel = new TUNNEL();
+            tunnel.setGossipRouterHosts(mhost+"["+server_port+"]");
+            tunnel.setBindAddress(localaddr2.getAddress());
+            tunnel.setEnableBundling(true);
+            tunnel.setDiscardIncompatiblePackets(true);
+            tunnel.setMaxBundleSize(128000);
+
+            //stack.addProtocol(tcp).
+            //addProtocol(gossip).
+            PING ping = new PING();
+            ping.setTimeout(6000);
             
-            stack.addProtocol(tcp).
-                    addProtocol(gossip).
+            stack.addProtocol(tunnel).
+                    addProtocol(ping).
                     addProtocol(merge2).
+                    //addProtocol(fdsock).
                     addProtocol(fd).
                     addProtocol(vsuspect).
                     //addProtocol(new VERIFY_SUSPECT()).
                     //addProtocol(new BARRIER()).
                     addProtocol(nakack2).
-                    addProtocol(unicast).
+                    addProtocol(new UNICAST()).
                     addProtocol(new STABLE()).
                     addProtocol(gms).
 //                    addProtocol(new UFC()).
@@ -194,7 +210,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
 
             channel.addChannelListener(instance);
             channel.connect("ART-DATA");
-                        
+
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -20,7 +20,7 @@ public class GraphingFrame extends JFrame
     private JButton twoAcross;
     private JButton threeAcross;
 
-    private static GraphingFrame instance = new GraphingFrame("Live Graphs");
+    private static GraphingFrame instance = new GraphingFrame("Live Graphs:1");
 
     private static final int ONE_BY_X = 1;
     private static final int TWO_BY_X = 2;

@@ -14,8 +14,12 @@ import com.bos.art.logParser.broadcast.beans.delegate.ExternalAccessRecordsDeleg
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -28,20 +32,25 @@ import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.block.LineBorder;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import org.jfree.chart.plot.DatasetRenderingOrder;
-import org.jfree.chart.plot.SeriesRenderingOrder;
-import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYItemRendererState;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.title.Title;
 import org.jfree.data.Range;
 import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.HorizontalAlignment;
 import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.VerticalAlignment;
 import org.jgroups.Message;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -72,6 +81,7 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
     private java.awt.Image image;
     private int[] classifications;
     private JFreeChart[] charts;
+    private TextTitle averageTitle[] = null, requestTitle[] = null;
     private TimeSeries[] requestVolumeServedSeries;
     private Map<Minute,Double>[] movingVolumeAverage;
     private Map<Minute,Double>[] movingAverage;
@@ -87,6 +97,7 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
     private ChartPanel chartPanel[];
     private JPopupMenu popupMenu[];
     private JMenuItem expandGraphItem[];
+    private JMenuItem expandGraphItem2[];
 
     static private class LRUMap<K, V> extends LinkedHashMap<K, V>
     {
@@ -240,6 +251,9 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
         movingAverage = new LRUMap[this.classifications.length];
         averageSeries = new TimeSeries[this.classifications.length];
         charts = new JFreeChart[this.classifications.length];
+        averageTitle = new TextTitle[this.classifications.length];
+        requestTitle = new TextTitle[this.classifications.length];
+
         dateAxis = new DateAxis[this.classifications.length];
         timeRangeAxis = new NumberAxis[this.classifications.length];
         requestVolumeRangeAxis = new NumberAxis[this.classifications.length];
@@ -247,6 +261,7 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
         chartPanel = new ChartPanel[this.classifications.length];
         popupMenu = new JPopupMenu[this.classifications.length];
         expandGraphItem = new javax.swing.JMenuItem[this.classifications.length];
+        expandGraphItem2 = new javax.swing.JMenuItem[this.classifications.length];
         mainPanel = new JPanel[this.classifications.length];
         dataset = new TimeSeriesCollection[this.classifications.length];
         orderedSeries = new ArrayList[this.classifications.length];
@@ -327,7 +342,7 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             timeRangeAxis[i].setAutoRangeIncludesZero(true);
             timeRangeAxis[i].setNumberFormatOverride(format);
             timeRangeAxis[i].setLowerMargin(0.00);
-            timeRangeAxis[i].setUpperMargin(1.5);
+            timeRangeAxis[i].setUpperMargin(0.2);
             timeRangeAxis[i].setLabelPaint(Color.white);
             timeRangeAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
             timeRangeAxis[i].setTickLabelPaint(Color.white);
@@ -338,7 +353,8 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                     new StandardXYToolTipGenerator(
                     "{0}: ({1}, {2})",
                     new SimpleDateFormat("HH:mm"),
-                    new java.text.DecimalFormat("0.0")));
+                    new java.text.DecimalFormat("###.##")));
+
 
 //            renderer.setSeriesPaint(0, Color.black);
             //renderer.setSeriesPaint(0, new Color(0, 143, 255));
@@ -359,7 +375,12 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                         BasicStroke.JOIN_ROUND, 0, new float[]{10.0f, 5.0f}, 0));
             }
 
-            XYBarRenderer barRenderer = new XYBarRenderer(0.20);
+            XYBarRenderer barRenderer = new XYBarRenderer(0.20){
+                @Override
+                public void drawItem(Graphics2D g2, XYItemRendererState state, Rectangle2D dataArea, PlotRenderingInfo info, XYPlot plot, ValueAxis domainAxis, ValueAxis rangeAxis, XYDataset dataset, int series, int item, CrosshairState crosshairState, int pass) {
+                    super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);    //To change body of overridden methods use File | Settings | File Templates.
+                }
+            };
             barRenderer.setShadowVisible(false);
             barRenderer.setDrawBarOutline(false);
             barRenderer.setMargin(0);
@@ -368,13 +389,13 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                     new StandardXYToolTipGenerator(
                     "{0}: ({1}, {2}/sec)",
                     new SimpleDateFormat("HH:mm"),
-                    new java.text.DecimalFormat("0.0")));
+                    new java.text.DecimalFormat("#0.000")));
 
             barRenderer.setSeriesPaint(0, Color.decode("#979797"));
             barRenderer.setSeriesOutlinePaint(0, Color.black);
             //
             //
-            requestVolumeRangeAxis[i] = new NumberAxis("Req / Sec");
+            requestVolumeRangeAxis[i] = new NumberAxis("Requests / Sec");
             requestVolumeRangeAxis[i].setLabelPaint(Color.white);
             requestVolumeRangeAxis[i].setLabelFont(new Font("Arial", Font.BOLD, 12));
             requestVolumeRangeAxis[i].setTickLabelPaint(Color.white);
@@ -406,9 +427,13 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             if (title == null)
                 title = "No Title";
 
-            TextTitle chartTitle = new TextTitle(title);
+            //TextTitle chartTitle = new TextTitle(title);
+            TextTitle chartTitle = new TextTitle(title,
+                   new Font("Arial", Font.BOLD, 14), Color.white,
+                   RectangleEdge.TOP, HorizontalAlignment.LEFT,
+                   VerticalAlignment.CENTER, RectangleInsets.ZERO_INSETS);
             chartTitle.setPaint(Color.white);
-            chartTitle.setFont(new Font("Verdana", Font.BOLD, 20));
+            chartTitle.setFont(new Font("Verdana", Font.BOLD, 18));
 
             charts[i] = new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT, xyplot, false);
             charts[i].getPlot().setNoDataMessage("No data received yet...");
@@ -441,11 +466,18 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
 
             popupMenu[i].add(expandGraphItem[i]);
 
+            expandGraphItem2[i] = new javax.swing.JMenuItem();
+            expandGraphItem2[i].setText("Maximize Graph(2)");
+            expandGraphItem2[i].setActionCommand("ExpandGraph2");
+
+            popupMenu[i].add(expandGraphItem2[i]);
+
             ExternalMinuteGraph.SymPopupMenu lSymPopupMenu = new ExternalMinuteGraph.SymPopupMenu();
             popupMenu[i].addPopupMenuListener(lSymPopupMenu);
 
             ExternalMinuteGraph.SymAction lSymAction = new ExternalMinuteGraph.SymAction();
             expandGraphItem[i].addActionListener(lSymAction);
+            expandGraphItem2[i].addActionListener(lSymAction);
 
             mainPanel[i] = new JPanel();
             mainPanel[i].setLayout(new BorderLayout(0, 0));
@@ -453,6 +485,8 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
             scrollableChartPanel[i] = new ExternalMinuteGraph.ScrollableChartPanel(dateAxis[i]);
             scrollableChartPanel[i].add(BorderLayout.CENTER, chartPanel[i]);
             mainPanel[i].add(BorderLayout.CENTER, scrollableChartPanel[i]);
+
+            setSubTitleValues(0.0,0.0,i);
 
             add(mainPanel[i]);
 
@@ -573,12 +607,52 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                     // ********************************************
                     Double minuteVolume = calcVolumePerMinute(armb, volumeServedDate, minute, i);
                     calcAndSetVolumeAxisRange(minute, i, minuteVolume);
+
+                    Double prevMinuteVolume = movingVolumeAverage[i].get(minute.previous());
+
+                    if (prevMinuteVolume == null) {
+                        prevMinuteVolume = 0.0;
+                    }
+                    //setSubTitleValues(runningAvg,prevMinuteVolume,charts[i]);
+//                    averageTitle.setText(String.valueOf(runningAvg));
+//                    requestTitle.setText(String.valueOf(prevMinuteVolume));
+
+                    setTitles(runningAvg,prevMinuteVolume,i);
                 }
             }
 
         } catch (IllegalArgumentException pe) {
             System.out.println("AvgLoadTime.process Error parsing data received " + pe);
         }
+    }
+
+
+    private void setSubTitleValues(Double runningAvg, Double runningVolume,int index) {
+        List<Title> subTitles = new CopyOnWriteArrayList<Title>();
+
+        DecimalFormat formatAvg = new DecimalFormat("#0.000");
+        subTitles.add((averageTitle[index] = new TextTitle("Average " + formatAvg.format(runningAvg),
+           new Font("Arial", Font.BOLD, 16), Color.white,
+           RectangleEdge.TOP, HorizontalAlignment.CENTER,
+           VerticalAlignment.CENTER, RectangleInsets.ZERO_INSETS)));
+
+        DecimalFormat format2 = new DecimalFormat("###.##");
+
+        subTitles.add((requestTitle[index] = new TextTitle("Requests " + format2.format(runningVolume) + " / sec",
+            new Font("Arial", Font.BOLD, 16), Color.white,
+            RectangleEdge.TOP, HorizontalAlignment.CENTER,
+            VerticalAlignment.CENTER, RectangleInsets.ZERO_INSETS)));
+
+        charts[index].setSubtitles(subTitles);
+    }
+
+    private void setTitles(Double runningAvg,Double runningVolume,int index) {
+        DecimalFormat formatAvg = new DecimalFormat("#0.000");
+        DecimalFormat format2 = new DecimalFormat("###.##");
+
+        averageTitle[index].setText("Average " + formatAvg.format(runningAvg));
+        requestTitle[index].setText("Requests " + format2.format(runningVolume) + " / sec");
+
     }
 
     private Double calcVolumePerMinute(ExternalAccessRecordsMinuteBean armb, Date volumeServedDate, Minute minute, int i) {
@@ -638,7 +712,7 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
         for(Map.Entry<Minute,Double> entry: movingAverage[i].entrySet()) {
             avgMaxValue = Math.max(avgMaxValue,entry.getValue());
         }
-        avgMaxValue += (avgMaxValue * .50);
+        avgMaxValue += (avgMaxValue * .85);
         timeRangeAxis[i].setRange(0.0,avgMaxValue);
         // ********************************************
     }
@@ -755,8 +829,32 @@ public class ExternalMinuteGraph extends JPanel implements ExternalAccessRecords
                         GraphingFrame.getInstance().addGraphPanel(scrollableChartPanel[i], mainPanel[i]);
                         GraphingFrame.getInstance().show();
 
+                    } else if (event.getActionCommand().equals("ExpandGraph2")) {
+
+                        GraphingFrame2.getInstance().addGraphPanel(scrollableChartPanel[i], mainPanel[i]);
+                        GraphingFrame2.getInstance().show();
+
                     } else if (event.getActionCommand().equals("RemoveGraph")) {
                         GraphingFrame.getInstance().returnPanel(mainPanel[i]);
+                        GraphingFrame2.getInstance().returnPanel(mainPanel[i]);
+                        mainPanel[i].updateUI();
+                    }
+                    break;
+                }
+                if (object == expandGraphItem2[i]) {
+                    if (event.getActionCommand().equals("ExpandGraph")) {
+
+                        GraphingFrame.getInstance().addGraphPanel(scrollableChartPanel[i], mainPanel[i]);
+                        GraphingFrame.getInstance().show();
+
+                    } else if (event.getActionCommand().equals("ExpandGraph2")) {
+
+                        GraphingFrame2.getInstance().addGraphPanel(scrollableChartPanel[i], mainPanel[i]);
+                        GraphingFrame2.getInstance().show();
+
+                    } else if (event.getActionCommand().equals("RemoveGraph")) {
+                        GraphingFrame.getInstance().returnPanel(mainPanel[i]);
+                        GraphingFrame2.getInstance().returnPanel(mainPanel[i]);
                         mainPanel[i].updateUI();
                     }
                     break;
