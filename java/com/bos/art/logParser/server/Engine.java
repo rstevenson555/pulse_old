@@ -140,6 +140,7 @@ public class Engine {
             LiveLogUnloader.startDBThread();
             LiveLogUnloader.startSystemTaskThread();
             ServerSocket server = new ServerSocket(ART_ENGINE_PORT);
+            server.setReceiveBufferSize(262144);
 
             while (true) {
                 for (;;) {
