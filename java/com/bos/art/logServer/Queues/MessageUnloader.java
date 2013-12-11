@@ -204,7 +204,8 @@ public class MessageUnloader extends java.lang.Thread {
                     logger.info("Attempting connection to ArtEngine at: " + address.getHostName());
                     socket = new Socket(address, port);
                     logger.warn("Socket Buffer Size: " + socket.getReceiveBufferSize());
-                    socket.setSendBufferSize(262144);
+                    //socket.setSendBufferSize(262144);
+                    socket.setSendBufferSize(229376);
                     logger.warn("Socket Buffer Size after change: " + socket.getReceiveBufferSize());
 
                     synchronized (this) {
