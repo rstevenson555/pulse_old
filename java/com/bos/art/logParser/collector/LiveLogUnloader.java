@@ -7,8 +7,14 @@
 package com.bos.art.logParser.collector;
 
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
+
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
 import com.bos.art.logParser.db.QueryParamCleaner;
@@ -20,8 +26,8 @@ import com.bos.art.logParser.statistics.StatisticsUnit;
 
 /**
  * @author I0360D3
- *
- * To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
+ *         <p/>
+ *         To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class LiveLogUnloader extends Thread {
 
@@ -71,13 +77,14 @@ public class LiveLogUnloader extends Thread {
     /*
      * (non-Javadoc) @see java.lang.Runnable#run()
      */
+
     @Override
     public void run() {
         CommunicationChannel channel = CommunicationChannel.getInstance();
         StatisticsModule sm = StatisticsModule.getInstance();
 
         while (unloadHeap || runstate) {
-            if ( logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("Starting the LogUnloader.");
             }
             ILiveLogPriorityQueueMessage llpr = queue.getFirst();
@@ -86,14 +93,14 @@ public class LiveLogUnloader extends Thread {
                 if (llpr.getPriority() != 20) {
                     logger.debug(
                             "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
-                            + System.currentTimeMillis());
+                                    + System.currentTimeMillis());
                 }
             }
             if (llpr instanceof ILiveLogParserRecord) {
                 Iterator iter = sm.iterator();
 
                 while (iter.hasNext()) {
-                    if ( logger.isDebugEnabled()) {
+                    if (logger.isDebugEnabled()) {
                         logger.debug(" Process Record called!");
                     }
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
@@ -199,33 +206,23 @@ public class LiveLogUnloader extends Thread {
 
     public static void startDBThread() {
         DatabaseWriteQueue.unloadDB = true;
-        (new Thread(DatabaseWriteQueue.getInstance(), "Database-Unloader No. " + databaseUnloader++) {
-            @Override
-            public void run() {
-                try {
-                    super.run();
-                }
-                catch(Exception e) {
-                    logger.error("Database-Unloader error:",e);
-                }
-            }
-        }).start();
+
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("Database-Unloader No.-%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(DatabaseWriteQueue.getInstance());
     }
 
     public static void startQueryParamCleaner() {
         QueryParamCleaner.shouldContinue = true;
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("QueryParamCleaner")
+                .build();
 
-        (new Thread(new QueryParamCleaner()) {
-            @Override
-             public void run() {
-                try {
-                    super.run();
-                }
-                catch(Exception e) {
-                    logger.error("QueryParamCleaner error:",e);
-                }
-            }
-        }).start();        
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(new QueryParamCleaner());
     }
 
     public static void stopQueryParamCleaner() {
@@ -263,33 +260,24 @@ public class LiveLogUnloader extends Thread {
     public static void startHeapThread() {
         unloadHeap = true;
         LiveLogUnloader llu = new LiveLogUnloader();
-        (new Thread(llu, "Heap-Unloader No. " + countHeapUnloader++) {
-            @Override
-             public void run() {
-                try {
-                    super.run();
-                }
-                catch(Exception e) {
-                    logger.error("Heap-Unloader error:",e);
-                }
-            }
-        }).start();        
 
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("Heap-Unloader No.-%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(llu);
     }
 
     public static void startQueryParamProcessor() {
         QueryParameterProcessingQueue qppq = QueryParameterProcessingQueue.getInstance();
-        (new Thread(qppq, "QueryParam-Proccessor No. " + queryParamProccessingQueue++) {
-            @Override
-            public void run() {
-                try {
-                    super.run();
-                }
-                catch(Exception e) {
-                    logger.error("QueryParam-Processor error:",e);
-                }
-            }
-        }).start();
+
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("QueryParam-Proccessor No.-%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(qppq);
 
         logger.warn("Starting QueryParamProcessor ..." + (queryParamProccessingQueue - 1));
         //t.start();
@@ -297,37 +285,25 @@ public class LiveLogUnloader extends Thread {
 
     public static void startQueryParamUnloader() {
         QueryParameterWriteQueue qpwq = QueryParameterWriteQueue.getInstance();
-        (new Thread(qpwq, "QueryParam-Unloader No. " + queryParamUnloader++) {
-            @Override
-            public void run() {
-                try {
-                    super.run();
-                }
-                catch(Exception e) {
-                    logger.error("QueryParam-Unloader error:",e);
-                }
-            }
-        }).start();
+
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("QueryParam-Unloader No. -%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(qpwq);
 
         logger.warn("Starting QueryParamUnloader ..." + (queryParamUnloader - 1));
-        //t.start();
     }
 
     public static void startSystemTaskThread() {
-        //LiveLogUnloader llu = new LiveLogUnloader(LiveLogPriorityQueue.getSystemTaskQueue(), true);
-        (new Thread(new LiveLogUnloader(LiveLogPriorityQueue.getSystemTaskQueue(), true),"SystemTask-Unloader No. " + systemTaskUnloader++) {
-            @Override
-            public void run() {
-                try {
-                    super.run();
-                }
-                catch(Exception e) {
-                    logger.error("SystemTask-Unloader error:",e);
-                }
-            }
-        }).start();
-        //llu.setName("SystemTask-Unloader No. " + systemTaskUnloader++);
-        //llu.start();
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("SystemTask-Unloader No. -%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(new LiveLogUnloader(LiveLogPriorityQueue.getSystemTaskQueue(), true));
+
     }
 
     private void stopHeapThreads() {
