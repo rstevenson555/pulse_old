@@ -87,9 +87,10 @@ public class LiveLogUnloader extends Thread {
         };
     };
 
-    public class ObjectEventHandler implements EventHandler<ObjectEvent> {
+    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
         public int failureCount = 0;
         public int messagesSeen = 0;
+        LiveLogUnloader unloader = new LiveLogUnloader();
 
         public ObjectEventHandler() {
         }
@@ -123,7 +124,7 @@ public class LiveLogUnloader extends Thread {
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
                 logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
-                performSystemTask((SystemTask) llpr);
+                unloader.performSystemTask((SystemTask) llpr);
             }
 
         }
