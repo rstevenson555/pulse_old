@@ -103,7 +103,7 @@ public class LiveLogUnloader extends Thread {
             event = pevent.record;
             ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage)event;
 
-            logger.warn("got event: " + event);
+            //logger.warn("got event: " + event);
 
             if (logger.isInfoEnabled()) {
                 if (llpr.getPriority() != 20) {
