@@ -142,8 +142,9 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("Database Write Queue size:");
+        sb.append("QueryParameterProcessing Queue size:");
         sb.append(((BlockingQueue) dequeue).size());
+        sb.append("disruptor cursor: " + disruptor.getCursor());
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);

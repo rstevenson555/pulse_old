@@ -143,6 +143,7 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
         sb.append("Database Write Queue size:");
         sb.append(((BlockingQueue) dequeue).size());
+        sb.append("disruptor cursor: " + disruptor.getCursor());       
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);

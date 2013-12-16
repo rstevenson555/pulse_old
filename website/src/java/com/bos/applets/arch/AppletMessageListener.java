@@ -175,6 +175,7 @@ public class AppletMessageListener extends ReceiverAdapter implements ChannelLis
             TUNNEL tunnel = new TUNNEL();
             tunnel.setGossipRouterHosts(mhost+"["+server_port+"]");
             tunnel.setBindAddress(localaddr2.getAddress());
+            tunnel.setBindPort(bind_port);
             tunnel.setEnableBundling(true);
             tunnel.setDiscardIncompatiblePackets(true);
             tunnel.setMaxBundleSize(128000);
