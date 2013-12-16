@@ -14,6 +14,7 @@ import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 import com.bos.art.logParser.records.QueryParameters;
 
@@ -40,7 +41,10 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
     private static final int MAX_DB_QUEUE_SIZE = 3000;
     //private static final int MAX_DB_QUEUE_SIZE = 50000;
     private static long fullCount = 0;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                .namingPattern("QueryParameterProcessingQueue-%d")
+                .build();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 2 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());

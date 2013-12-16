@@ -16,6 +16,7 @@ import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
 import com.bos.art.logParser.db.ConnectionPoolT;
@@ -54,7 +55,10 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     private static DateTime oneMinute = new DateTime().plusMinutes(1);
     private static long recordsPerMinute = 0;
     private static long fullCount = 0;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                .namingPattern("QueryParameterWriteQueue-%d")
+                .build();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 2 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());

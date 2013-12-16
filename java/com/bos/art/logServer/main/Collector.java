@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.yaml.snakeyaml.Yaml;
@@ -106,7 +108,11 @@ public class Collector {
         logger.info("running from: " + System.getProperty("user.dir"));
         
         boolean encode_input = false;
-        ExecutorService pool = Executors.newCachedThreadPool();
+        private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                    .namingPattern("Collector-%d")
+                    .build();
+
+        ExecutorService pool = Executors.newCachedThreadPool(tFactory);
 
         if ( args[1].equals("-encode_input")) {
             encode_input = true;

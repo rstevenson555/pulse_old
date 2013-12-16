@@ -17,6 +17,7 @@ import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDriver;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
@@ -132,7 +133,11 @@ public class Engine {
     public static void run(String args[]) {
 
         int connections = 1;
-        ExecutorService pool = Executors.newCachedThreadPool();
+        BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                    .namingPattern("Pulse Engine-%d")
+                    .build();
+
+        ExecutorService pool = Executors.newCachedThreadPool(tFactory);
 
         try {
 

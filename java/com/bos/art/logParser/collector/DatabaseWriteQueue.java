@@ -15,6 +15,7 @@ import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
 /**
@@ -34,7 +35,11 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     private static final int MAX_DB_QUEUE_SIZE = 4500;
     private static long fullCount = 0;
     private static long writeCount = 0;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                .namingPattern("DatabaseWriteQueue-%d")
+                .build();
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 4*1024, executor,
                 ProducerType.SINGLE, new SleepingWaitStrategy());

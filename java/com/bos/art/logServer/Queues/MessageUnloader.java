@@ -20,6 +20,7 @@ import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
 public class MessageUnloader extends java.lang.Thread {
@@ -40,7 +41,11 @@ public class MessageUnloader extends java.lang.Thread {
     //private int MESSAGE_QUEUE_SIZE = 300000;
     private int MESSAGE_QUEUE_SIZE = 5000;
     private static int SOCKET_BUFFER = 262144;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(DaemonThreadFactory.INSTANCE);
+    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                .namingPattern("MessageUnloader-%d")
+                .build();
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
