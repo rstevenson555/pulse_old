@@ -108,7 +108,7 @@ public class Collector {
         logger.info("running from: " + System.getProperty("user.dir"));
         
         boolean encode_input = false;
-        private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+        BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
                     .namingPattern("Collector-%d")
                     .build();
 
