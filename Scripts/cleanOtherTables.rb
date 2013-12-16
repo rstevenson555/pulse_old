@@ -2,7 +2,7 @@
 #
 require 'java'
 require 'rubygems'
-require '../jars/postgresql-9.2-1002.jdbc4.jar'
+require '../jars/postgresql-9.3-1100.jdbc4.jar'
 require '../jars/joda-time-2.1.jar'
 require 'active_record'
 module Joda
