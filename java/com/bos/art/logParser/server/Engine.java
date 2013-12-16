@@ -134,7 +134,7 @@ public class Engine {
 
         int connections = 1;
         BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
-                    .namingPattern("Pulse Engine-%d")
+                    .namingPattern("Engine Client Handler-%d")
                     .build();
 
         ExecutorService pool = Executors.newCachedThreadPool(tFactory);

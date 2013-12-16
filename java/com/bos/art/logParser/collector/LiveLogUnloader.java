@@ -8,11 +8,14 @@ package com.bos.art.logParser.collector;
 
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
@@ -72,6 +75,59 @@ public class LiveLogUnloader extends Thread {
     public LiveLogUnloader(LiveLogPriorityQueue parmQueue, boolean rs) {
         runstate = rs;
         queue = parmQueue;
+    }
+
+    public static class ObjectEvent {
+        public Object record;
+
+        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
+            public ObjectEvent newInstance() {
+                return new ObjectEvent();
+            }
+        };
+    };
+
+    public class ObjectEventHandler implements EventHandler<ObjectEvent> {
+        public int failureCount = 0;
+        public int messagesSeen = 0;
+
+        public ObjectEventHandler() {
+        }
+
+        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
+            CommunicationChannel channel = CommunicationChannel.getInstance();
+            StatisticsModule sm = StatisticsModule.getInstance();
+            Object event = pevent.record;
+
+            event = pevent.record;
+            ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage)event;
+
+
+            if (logger.isInfoEnabled()) {
+                if (llpr.getPriority() != 20) {
+                    logger.debug(
+                            "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
+                                    + System.currentTimeMillis());
+                }
+            }
+            if (llpr instanceof ILiveLogParserRecord) {
+                Iterator iter = sm.iterator();
+
+                while (iter.hasNext()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(" Process Record called!");
+                    }
+                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
+                }
+                DatabaseWriteQueue.getInstance().addLast(llpr);
+                // FileWriteQueue.getInstance().addLast(llpr);
+            } else if (llpr instanceof SystemTask) {
+                logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
+                performSystemTask((SystemTask) llpr);
+            }
+
+        }
+
     }
 
     /*

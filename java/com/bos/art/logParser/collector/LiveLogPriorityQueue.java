@@ -10,8 +10,17 @@ package com.bos.art.logParser.collector;
 import EDU.oswego.cs.dl.util.concurrent.BoundedPriorityQueue;
 import com.bos.art.logParser.records.ILiveLogPriorityQueueMessage;
 import java.io.Serializable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventTranslator;
+import com.lmax.disruptor.FatalExceptionHandler;
+import com.lmax.disruptor.SleepingWaitStrategy;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
 
@@ -36,8 +45,23 @@ public class LiveLogPriorityQueue implements Serializable {
     private static LiveLogPriorityQueue systemTaskInstance;
     private static AtomicBoolean instanceLock = new AtomicBoolean(false);
     private static AtomicBoolean instanceTaskLock = new AtomicBoolean(false);
+    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+                .namingPattern("LiveLogProcessor-%d")
+                .build();
 
-    private LiveLogPriorityQueue() {}
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
+    private Disruptor<LiveLogUnloader.ObjectEvent> disruptor = new Disruptor<LiveLogUnloader.ObjectEvent>(LiveLogUnloader.ObjectEvent.FACTORY, 4 * 1024, executor,
+            ProducerType.SINGLE, new SleepingWaitStrategy());
+
+    
+
+    private LiveLogPriorityQueue() {
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        LiveLogUnloader.ObjectEventHandler handler = new LiveLogUnloader.ObjectEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
+    }
 
     public static LiveLogPriorityQueue getInstance() {
         if (instanceTaskLock.compareAndSet(false,true)){
@@ -53,12 +77,17 @@ public class LiveLogPriorityQueue implements Serializable {
         return systemTaskInstance;
     }
 
-    public void addObject(Object o) {
+    public void addObject(final Object o) {
         long startTime = System.currentTimeMillis();
 
         if (o instanceof ILiveLogPriorityQueueMessage) {
             try {              
-                queue.put(o);
+                //queue.put(o);                
+                disruptor.publishEvent(new EventTranslator<LiveLogUnloader.ObjectEvent>() {
+                    public void translateTo(LiveLogUnloader.ObjectEvent event, long sequence) {
+                        event.record = o;
+                    }
+                });
                 
             } catch (Exception e) {
                 e.printStackTrace();
