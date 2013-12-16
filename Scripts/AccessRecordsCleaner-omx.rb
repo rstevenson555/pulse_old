@@ -1,5 +1,5 @@
 require 'java'
-require '../jars/postgresql-9.2-1002.jdbc4.jar'
+require '../jars/postgresql-9.3-1100.jdbc4.jar'
 require '../jars/ojdbc5.jar'
 require 'rubygems'
 require 'omx_jdbc_manager'
