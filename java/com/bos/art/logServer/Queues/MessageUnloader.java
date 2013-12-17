@@ -47,7 +47,7 @@ public class MessageUnloader extends java.lang.Thread {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
-    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 6 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
     private static class ObjectEvent {
