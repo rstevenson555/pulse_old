@@ -46,7 +46,7 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
-    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 2 * 1024, executor,
+    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 4 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
 
@@ -70,6 +70,11 @@ public class QueryParameterProcessingQueue extends Thread implements Serializabl
         }
 
         public void onEvent(QueryParametersEvent event, long sequence, boolean endOfBatch) throws Exception {
+            if (logger.isInfoEnabled()) {
+                if (objectsRemoved % 10000 == 0) {
+                    logger.info(toString());
+                }
+            }
             QueryParameters qp = event.record;
 
             ++objectsRemoved;

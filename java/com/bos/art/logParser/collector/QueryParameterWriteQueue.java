@@ -60,7 +60,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
-    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 2 * 1024, executor,
+    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 4 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
     private static class DBQueryParamRecordEvent {
@@ -83,6 +83,21 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         }
 
         public void onEvent(DBQueryParamRecordEvent event, long sequence, boolean endOfBatch) throws Exception {
+
+            now = new DateTime();
+            recordsPerMinute++;
+
+            if (now.isAfter(oneMinute)) {
+                logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
+                oneMinute = now.plusMinutes(1);
+                recordsPerMinute = 0;
+            }
+            if (logger.isInfoEnabled()) {
+                if (objectsRemoved % 10000 == 0) {
+                    logger.info(toString());
+                }
+            }
+
             QueryParameters.DBQueryParamRecord dbqp = event.record;
             ++objectsRemoved;
 //                if (dbqp == null) {
