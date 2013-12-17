@@ -42,6 +42,8 @@ public class PatchFilterInputStream extends FilterInputStream {
                 return (byte) ' ';
             case (byte) '\u000f':
                 return (byte) ' ';
+            case (byte) '\u000b':
+                return (byte) ' ';
             case (byte) '\u0013':
                 return (byte) ' ';
         }
@@ -79,6 +81,8 @@ public class PatchFilterInputStream extends FilterInputStream {
                 case (byte) '\u0012':
                     data[i] = (byte) ' ';
                 case (byte) '\u000f':
+                    data[i] = (byte) ' ';
+                case (byte) '\u000b':
                     data[i] = (byte) ' ';
                 case (byte) '\u0013':
                     data[i] = (byte) ' ';
