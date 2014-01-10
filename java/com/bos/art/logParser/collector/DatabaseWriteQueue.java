@@ -123,9 +123,9 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
                 event.record = o;
             }
         });
-        if ( (fullCount++ % 100) == 0) {
-            logger.error("DatabaseWriteQueue is full, throwing out messages");
-        }
+//        if ( (fullCount++ % 100) == 0) {
+//            logger.error("DatabaseWriteQueue is full, throwing out messages");
+//        }
     }
 
 
