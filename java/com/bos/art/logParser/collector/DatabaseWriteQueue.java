@@ -109,14 +109,21 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
     public void addLast(final ILiveLogParserRecord o) {
         //boolean success = dequeue.offer(o);
-        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<ILiveLogParserRecordEvent>() {
+//        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<ILiveLogParserRecordEvent>() {
+//            public void translateTo(ILiveLogParserRecordEvent event, long sequence)
+//            {
+//                event.record = o;
+//            }
+//
+//        });
+
+        disruptor.publishEvent(new EventTranslator<ILiveLogParserRecordEvent>() {
             public void translateTo(ILiveLogParserRecordEvent event, long sequence)
             {
                 event.record = o;
             }
-
         });
-        if (!success && (fullCount++ % 100) == 0) {
+        if ( (fullCount++ % 100) == 0) {
             logger.error("DatabaseWriteQueue is full, throwing out messages");
         }
     }
