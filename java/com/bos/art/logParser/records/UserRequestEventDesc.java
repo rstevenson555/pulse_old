@@ -15,7 +15,7 @@ public class UserRequestEventDesc implements Serializable, Comparable {
     private String branchName;
     private String serverName;
     private String className;
-    private String context = "ROOT";
+    private String context;
     private String instance = "no_instance";
     transient private String date;
     transient private String time;
