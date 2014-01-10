@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
+import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Properties;
@@ -145,8 +147,10 @@ public class Engine {
             LiveLogUnloader.startHeapThread();
             LiveLogUnloader.startDBThread();
             LiveLogUnloader.startSystemTaskThread();
-            ServerSocket server = new ServerSocket(ART_ENGINE_PORT);
+            ServerSocket server = new ServerSocket();
+            SocketAddress localSocketAddress = new InetSocketAddress(ART_ENGINE_PORT);
             server.setReceiveBufferSize(SOCKET_BUFFER);
+            server.bind(localSocketAddress);
 
             while (true) {
                 for (;;) {
