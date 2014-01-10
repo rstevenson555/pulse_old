@@ -216,7 +216,7 @@ public class MessageUnloader extends java.lang.Thread {
 
                     synchronized (this) {
 
-                        outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                        outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(),16*1024));
                         logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
                         connector = null;
                         break;
