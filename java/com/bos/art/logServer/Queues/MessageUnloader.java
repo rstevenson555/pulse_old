@@ -8,7 +8,9 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -294,11 +296,15 @@ public class MessageUnloader extends java.lang.Thread {
 
         try {
             logger.info("trying to connect to ArtEngine at: " + address + " port: " + port);
-            Socket socket = new Socket(address, port);
+            Socket socket = new Socket();
+            SocketAddress engineSocket = new InetSocketAddress(address, port);
+            socket.bind(engineSocket);
 
             logger.warn("Socket Buffer Size: " + socket.getReceiveBufferSize());
             socket.setSendBufferSize(262144);
             logger.warn("Socket Buffer Size after change: " + socket.getReceiveBufferSize());
+
+            socket.connect(engineSocket);
 
             outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(),16*1024));
             logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
