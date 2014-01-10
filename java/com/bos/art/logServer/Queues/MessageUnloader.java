@@ -47,7 +47,7 @@ public class MessageUnloader extends java.lang.Thread {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
-    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 6 * 1024, executor,
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 3 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
     private static class ObjectEvent {
@@ -163,7 +163,7 @@ public class MessageUnloader extends java.lang.Thread {
 //        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
         queue = new ArrayBlockingQueue(1); //across all jvm's because this is static connection
 
-                disruptor.handleExceptionsWith(new FatalExceptionHandler());
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
         ObjectEventHandler handler = new ObjectEventHandler();
         disruptor.handleEventsWith(handler);
