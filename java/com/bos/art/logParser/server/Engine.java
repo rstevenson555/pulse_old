@@ -112,7 +112,8 @@ public class Engine {
         DB_URL = (String)dbsettings.get("driver") + "://" + (String)dbsettings.get("host") + ":"
                     + dbsettings.get("port") + "/" + dbsettings.get("instance") + "?user="
                     + dbsettings.get("login") + "&password=" + dbsettings.get("pwd")
-                    + "&sendBufferSize=" +SOCKET_BUFFER + "&receiveBufferSize=" +SOCKET_BUFFER;
+                    + "&sendBufferSize=" +SOCKET_BUFFER + "&receiveBufferSize=" +SOCKET_BUFFER
+                    + "&recvBufferSize=" + SOCKET_BUFFER;
         
         Map javagroups = (Map) config.get("javagroups");
         gossipServer = (String) javagroups.get("gossipserver");
@@ -218,6 +219,7 @@ public class Engine {
         props.put("removeAbandoned", "true");
         props.put("sendBufferSize",String.valueOf(SOCKET_BUFFER));
         props.put("receiveBufferSize",String.valueOf(SOCKET_BUFFER));
+        props.put("recvBufferSize",String.valueOf(SOCKET_BUFFER));
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI, props);
 
         // connectionFactory.
