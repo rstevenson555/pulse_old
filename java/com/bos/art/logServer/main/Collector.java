@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Properties;
@@ -28,6 +31,7 @@ public class Collector {
     private static final String PRODCONFIG = "prodconfig";
     private static final String STRESSCONFIG = "stressconfig";
     private static final String LOCALCONFIG = "localconfig";
+    private static int SOCKET_BUFFER = 262144;  // 256kb
 
     public static void init() {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -122,7 +126,11 @@ public class Collector {
             System.out.println("Running in server mode, listening on " + ART_COLLECTOR_PORT);
             while (true) {
                 try {
-                    server = new java.net.ServerSocket(ART_COLLECTOR_PORT);
+                    server = new ServerSocket();
+                    SocketAddress localSocketAddress = new InetSocketAddress(ART_COLLECTOR_PORT);
+                    server.setReceiveBufferSize(SOCKET_BUFFER);
+                    server.bind(localSocketAddress);
+
                     break;
                 } catch (java.net.SocketException se) {
                     try {
