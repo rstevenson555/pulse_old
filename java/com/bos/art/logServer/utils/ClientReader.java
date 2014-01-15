@@ -435,7 +435,7 @@ public class ClientReader implements Runnable {
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
                             new PatchFilterInputStream(
-                          new BufferedInputStream(inputSocket.getInputStream(),16*1024)),
+                          new BufferedInputStream(inputSocket.getInputStream(),32*1024)),
                     50);
 
                 } else {
