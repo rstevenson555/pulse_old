@@ -302,7 +302,7 @@ public class MessageUnloader extends java.lang.Thread {
             socket.setSendBufferSize(262144);
             logger.warn("Socket Buffer Size after change: " + socket.getSendBufferSize());
 
-            outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(),64*1024));
+            outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(),128*1024));
             logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
         } catch (IOException io) {
             logger.error("Error connecting to : " + address + " " + io);
