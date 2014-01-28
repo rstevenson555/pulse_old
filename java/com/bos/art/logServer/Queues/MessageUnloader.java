@@ -348,6 +348,10 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
         return messagesPerSecond;
     }
 
+    public long getWriteCount() {
+        return writeCount;
+    }
+
     public void exitOnFinish() {
         exitOnFinish = true;
     }

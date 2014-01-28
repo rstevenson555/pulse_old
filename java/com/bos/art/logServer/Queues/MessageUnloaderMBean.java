@@ -13,4 +13,5 @@ public interface MessageUnloaderMBean {
     void setBufferSize(long sz);
     long getRemainingCapacity();
     long getMessagesPerSecond();
+    long getWriteCount();
 }
