@@ -9,6 +9,9 @@ import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +23,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 public class MessageUnloader extends java.lang.Thread implements MessageUnloaderMBean {
     private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
@@ -60,6 +64,17 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     }
 
 
+    class TPSCalc {
+        public int count=0;
+        DateTime start;
+    }
+    private Map<Integer,TPSCalc> cache = new LinkedHashMap<Integer,TPSCalc>()
+    {
+        protected boolean removeEldestEntry(Map.Entry eldest) {
+            return size() > 10;
+        }
+    };
+
     private class ObjectEventHandler implements EventHandler<ObjectEvent> {
         public int failureCount = 0;
         private long messagesSeen = 0;
@@ -79,8 +94,19 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
                     if (++writeCount % 1000 == 0) {
                         outputStream.reset();
 
-                        long now = System.currentTimeMillis();
-                        messagesPerSecond = (writeCount / ((now - ManagementFactory.getRuntimeMXBean().getStartTime()) /1000));
+                        //long now = System.currentTimeMillis();
+                        //messagesPerSecond = (writeCount / ((now - ManagementFactory.getRuntimeMXBean().getStartTime()) /1000));
+
+                        DateTime now = new DateTime();
+                        TPSCalc calcTPS = cache.get(now.getMinuteOfHour());
+                        if (calcTPS==null) {
+                            calcTPS = new TPSCalc();
+                            calcTPS.start = new DateTime();
+                            cache.put(now.getMinuteOfHour(), calcTPS);
+                        }
+                        calcTPS.count++;
+
+                        messagesPerSecond = calcTPS.count / ((now.toDateTime().getMillis() - calcTPS.start.toDateTime().getMillis())/1000);
                     }
 
                     if (writeCount % 10000 == 0) {
