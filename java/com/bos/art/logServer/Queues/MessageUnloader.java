@@ -158,15 +158,13 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
         return queue.size();
     }
 
-    private ObjectEventHandler handler;
-
     private MessageUnloader() {
 //        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
         queue = new ArrayBlockingQueue(1); //across all jvm's because this is static connection
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
-        handler = new ObjectEventHandler();
+        ObjectEventHandler handler = new ObjectEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
 
@@ -333,9 +331,8 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
         return disruptor.getBufferSize();
     }
 
-    public long getCursor() {
-
-        return handler.sequence;
+    public long remainingCapacity() {
+        return disruptor.getRingBuffer().remainingCapacity();
     }
 
     public void exitOnFinish() {
