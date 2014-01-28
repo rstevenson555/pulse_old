@@ -71,7 +71,7 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     private Map<Integer,TPSCalc> cache = new LinkedHashMap<Integer,TPSCalc>()
     {
         protected boolean removeEldestEntry(Map.Entry eldest) {
-            return size() > 10;
+            return size() > 1;
         }
     };
 
