@@ -80,8 +80,7 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
                         outputStream.reset();
 
                         long now = System.currentTimeMillis();
-                        messagesPerSecond = writeCount / (now - ManagementFactory.getRuntimeMXBean().getStartTime()) /1000;
-
+                        messagesPerSecond = (writeCount / ((now - ManagementFactory.getRuntimeMXBean().getStartTime()) /1000));
                     }
 
                     if (writeCount % 10000 == 0) {
