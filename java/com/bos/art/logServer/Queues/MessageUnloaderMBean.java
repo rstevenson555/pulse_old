@@ -10,6 +10,6 @@ package com.bos.art.logServer.Queues;
 public interface MessageUnloaderMBean {
 
     long getBufferSize();
-    long remainingCapacity();
+    long getRemainingCapacity();
 
 }

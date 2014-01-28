@@ -331,7 +331,7 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
         return disruptor.getBufferSize();
     }
 
-    public long remainingCapacity() {
+    public long getRemainingCapacity() {
         return disruptor.getRingBuffer().remainingCapacity();
     }
 
