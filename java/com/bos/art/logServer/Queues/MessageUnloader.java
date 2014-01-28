@@ -59,12 +59,15 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     private class ObjectEventHandler implements EventHandler<ObjectEvent> {
         public int failureCount = 0;
         public int messagesSeen = 0;
+        public long sequence = 0;
 
         public ObjectEventHandler() {
         }
 
         public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
             Object event = pevent.record;
+
+            this.sequence = sequence;
 
             try {
                 event = pevent.record;
@@ -154,6 +157,8 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     public int size() {
         return queue.size();
     }
+
+    private ObjectEventHandler handler;
 
     private MessageUnloader() {
 //        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
@@ -329,7 +334,8 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     }
 
     public long getCursor() {
-        return disruptor.getCursor();
+
+        return handler.sequence;
     }
 
     public void exitOnFinish() {
