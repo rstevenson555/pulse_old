@@ -1,6 +1,5 @@
 package com.bos.art.logServer.Queues;
 
-import com.bos.art.logServer.Queues.MBeanInterface.MessageUnloaderMBean;
 import com.bos.art.logServer.main.Collector;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
 

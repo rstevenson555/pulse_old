@@ -1,4 +1,4 @@
-package com.bos.art.logServer.Queues.MBeanInterface;
+package com.bos.art.logServer.Queues;
 
 /**
  * Created with IntelliJ IDEA.
