@@ -1,6 +1,6 @@
 package com.bos.art.logServer.Queues;
 
-import com.bos.art.logParser.records.QueryParameters;
+import com.bos.art.logServer.Queues.MBeanInterface.DisruptorMBean;
 import com.bos.art.logServer.main.Collector;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
 
@@ -8,11 +8,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -21,11 +17,10 @@ import java.util.concurrent.Executors;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
-public class MessageUnloader extends java.lang.Thread {
+public class MessageUnloader  extends java.lang.Thread implements DisruptorMBean {
     private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
 
     private BlockingQueue queue = null;
@@ -328,6 +323,14 @@ public class MessageUnloader extends java.lang.Thread {
         } else {
             failCount = 0;
         }
+    }
+
+    public long getBufferSize() {
+        return disruptor.getBufferSize();
+    }
+
+    public long getCursor() {
+        return disruptor.getCursor();
     }
 
     public void exitOnFinish() {

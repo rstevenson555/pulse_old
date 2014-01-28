@@ -1,10 +1,12 @@
 package com.bos.art.logServer.main;
 
+import com.bos.art.logServer.Queues.MessageUnloader;
 import com.bos.art.logServer.utils.ClientReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
@@ -18,6 +20,8 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.yaml.snakeyaml.Yaml;
+
+import javax.management.*;
 
 public class Collector {
 
@@ -122,6 +126,24 @@ public class Collector {
             encode_input = true;
         }
         if (args[0].equals("-server")) {
+            MessageUnloader unloader = MessageUnloader.getInstance();
+            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name = null;
+            try {
+                name = new ObjectName("com.omx.MessageUnloader.jmx:type=DisruptorMBean");
+            } catch (MalformedObjectNameException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            try {
+                mbs.registerMBean(unloader, name);
+            } catch (InstanceAlreadyExistsException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } catch (MBeanRegistrationException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            } catch (NotCompliantMBeanException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+
             java.net.ServerSocket server = null;
             System.out.println("Running in server mode, listening on " + ART_COLLECTOR_PORT);
             while (true) {
