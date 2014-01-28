@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
@@ -59,15 +60,12 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     private class ObjectEventHandler implements EventHandler<ObjectEvent> {
         public int failureCount = 0;
         public int messagesSeen = 0;
-        public long sequence = 0;
 
         public ObjectEventHandler() {
         }
 
         public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
             Object event = pevent.record;
-
-            this.sequence = sequence;
 
             try {
                 event = pevent.record;
@@ -335,10 +333,24 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
         return disruptor.getRingBuffer().remainingCapacity();
     }
 
+    public void setBufferSize(long sz) {
+        disruptor.shutdown();
+
+        int psize = Util.ceilingNextPowerOfTwo((int)sz);
+
+        disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, psize, executor,
+                ProducerType.SINGLE, new SleepingWaitStrategy());
+
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        ObjectEventHandler handler = new ObjectEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
+
+    }
+
     public void exitOnFinish() {
         exitOnFinish = true;
-
-        
     }
 
     @Override
