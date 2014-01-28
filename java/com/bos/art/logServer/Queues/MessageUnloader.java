@@ -91,22 +91,19 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
                 if (outputStream != null) {
                     writeData(outputStream, event);
 
+                    DateTime now = new DateTime();
+                    TPSCalc calcTPS = cache.get(now.getMinuteOfHour());
+                    if (calcTPS==null) {
+                        calcTPS = new TPSCalc();
+                        calcTPS.start = new DateTime();
+                        cache.put(now.getMinuteOfHour(), calcTPS);
+                    }
+                    calcTPS.count++;
+
+                    messagesPerSecond = calcTPS.count / ((now.toDateTime().getMillis() - calcTPS.start.toDateTime().getMillis())/1000);
+
                     if (++writeCount % 1000 == 0) {
                         outputStream.reset();
-
-                        //long now = System.currentTimeMillis();
-                        //messagesPerSecond = (writeCount / ((now - ManagementFactory.getRuntimeMXBean().getStartTime()) /1000));
-
-                        DateTime now = new DateTime();
-                        TPSCalc calcTPS = cache.get(now.getMinuteOfHour());
-                        if (calcTPS==null) {
-                            calcTPS = new TPSCalc();
-                            calcTPS.start = new DateTime();
-                            cache.put(now.getMinuteOfHour(), calcTPS);
-                        }
-                        calcTPS.count++;
-
-                        messagesPerSecond = calcTPS.count / ((now.toDateTime().getMillis() - calcTPS.start.toDateTime().getMillis())/1000);
                     }
 
                     if (writeCount % 10000 == 0) {
