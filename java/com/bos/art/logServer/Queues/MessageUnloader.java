@@ -6,6 +6,7 @@ import com.bos.art.logServer.utils.TimeIntervalConstants;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -20,7 +21,7 @@ import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
-public class MessageUnloader  extends java.lang.Thread implements MessageUnloaderMBean {
+public class MessageUnloader extends java.lang.Thread implements MessageUnloaderMBean {
     private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
 
     private BlockingQueue queue = null;
@@ -39,8 +40,9 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     private int MESSAGE_QUEUE_SIZE = 5000;
     private static int SOCKET_BUFFER = 262144;
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
-                .namingPattern("MessageUnloader-%d")
-                .build();
+            .namingPattern("MessageUnloader-%d")
+            .build();
+    private long messagesPerSecond = 0;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
@@ -55,11 +57,12 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
                 return new ObjectEvent();
             }
         };
-    };
+    }
+
 
     private class ObjectEventHandler implements EventHandler<ObjectEvent> {
         public int failureCount = 0;
-        public int messagesSeen = 0;
+        private long messagesSeen = 0;
 
         public ObjectEventHandler() {
         }
@@ -71,20 +74,23 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
                 event = pevent.record;
 
                 if (outputStream != null) {
-                    //System.out.println(event);
-                    //outputStream.writeObject(event);
                     writeData(outputStream, event);
-                    // System.out.println("writing object"+writeCount);
+
                     if (++writeCount % 1000 == 0) {
                         outputStream.reset();
+
+                        long now = System.currentTimeMillis();
+                        messagesPerSecond = writeCount / (now - ManagementFactory.getRuntimeMXBean().getStartTime()) /1000;
+
                     }
+
                     if (writeCount % 10000 == 0) {
+
                         logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
                                 + " millis; leaving [" + queue.size() + "] in the queue");
 
                         writeTime = System.currentTimeMillis();
                     }
-                    //System.out.println("writing ojbect to server");
                 } else {
                     logger.error("outputstream is null");
                 }
@@ -97,13 +103,6 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
                 }
                 logger.error("IOException in MessageUnloader", io);
                 fireConnector();
-//            } catch (InterruptedException ie) {
-//                try {
-//                    outputStream.reset();
-//                } catch (IOException io) {
-//                }
-//                logger.error("InterruptedException in MessageUnloader", ie);
-//                fireConnector();
             } catch (Throwable t) {
                 try {
                     outputStream.reset();
@@ -131,10 +130,9 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
                 }
                 logger.info("exiting");
                 System.exit(0);
-                }
+            }
 
         }
-
     }
 
     static public MessageUnloader getInstance() {
@@ -157,7 +155,6 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     }
 
     private MessageUnloader() {
-//        queue = new ArrayBlockingQueue(MESSAGE_QUEUE_SIZE); //across all jvm's because this is static connection
         queue = new ArrayBlockingQueue(1); //across all jvm's because this is static connection
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
@@ -213,7 +210,7 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
 
                     synchronized (this) {
 
-                        outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(),64*1024));
+                        outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(), 64 * 1024));
                         logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
                         connector = null;
                         break;
@@ -297,7 +294,7 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
             socket.setSendBufferSize(262144);
             logger.warn("Socket Buffer Size after change: " + socket.getSendBufferSize());
 
-            outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(),128*1024));
+            outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(), 128 * 1024));
             logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
         } catch (IOException io) {
             logger.error("Error connecting to : " + address + " " + io);
@@ -336,7 +333,7 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
     public void setBufferSize(long sz) {
         disruptor.shutdown();
 
-        int psize = Util.ceilingNextPowerOfTwo((int)sz);
+        int psize = Util.ceilingNextPowerOfTwo((int) sz);
 
         disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, psize, executor,
                 ProducerType.SINGLE, new SleepingWaitStrategy());
@@ -346,7 +343,10 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
         ObjectEventHandler handler = new ObjectEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
+    }
 
+    public long getMessagesPerSecond() {
+        return messagesPerSecond;
     }
 
     public void exitOnFinish() {
