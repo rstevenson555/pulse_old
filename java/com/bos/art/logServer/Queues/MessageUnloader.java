@@ -166,7 +166,7 @@ public class MessageUnloader  extends java.lang.Thread implements MessageUnloade
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
-        ObjectEventHandler handler = new ObjectEventHandler();
+        handler = new ObjectEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
 
