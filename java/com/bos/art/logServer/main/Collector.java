@@ -130,7 +130,7 @@ public class Collector {
             MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
             ObjectName name = null;
             try {
-                name = new ObjectName("com.omx.MessageUnloader.jmx:type=DisruptorMBean");
+                name = new ObjectName("com.omx.MessageUnloader.jmx:type=MessageUnloaderMBean");
             } catch (MalformedObjectNameException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }

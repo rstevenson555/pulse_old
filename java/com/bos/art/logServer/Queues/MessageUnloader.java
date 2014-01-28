@@ -1,6 +1,6 @@
 package com.bos.art.logServer.Queues;
 
-import com.bos.art.logServer.Queues.MBeanInterface.DisruptorMBean;
+import com.bos.art.logServer.Queues.MBeanInterface.MessageUnloaderMBean;
 import com.bos.art.logServer.main.Collector;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
 
@@ -20,7 +20,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
-public class MessageUnloader  extends java.lang.Thread implements DisruptorMBean {
+public class MessageUnloader  extends java.lang.Thread implements MessageUnloaderMBean {
     private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
 
     private BlockingQueue queue = null;

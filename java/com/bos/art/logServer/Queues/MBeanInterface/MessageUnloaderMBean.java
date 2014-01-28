@@ -7,7 +7,7 @@ package com.bos.art.logServer.Queues.MBeanInterface;
  * Time: 8:52 AM
  * To change this template use File | Settings | File Templates.
  */
-public interface DisruptorMBean {
+public interface MessageUnloaderMBean {
 
     long getBufferSize();
     long getCursor();
