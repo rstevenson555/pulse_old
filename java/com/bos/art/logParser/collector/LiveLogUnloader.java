@@ -263,14 +263,14 @@ public class LiveLogUnloader extends Thread {
     }
 
     public static void startDBThread() {
-        DatabaseWriteQueue.unloadDB = true;
-
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("Database-Unloader No.-%d")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(DatabaseWriteQueue.getInstance());
+//        DatabaseWriteQueue.unloadDB = true;
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("Database-Unloader No.-%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(DatabaseWriteQueue.getInstance());
     }
 
     public static void startQueryParamCleaner() {
