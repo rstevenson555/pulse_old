@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,12 +15,12 @@ import java.util.Map;
  */
 public class TPSCalculator {
     private class CalcRecord {
-        int count;
+        AtomicInteger transactionCount;
         DateTime periodStart;
 
         CalcRecord() {
             periodStart = new DateTime();
-            count = 0;
+            transactionCount = new AtomicInteger(0);
         }
     }
 
@@ -30,20 +31,28 @@ public class TPSCalculator {
         }
     };
 
+    /**
+     * increment the transaction record for the current minute
+     */
     public void incrementTransaction() {
         DateTime now = new DateTime();
         int minute = now.getMinuteOfHour();
+
         CalcRecord calcRecord = tpsRecordMap.get(minute);
         if ( calcRecord == null) {
             calcRecord = new CalcRecord();
             tpsRecordMap.put(minute, calcRecord);
         }
-        calcRecord.count++;
+        calcRecord.transactionCount.incrementAndGet();
     }
 
+    /**
+     * do the tps calc
+     * @return
+     */
     public long getMessagesPerSecond() {
         DateTime now = new DateTime();
         CalcRecord calcRecord = tpsRecordMap.get(now.getMinuteOfHour());
-        return calcRecord.count / ((now.toDateTime().getMillis() - calcRecord.periodStart.toDateTime().getMillis())/1000);
+        return calcRecord.transactionCount.get() / ((now.toDateTime().getMillis() - calcRecord.periodStart.toDateTime().getMillis())/1000);
     }
 }
