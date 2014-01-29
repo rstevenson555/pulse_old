@@ -126,21 +126,6 @@ public class Collector {
             encode_input = true;
         }
         if (args[0].equals("-server")) {
-            MessageUnloader unloader = MessageUnloader.getInstance();
-            MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-            ObjectName name = null;
-            try {
-                name = new ObjectName("com.omx.Collector:type=MessageUnloaderMBean");
-                mbs.registerMBean(unloader, name);
-            } catch (MalformedObjectNameException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } catch (InstanceAlreadyExistsException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } catch (MBeanRegistrationException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } catch (NotCompliantMBeanException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
 
             java.net.ServerSocket server = null;
             System.out.println("Running in server mode, listening on " + ART_COLLECTOR_PORT);

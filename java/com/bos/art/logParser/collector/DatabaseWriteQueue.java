@@ -9,14 +9,19 @@ package com.bos.art.logParser.collector;
 
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import java.io.Serializable;
+import java.lang.management.ManagementFactory;
 import java.util.concurrent.*;
 
+import com.bos.art.logServer.utils.TPSCalculator;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
+
+import javax.management.*;
 
 /**
  * @author I0360D3
@@ -24,22 +29,20 @@ import org.apache.log4j.Logger;
  * To change the template for this generated type comment go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-public class DatabaseWriteQueue extends Thread implements Serializable {
+public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(DatabaseWriteQueue.class.getName());
     private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
-    private BlockingQueue<ILiveLogParserRecord> dequeue;
     private int objectsRemoved;
     private int objectsWritten;                 
     private long totalWriteTime;
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 4500;
-    private static long fullCount = 0;
-    private static long writeCount = 0;
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
                 .namingPattern("DatabaseWriteQueue-%d")
                 .build();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
+    private static TPSCalculator tpsCalculator = new TPSCalculator();
 
     private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 4*1024, executor,
                 ProducerType.SINGLE, new SleepingWaitStrategy());
@@ -61,9 +64,6 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
     private class LiveLogParserRecordEventHandler implements EventHandler<ILiveLogParserRecordEvent>
     {
-        public int failureCount = 0;
-        public int messagesSeen = 0;
-
         public LiveLogParserRecordEventHandler()
         {
         }
@@ -75,27 +75,83 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
 
             long writeStartTime = System.currentTimeMillis();
 
-            if (writeCount++ % 1000 == 0) {
-                //logger.warn("DatabaseWriteQueue writeToDatabase called");
-            }
-            //logger.warn("Persisting...");
+            tpsCalculator.incrementTransaction();
+
             ilpr.writeToDatabase();
             totalWriteTime += (System.currentTimeMillis() - writeStartTime);
             ++objectsWritten;
-            messagesSeen++;
         }
     }
 
-
     private DatabaseWriteQueue() {
-//        dequeue = new ArrayBlockingQueue<ILiveLogParserRecord>(MAX_DB_QUEUE_SIZE);
-        dequeue = new ArrayBlockingQueue<ILiveLogParserRecord>(1);
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
         LiveLogParserRecordEventHandler handler = new LiveLogParserRecordEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
+
+        registerWithMBeanServer();
+    }
+
+    // JMX Interface exposed
+    public long getBufferSize() {
+        return disruptor.getBufferSize();
+    }
+
+    /**
+     * get the remaining capacity of the ringbuffer
+     * @return
+     */
+    public long getRemainingCapacity() {
+        return disruptor.getRingBuffer().remainingCapacity();
+    }
+
+    /**
+     * change the buffer size to nearest power of two
+     * @param sz
+     */
+    public void setBufferSize(long sz) {
+        disruptor.shutdown();
+
+        int psize = Util.ceilingNextPowerOfTwo((int) sz);
+
+        disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 4*1024, executor,
+                ProducerType.SINGLE, new SleepingWaitStrategy());
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        LiveLogParserRecordEventHandler handler = new LiveLogParserRecordEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
+    }
+
+    /**
+     * return messages per second calculation
+     * @return
+     */
+    public long getMessagesPerSecond() {
+        return tpsCalculator.getMessagesPerSecond();
+    }
+
+    public long getWriteCount() {
+        return tpsCalculator.getTransactionCount();
+    }
+
+    private void registerWithMBeanServer() {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = null;
+        try {
+            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean");
+            mbs.registerMBean(this, name);
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InstanceAlreadyExistsException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (MBeanRegistrationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (NotCompliantMBeanException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     public static DatabaseWriteQueue getInstance() {
@@ -108,17 +164,6 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
     }
 
     public void addLast(final ILiveLogParserRecord o) {
-        //boolean success = dequeue.offer(o);
-//        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<ILiveLogParserRecordEvent>() {
-//            public void translateTo(ILiveLogParserRecordEvent event, long sequence)
-//            {
-//                event.record = o;
-//            }
-//
-//        });
-//        if (!success && (fullCount++ % 100) == 0) {
-//            logger.error("DatabaseWriteQueue is full, throwing out messages");
-//        }
         disruptor.publishEvent(new EventTranslator<ILiveLogParserRecordEvent>() {
             public void translateTo(ILiveLogParserRecordEvent event, long sequence)
             {
@@ -128,28 +173,16 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
         });
     }
 
-
-    public Object removeFirst() {
-        return removeFirst0();
+    public long size() {
+        return (disruptor.getRingBuffer().getBufferSize() - disruptor.getRingBuffer().remainingCapacity());
     }
-
-    public ILiveLogParserRecord removeFirst0() {
-        try {
-            return dequeue.take();
-        } catch (InterruptedException e) {
-            logger.error("Interrupted Exception taking from the Database Write Queue: ", e);
-            e.printStackTrace();
-        }
-        return null;
-    }
-
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
-        sb.append(((BlockingQueue) dequeue).size());
+        sb.append(size());
         sb.append("disruptor cursor: " + disruptor.getCursor());       
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
@@ -163,42 +196,5 @@ public class DatabaseWriteQueue extends Thread implements Serializable {
         return sb.toString();
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Runnable#run()
-     */
-
-    @Override
-    public void run() {
-        try {
-            while (unloadDB && !Thread.currentThread().isInterrupted()) {
-                if (logger.isInfoEnabled()) {
-                    if (objectsRemoved % 100000 == 0) {
-                        logger.info(toString());
-                    }
-                }
-                try {
-                    ILiveLogParserRecord ilpr = removeFirst0();
-
-                    ++objectsRemoved;
-                    if (ilpr == null) {
-                        logger.error("removeFirst Returned Null!");
-                        continue;
-                    }
-                    long writeStartTime = System.currentTimeMillis();
-
-                    if (writeCount++ % 1000 == 0) {
-                        //logger.warn("DatabaseWriteQueue writeToDatabase called");
-                    }
-                    ilpr.writeToDatabase();
-                    totalWriteTime += (System.currentTimeMillis() - writeStartTime);
-                    ++objectsWritten;
-                } catch (Throwable t) {
-                    logger.error("Throwable in DatabaseWriteQueue Thread! " + Thread.currentThread().getName() + ":", t);
-                }
-            }
-        } catch (Throwable t) {
-            logger.error("DatabaseWriteQueue errored, should never happen!!!", t);
-        }
-    }
 }
 

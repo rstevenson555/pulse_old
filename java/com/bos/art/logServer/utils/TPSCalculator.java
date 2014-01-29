@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,13 +15,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  * To change this template use File | Settings | File Templates.
  */
 public class TPSCalculator {
+    private AtomicLong lifeTimeCount;
+
+    public TPSCalculator() {
+        lifeTimeCount = new AtomicLong(0);
+    }
+
     private class CalcRecord {
-        AtomicInteger transactionCount;
+        AtomicInteger periodCount;
         DateTime periodStart;
 
         CalcRecord() {
             periodStart = new DateTime();
-            transactionCount = new AtomicInteger(0);
+            periodCount = new AtomicInteger(0);
         }
     }
 
@@ -34,16 +41,17 @@ public class TPSCalculator {
     /**
      * increment the transaction record for the current minute
      */
-    public void incrementTransaction() {
+    public long incrementTransaction() {
         DateTime now = new DateTime();
-        int minute = now.getMinuteOfHour();
+        int minuteOfHour = now.getMinuteOfHour();
 
-        CalcRecord calcRecord = tpsRecordMap.get(minute);
+        CalcRecord calcRecord = tpsRecordMap.get(minuteOfHour);
         if ( calcRecord == null) {
             calcRecord = new CalcRecord();
-            tpsRecordMap.put(minute, calcRecord);
+            tpsRecordMap.put(minuteOfHour, calcRecord);
         }
-        calcRecord.transactionCount.incrementAndGet();
+        calcRecord.periodCount.incrementAndGet();
+        return lifeTimeCount.incrementAndGet();
     }
 
     /**
@@ -53,6 +61,10 @@ public class TPSCalculator {
     public long getMessagesPerSecond() {
         DateTime now = new DateTime();
         CalcRecord calcRecord = tpsRecordMap.get(now.getMinuteOfHour());
-        return calcRecord.transactionCount.get() / ((now.toDateTime().getMillis() - calcRecord.periodStart.toDateTime().getMillis())/1000);
+        return calcRecord.periodCount.get() / ((now.toDateTime().getMillis() - calcRecord.periodStart.toDateTime().getMillis())/1000);
+    }
+
+    public long getTransactionCount() {
+        return lifeTimeCount.get();
     }
 }

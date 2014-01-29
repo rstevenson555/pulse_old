@@ -3,45 +3,37 @@ package com.bos.art.logServer.Queues;
 import com.bos.art.logServer.main.Collector;
 import com.bos.art.logServer.utils.TPSCalculator;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
-
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 
-public class MessageUnloader extends java.lang.Thread implements MessageUnloaderMBean {
+import javax.management.*;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class MessageUnloader implements MessageUnloaderMBean {
     private static final int ENGINE_OUTPUT_BUFFER_SIZE = 1024 * 8;
 
-    private BlockingQueue queue = null;
     private static Logger logger = Logger.getLogger(MessageUnloader.class.getName());
     private ObjectOutputStream outputStream = null;
     private Connector connector;
     private InetAddress address = null;
     private int port = 0;
     final private long reconnectionDelay = TimeIntervalConstants.THIRTY_SECONDS_MILLIS;
-    private long writeCount = 0;
     private boolean exitOnFinish = false;
     private long writeTime = System.currentTimeMillis();
     private static MessageUnloader instance = new MessageUnloader();
     private int failCount = 0;
-    private int MESSAGE_QUEUE_SIZE = 5000;
+    private int MESSAGE_QUEUE_SIZE = 4 * 1024;
     private static int SOCKET_BUFFER = 262144;
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
             .namingPattern("MessageUnloader-%d")
@@ -49,7 +41,7 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     private static TPSCalculator tpsCalculator = new TPSCalculator();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
-    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, MESSAGE_QUEUE_SIZE, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
     private static class ObjectEvent {
@@ -62,10 +54,15 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
         };
     }
 
+    /**
+     * return number of elements in the ringbuffer
+     * @return
+     */
+    public long size() {
+        return (disruptor.getRingBuffer().getBufferSize() - disruptor.getRingBuffer().remainingCapacity());
+    }
 
     private class ObjectEventHandler implements EventHandler<ObjectEvent> {
-        public int failureCount = 0;
-        private long messagesSeen = 0;
 
         public ObjectEventHandler() {
         }
@@ -79,16 +76,16 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
                 if (outputStream != null) {
                     writeData(outputStream, event);
 
-                    tpsCalculator.incrementTransaction();
+                    long writeCount = tpsCalculator.incrementTransaction();
 
-                    if (++writeCount % 1000 == 0) {
+                    if (writeCount % 1000 == 0) {
                         outputStream.reset();
                     }
 
                     if (writeCount % 10000 == 0) {
 
                         logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
-                                + " millis; leaving [" + queue.size() + "] in the queue");
+                                + " millis; leaving [" + size() + "] in the queue");
 
                         writeTime = System.currentTimeMillis();
                     }
@@ -136,6 +133,44 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
         }
     }
 
+    /**
+     * create the disruptor and connect to the end point
+     */
+    private MessageUnloader() {
+
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        ObjectEventHandler handler = new ObjectEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
+
+        registerWithMBeanServer();
+
+        // connect to the output
+
+        this.address = getAddressByName(Collector.ART_ENGINE_MACHINE);
+        this.port = Collector.ART_ENGINE_PORT;
+
+        connect(address, port);
+    }
+
+    private void registerWithMBeanServer() {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = null;
+        try {
+            name = new ObjectName("com.omx.collector:type=MessageUnloaderMBean");
+            mbs.registerMBean(this, name);
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InstanceAlreadyExistsException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (MBeanRegistrationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (NotCompliantMBeanException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+
     static public MessageUnloader getInstance() {
         return instance;
     }
@@ -144,39 +179,9 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     protected void finalize() throws Throwable {
         try {
             cleanUp();
-            //queue.clear();
-            queue = null;
         } finally {
             super.finalize();
         }
-    }
-
-    public int size() {
-        return queue.size();
-    }
-
-    private MessageUnloader() {
-        queue = new ArrayBlockingQueue(1); //across all jvm's because this is static connection
-
-        disruptor.handleExceptionsWith(new FatalExceptionHandler());
-
-        ObjectEventHandler handler = new ObjectEventHandler();
-        disruptor.handleEventsWith(handler);
-        disruptor.start();
-
-        // connect to the output
-
-        this.address = getAddressByName(Collector.ART_ENGINE_MACHINE);
-        this.port = Collector.ART_ENGINE_PORT;
-
-        connect(address, port);
-        start();
-    }
-
-    @Override
-    public void start() {
-        // go
-        super.start();
     }
 
     /**
@@ -363,100 +368,13 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     }
 
     public long getWriteCount() {
-        return writeCount;
+        return tpsCalculator.getTransactionCount();
     }
 
     public void exitOnFinish() {
         exitOnFinish = true;
     }
 
-    @Override
-    public void run() {
-        Object event;
-
-        while (!exitOnFinish) {
-            // now write it to their respective files and empty the stack
-
-            // this loop could take a long time and it wouldnt slow the app down
-            // because the userEventStack is released, the the userEventStack
-            // can continue to be filled up
-
-            try {
-                event = removeLast();
-                if (event == null) {
-                    //yield();
-                    continue;
-                }
-                if (outputStream != null) {
-                    //System.out.println(event);
-                    //outputStream.writeObject(event);
-                    writeData(outputStream, event);
-                    // System.out.println("writing object"+writeCount);
-                    if (++writeCount % 1000 == 0) {
-                        outputStream.reset();
-                    }
-                    if (writeCount % 10000 == 0) {
-                        logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
-                                + " millis; leaving [" + queue.size() + "] in the queue");
-
-                        writeTime = System.currentTimeMillis();
-                    }
-                    //System.out.println("writing ojbect to server");
-                } else {
-                    logger.error("outputstream is null");
-                }
-
-                event = null;
-            } catch (IOException io) {
-                try {
-                    outputStream.reset();
-                } catch (IOException i) {
-                }
-                logger.error("IOException in MessageUnloader", io);
-                fireConnector();
-            } catch (InterruptedException ie) {
-                try {
-                    outputStream.reset();
-                } catch (IOException io) {
-                }
-                logger.error("InterruptedException in MessageUnloader", ie);
-                fireConnector();
-            } catch (Throwable t) {
-                try {
-                    outputStream.reset();
-                } catch (IOException io) {
-                }
-                logger.error("Throwable in MessageUnloader", t);
-                fireConnector();
-            }
-
-        }
-
-        if (exitOnFinish) {
-            try {
-                drainQueue(outputStream);
-                try {
-                    outputStream.reset();
-                } catch (IOException io) {
-                }
-                outputStream.flush();
-                outputStream.close();
-            } catch (IOException io) {
-                try {
-                    outputStream.reset();
-                } catch (IOException i) {
-                }
-                logger.error("IO Error draining queue " + io);
-            }
-            logger.info("exiting");
-            System.exit(0);
-        }
-    }
-
-    private Object removeLast() throws InterruptedException {
-        //return queue.poll(5L, TimeUnit.SECONDS);
-        return queue.take();
-    }
 
     private void writeData(ObjectOutputStream outputStream, Object event) throws IOException {
         outputStream.writeObject(event);
@@ -466,42 +384,7 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
      * drain the queue out
      */
     private void drainQueue(ObjectOutputStream outputStream) throws IOException {
-        Object event;
 
-        while (queue.size() > 0) {
-            try {
-                event = removeLast();
-                if (event == null) {
-                    //yield();
-                    continue;
-                }
-                if (outputStream != null) {
-                    writeData(outputStream, event);
-                    if (++writeCount % 1000 == 0) {
-                        outputStream.reset();
-                    }
-                    if (writeCount % 10000 == 0) {
-                        logger.info("sent 10000 objects to the ArtEngine in " + (System.currentTimeMillis() - writeTime) / 10
-                                + " millis; leaving [" + queue.size() + "] in the queue");
-
-
-                        writeTime = System.currentTimeMillis();
-                    }
-                    //System.out.println("writing ojbect to server");
-                } else {
-                    logger.error("outputstream is null");
-                }
-
-                event = null;
-            } catch (InterruptedException ie) {
-                // thread interrupted
-            } finally {
-                try {
-                    outputStream.reset();
-                } catch (IOException io) {
-                }
-            }
-        }
     }
 }
 
