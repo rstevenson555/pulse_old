@@ -3,12 +3,13 @@ package com.bos.art.logServer.utils;
 import com.bos.art.logParser.records.*;
 import com.bos.art.logServer.Queues.MessageUnloader;
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.Socket;
 import java.util.Calendar;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Stack;
+import javax.management.*;
 import javax.xml.parsers.SAXParser;
+
 import org.apache.commons.digester.Digester;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -24,7 +25,7 @@ import org.xml.sax.XMLReader;
  * So then there's a logServerUnloader for every instance
  *
  */
-public class ClientReader implements Runnable {
+public class ClientReader implements Runnable, ClientReaderMBean {
 
     private static final int COLLECTOR_INPUT_BUFFER = 1024 * 32;
     private static final int PARSER_BUFFER_SIZE = 8192;
@@ -51,7 +52,8 @@ public class ClientReader implements Runnable {
     private static int filecounter = 0;
     private static final Object ulock = new Object();
     private boolean encode_input = false;
-    static int SOCKET_BUFFER = 262144;
+    private static int SOCKET_BUFFER = 262144;
+    private static TPSCalculator tpsCalculator = new TPSCalculator();
 
     static {
         // Initialize SAX Parser factory defaults
@@ -70,7 +72,7 @@ public class ClientReader implements Runnable {
             }
 
             // reschedule the job for the next day
-            scheduleJob();
+            init();
         }
     }
 
@@ -169,7 +171,7 @@ public class ClientReader implements Runnable {
     }
 
     public ClientReader(Socket sock,boolean encode_input) {
-        scheduleJob();
+        init();
         inputSocket = sock;
         inputStream = null;
         logger.info("Created a new Client Reader on Port: " + inputSocket.getPort());
@@ -178,7 +180,7 @@ public class ClientReader implements Runnable {
     }
 
     public ClientReader(String command) {
-        scheduleJob();
+        init();
         inputSocket = null;
 
         mode = COMMAND_MODE;
@@ -189,14 +191,14 @@ public class ClientReader implements Runnable {
      * Called from the command - line
      */
     public ClientReader(InputStream input) {
-        scheduleJob();
+        init();
         inputStream = input;
         inputSocket = null;
         mode = FILE_MODE;
     }
 
     public ClientReader() {
-        scheduleJob();
+        init();
     }
 
     public static void main(String[] args) {
@@ -205,13 +207,28 @@ public class ClientReader implements Runnable {
         reader.run();
     }
 
-    public void scheduleJob() {
+    public void init() {
         Calendar c = Calendar.getInstance();
         // now + 1 day, 00:01:00
         c.roll(Calendar.DAY_OF_YEAR, 1);
         c.set(Calendar.HOUR_OF_DAY, 0);
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
+
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = null;
+        try {
+            name = new ObjectName("com.omx.ClientReader.jmx:type=ClientReaderMBean");
+            mbs.registerMBean(this, name);
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InstanceAlreadyExistsException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (MBeanRegistrationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (NotCompliantMBeanException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
     }
 
     private static DateTimeFormatter timeformat  = DateTimeFormat.forPattern("HH:mm:ss a");
@@ -580,7 +597,9 @@ public class ClientReader implements Runnable {
         if (timing.getPriority() == -1) {
             System.out.println("priority is -1");
         }
-        
+
+        tpsCalculator.incrementTransaction();
+
         unloader.addMessage((Object) timing);
 
         clientCache.objectsWritten++;
@@ -593,4 +612,14 @@ public class ClientReader implements Runnable {
             clientCache.writeTime = System.currentTimeMillis();
         }
     }
+
+
+    /**
+     * return messages per second calculation
+     * @return
+     */
+    public long getMessagesPerSecond() {
+        return tpsCalculator.getMessagesPerSecond();
+    }
+
 }

@@ -131,11 +131,9 @@ public class Collector {
             ObjectName name = null;
             try {
                 name = new ObjectName("com.omx.MessageUnloader.jmx:type=MessageUnloaderMBean");
+                mbs.registerMBean(unloader, name);
             } catch (MalformedObjectNameException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            }
-            try {
-                mbs.registerMBean(unloader, name);
             } catch (InstanceAlreadyExistsException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             } catch (MBeanRegistrationException e) {
