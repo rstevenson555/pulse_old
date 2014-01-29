@@ -1,6 +1,7 @@
 package com.bos.art.logServer.Queues;
 
 import com.bos.art.logServer.main.Collector;
+import com.bos.art.logServer.utils.TPSCalculator;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
 
 import java.io.BufferedOutputStream;
@@ -40,14 +41,12 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     private long writeTime = System.currentTimeMillis();
     private static MessageUnloader instance = new MessageUnloader();
     private int failCount = 0;
-    //private int MESSAGE_QUEUE_SIZE = 300000;
     private int MESSAGE_QUEUE_SIZE = 5000;
     private static int SOCKET_BUFFER = 262144;
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
             .namingPattern("MessageUnloader-%d")
             .build();
-    private long messagesPerSecond = 0;
-
+    private static TPSCalculator tpsCalculator = new TPSCalculator();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
@@ -63,17 +62,6 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
         };
     }
 
-
-    class TPSCalc {
-        public int count=0;
-        DateTime start;
-    }
-    private Map<Integer,TPSCalc> cache = new LinkedHashMap<Integer,TPSCalc>()
-    {
-        protected boolean removeEldestEntry(Map.Entry eldest) {
-            return size() > 1;
-        }
-    };
 
     private class ObjectEventHandler implements EventHandler<ObjectEvent> {
         public int failureCount = 0;
@@ -91,16 +79,7 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
                 if (outputStream != null) {
                     writeData(outputStream, event);
 
-                    DateTime now = new DateTime();
-                    TPSCalc calcTPS = cache.get(now.getMinuteOfHour());
-                    if (calcTPS==null) {
-                        calcTPS = new TPSCalc();
-                        calcTPS.start = new DateTime();
-                        cache.put(now.getMinuteOfHour(), calcTPS);
-                    }
-                    calcTPS.count++;
-
-                    messagesPerSecond = calcTPS.count / ((now.toDateTime().getMillis() - calcTPS.start.toDateTime().getMillis())/1000);
+                    tpsCalculator.incrementTransaction();
 
                     if (++writeCount % 1000 == 0) {
                         outputStream.reset();
@@ -327,7 +306,6 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
     // messages going to the ArtEngine
 
     public void addMessage(final Object o) {
-        //if (!queue.offer(o)) {
         boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<ObjectEvent>() {
             public void translateTo(ObjectEvent event, long sequence) {
                 event.record = o;
@@ -344,14 +322,23 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
         }
     }
 
+    // JMX Interface exposed
     public long getBufferSize() {
         return disruptor.getBufferSize();
     }
 
+    /**
+     * get the remaining capacity of the ringbuffer
+     * @return
+     */
     public long getRemainingCapacity() {
         return disruptor.getRingBuffer().remainingCapacity();
     }
 
+    /**
+     * change the buffer size to nearest power of two
+     * @param sz
+     */
     public void setBufferSize(long sz) {
         disruptor.shutdown();
 
@@ -367,8 +354,12 @@ public class MessageUnloader extends java.lang.Thread implements MessageUnloader
         disruptor.start();
     }
 
+    /**
+     * return messages per second calculation
+     * @return
+     */
     public long getMessagesPerSecond() {
-        return messagesPerSecond;
+        return tpsCalculator.getMessagesPerSecond();
     }
 
     public long getWriteCount() {
