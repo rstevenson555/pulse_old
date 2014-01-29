@@ -218,7 +218,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.ClientReader.jmx:type=ClientReaderMBean");
+            name = new ObjectName("com.omx.Collector:type=ClientReaderMBean");
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
