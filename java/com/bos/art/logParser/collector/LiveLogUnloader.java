@@ -341,16 +341,16 @@ public class LiveLogUnloader implements Runnable {
     }
 
     public static void startQueryParamUnloader() {
-        QueryParameterWriteQueue qpwq = QueryParameterWriteQueue.getInstance();
-
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("QueryParam-Unloader No. -%d")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(qpwq);
-
-        logger.warn("Starting QueryParamUnloader ..." + (queryParamUnloader - 1));
+//        QueryParameterWriteQueue qpwq = QueryParameterWriteQueue.getInstance();
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("QueryParam-Unloader No. -%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(qpwq);
+//
+//        logger.warn("Starting QueryParamUnloader ..." + (queryParamUnloader - 1));
     }
 
     public static void startSystemTaskThread() {

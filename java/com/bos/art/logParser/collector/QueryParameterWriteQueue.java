@@ -12,10 +12,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import com.bos.art.logServer.utils.TPSCalculator;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
@@ -36,10 +38,9 @@ import org.joda.time.DateTime;
  *         To change the template for this generated type comment go to
  *         Window>Preferences>Java>Code Generation>Code and Comments
  */
-public class QueryParameterWriteQueue extends Thread implements Serializable {
+public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
     private static QueryParameterWriteQueue instance;
-    private BlockingQueue<QueryParameters.DBQueryParamRecord> dequeue;
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
@@ -59,6 +60,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
                 .namingPattern("QueryParameterWriteQueue-%d")
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
+    private static TPSCalculator tpsCalculator = new TPSCalculator();
 
     private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 4 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
@@ -76,8 +78,6 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     ;
 
     private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent> {
-        public int failureCount = 0;
-        public int messagesSeen = 0;
 
         public DBQueryParamRecordEventHandler() {
         }
@@ -100,12 +100,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
             QueryParameters.DBQueryParamRecord dbqp = event.record;
             ++objectsRemoved;
-//                if (dbqp == null) {
-//                    logger.error("removeFirst Returned Null!");
-//                    continue;
-//                }
             long sTime = System.currentTimeMillis();
-            //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
 
             try {
                 PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
@@ -131,8 +126,6 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     }
 
     private QueryParameterWriteQueue() {
-//        dequeue = new ArrayBlockingQueue<QueryParameters.DBQueryParamRecord>(MAX_DB_QUEUE_SIZE);
-        dequeue = new ArrayBlockingQueue<QueryParameters.DBQueryParamRecord>(1);
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
@@ -153,7 +146,6 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
     }
 
     public void addLast(final QueryParameters.DBQueryParamRecord o) {
-        //boolean success = dequeue.offer(o);
         boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<DBQueryParamRecordEvent>() {
             public void translateTo(DBQueryParamRecordEvent event, long sequence) {
                 event.record = o;
@@ -166,19 +158,52 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
 
     }
 
-    final public Object removeFirst() {
-        return removeFirst0();
+    public long size() {
+        return (disruptor.getRingBuffer().getBufferSize() - disruptor.getRingBuffer().remainingCapacity());
     }
 
-    final public QueryParameters.DBQueryParamRecord removeFirst0() {
-        try {
-            // if empty wait until someone puts something in
-            return dequeue.take();
-        } catch (InterruptedException e) {
-            logger.error("Interrupted Exception taking from the Database Write Queue: ", e);
-            e.printStackTrace();
-        }
-        return null;
+    // JMX Interface exposed
+    public long getBufferSize() {
+        return disruptor.getBufferSize();
+    }
+
+    /**
+     * get the remaining capacity of the ringbuffer
+     * @return
+     */
+    public long getRemainingCapacity() {
+        return disruptor.getRingBuffer().remainingCapacity();
+    }
+
+    /**
+     * change the buffer size to nearest power of two
+     * @param sz
+     */
+    public void setBufferSize(long sz) {
+        disruptor.shutdown();
+
+        int psize = Util.ceilingNextPowerOfTwo((int) sz);
+
+        disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 4 * 1024, executor,
+                ProducerType.SINGLE, new SleepingWaitStrategy());
+
+        disruptor.handleExceptionsWith(new FatalExceptionHandler());
+
+        DBQueryParamRecordEventHandler handler = new DBQueryParamRecordEventHandler();
+        disruptor.handleEventsWith(handler);
+        disruptor.start();
+    }
+
+    /**
+     * return messages per second calculation
+     * @return
+     */
+    public long getMessagesPerSecond() {
+        return tpsCalculator.getMessagesPerSecond();
+    }
+
+    public long getWriteCount() {
+        return tpsCalculator.getTransactionCount();
     }
 
 
@@ -187,7 +212,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         StringBuilder sb = new StringBuilder();
 
         sb.append("Database Write Queue size:");
-        sb.append(((BlockingQueue) dequeue).size());
+        sb.append(size());
         sb.append("\t\t this thread: ");
         sb.append(Thread.currentThread().getName());
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
@@ -200,67 +225,6 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
         return sb.toString();
     }
 
-
-    /* (non-Javadoc)
-     * @see java.lang.Runnable#run()
-     */
-
-    @Override
-    public void run() {
-        while (unloadDB && !Thread.currentThread().isInterrupted()) {
-
-            now = new DateTime();
-            recordsPerMinute++;
-
-            if (now.isAfter(oneMinute)) {
-                logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
-                oneMinute = now.plusMinutes(1);
-                recordsPerMinute = 0;
-            }
-            if (logger.isInfoEnabled()) {
-                if (objectsRemoved % 10000 == 0) {
-                    logger.info(toString());
-                }
-            }
-            try {
-                QueryParameters.DBQueryParamRecord dbqp = removeFirst0();
-                ++objectsRemoved;
-                if (dbqp == null) {
-                    logger.error("removeFirst Returned Null!");
-                    continue;
-                }
-                //if (o instanceof QueryParameters.DBQueryParamRecord) {
-                long sTime = System.currentTimeMillis();
-                //QueryParameters.DBQueryParamRecord  dbqp = (QueryParameters.DBQueryParamRecord) o;
-
-                try {
-                    PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
-
-                    pstmt.setInt(1, dbqp.getRecordPK().intValue());
-                    pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
-                    blockInsert(pstmt);
-                    ++objectsWritten;
-                    // requestType, requestToken, userServiceTime
-                } catch (SQLException se) {
-                    logger.error("Exception", se);
-                    resetThreadLocalPstmt();
-                    // return false;
-                }
-                finally {
-                    // Removed because of Thread Local.
-                    long sTime2 = System.currentTimeMillis();
-
-                    totalWriteTime += (sTime2 - sTime);
-                }
-
-                //} else {
-                //    logger.error("removeFirst gave " + o.getClass().getName());
-                //}
-            } catch (RuntimeException t) {
-                logger.error("Throwable in QueryParameterWiteQueue Thread! " + Thread.currentThread().getName() + ":", t);
-            }
-        }
-    }
 
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
         @Override
@@ -286,6 +250,7 @@ public class QueryParameterWriteQueue extends Thread implements Serializable {
             return null;
         }
     };
+
     private static ThreadLocal threadLocalInserts = new ThreadLocal() {
         @Override
         protected synchronized Object initialValue() {

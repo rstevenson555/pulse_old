@@ -96,6 +96,9 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         }
     }
 
+    /**
+     * create and start the disruptor to process query parameters.
+     */
     private QueryParameterProcessingQueue() {
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
@@ -107,6 +110,9 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         registerWithMBeanServer();
     }
 
+    /**
+     * register the mbean with JMX
+     */
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
