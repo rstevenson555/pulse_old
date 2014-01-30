@@ -32,7 +32,7 @@ import com.bos.art.logParser.statistics.StatisticsUnit;
  *         <p/>
  *         To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
  */
-public class LiveLogUnloader extends Thread {
+public class LiveLogUnloader implements Runnable {
 
     private static Logger logger = (Logger) Logger.getLogger(LiveLogUnloader.class.getName());
     private static Logger systemTaskLogger = (Logger) Logger.getLogger("systemTaskLogger");
@@ -136,7 +136,6 @@ public class LiveLogUnloader extends Thread {
      * (non-Javadoc) @see java.lang.Runnable#run()
      */
 
-    @Override
     public void run() {
         CommunicationChannel channel = CommunicationChannel.getInstance();
         StatisticsModule sm = StatisticsModule.getInstance();
@@ -328,16 +327,16 @@ public class LiveLogUnloader extends Thread {
     }
 
     public static void startQueryParamProcessor() {
-        QueryParameterProcessingQueue qppq = QueryParameterProcessingQueue.getInstance();
-
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("QueryParam-Proccessor No.-%d")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(qppq);
-
-        logger.warn("Starting QueryParamProcessor ..." + (queryParamProccessingQueue - 1));
+//        QueryParameterProcessingQueue qppq = QueryParameterProcessingQueue.getInstance();
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("QueryParam-Proccessor No.-%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(qppq);
+//
+//        logger.warn("Starting QueryParamProcessor ..." + (queryParamProccessingQueue - 1));
         //t.start();
     }
 
