@@ -101,6 +101,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
 
             QueryParameters.DBQueryParamRecord dbqp = event.record;
             ++objectsRemoved;
+            tpsCalculator.incrementTransaction();
             long sTime = System.currentTimeMillis();
 
             try {
