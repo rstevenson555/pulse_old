@@ -8,6 +8,7 @@ package com.bos.art.logParser.collector;
 
 
 import java.io.Serializable;
+import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -30,6 +31,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.joda.time.DateTime;
+
+import javax.management.*;
 
 
 /**
@@ -73,9 +76,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
                 return new DBQueryParamRecordEvent();
             }
         };
-    }
-
-    ;
+    };
 
     private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent> {
 
@@ -132,7 +133,30 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         DBQueryParamRecordEventHandler handler = new DBQueryParamRecordEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
+
+        registerWithMBeanServer();
     }
+
+    /**
+     * register the mbean with JMX
+     */
+    private void registerWithMBeanServer() {
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = null;
+        try {
+            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean");
+            mbs.registerMBean(this, name);
+        } catch (MalformedObjectNameException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (InstanceAlreadyExistsException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (MBeanRegistrationException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (NotCompliantMBeanException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+
 
     public static QueryParameterWriteQueue getInstance() {
         if (instance == null) {
