@@ -222,7 +222,20 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
 
+        initHandlers();
 //        registerWithMBeanServer();
+    }
+
+    private static Object sync = new Object();
+
+    public void initHandlers() {
+        logger.info("ClientReader.createHandlers");
+        synchronized (sync) {
+            for(int i = 0;i<messageUnloaderHandlers.length;i++) {
+                if ( messageUnloaderHandlers[i]==null)
+                    messageUnloaderHandlers[i] = new MessageUnloaderHandler();
+            }
+        }
     }
 
     static private int uniqueClientCounter = 1;
@@ -624,10 +637,12 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
     private MessageUnloaderHandler nextHandler() {
         int hcount = handlerCount.incrementAndGet();
+
         if ( hcount > messageUnloaderHandlers.length-1) {
             hcount = 0;
             handlerCount.set(hcount);
         }
+
         return messageUnloaderHandlers[hcount];
     }
 
