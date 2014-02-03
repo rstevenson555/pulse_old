@@ -3,6 +3,7 @@ package com.bos.art.logServer.utils;
 import com.bos.art.logParser.records.*;
 import com.bos.art.logServer.Queues.MessageUnloader;
 import org.apache.commons.digester.Digester;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -39,7 +40,11 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private static MessageUnloader commandUnloader = new MessageUnloader();
     private static int NUM_MESSAGE_HANDLERS = 4;
     private static MessageUnloaderHandler messageUnloaderHandlers[] = new MessageUnloaderHandler[NUM_MESSAGE_HANDLERS];
-    private static ExecutorService executorService = Executors.newFixedThreadPool(NUM_MESSAGE_HANDLERS);
+    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+            .namingPattern("MessageUnloaderHandler-%d")
+            .build();
+    // this controls how wide to scale the message handlers (very critical)
+    private static ExecutorService executorService = Executors.newFixedThreadPool(NUM_MESSAGE_HANDLERS,tFactory);
     private static Stack saxParsers = new Stack();
     private static SAXParserFactory saxFactory;
     private InputStream inputStream = null;
@@ -545,7 +550,11 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             digester.parse(inputSource);
 
             tpsCalculator.incrementTransaction();
-            commandUnloader.addMessage((Object) task);
+            //commandUnloader.addMessage((Object) task);
+
+            MessageUnloaderHandler messageUnloaderHandler = nextHandler();
+            messageUnloaderHandler.setTimingRecord((Object) task);
+            executorService.execute(messageUnloaderHandler);
 
         } catch (java.io.IOException e) {
             String message = e.getMessage();
@@ -626,7 +635,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         UserRequestEventDesc timing;
         MessageUnloader unloader = new MessageUnloader();
 
-        public void setTimingRecord(UserRequestEventDesc t) { timing = t;}
+        public void setTimingRecord(Object t) { timing = (UserRequestEventDesc)t;}
 
         public void run() {
             unloader.addMessage(timing);
