@@ -31,7 +31,8 @@ public class MessageUnloader implements MessageUnloaderMBean {
     final private long reconnectionDelay = TimeIntervalConstants.THIRTY_SECONDS_MILLIS;
     private boolean exitOnFinish = false;
     private long writeTime = System.currentTimeMillis();
-    private static MessageUnloader instance = new MessageUnloader();
+    private Socket socket;
+//    private static MessageUnloader instance = new MessageUnloader();
     private int failCount = 0;
     private int MESSAGE_QUEUE_SIZE = 4 * 1024;
     private static int SOCKET_BUFFER = 262144;
@@ -136,15 +137,13 @@ public class MessageUnloader implements MessageUnloaderMBean {
     /**
      * create the disruptor and connect to the end point
      */
-    private MessageUnloader() {
+    public MessageUnloader() {
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
         ObjectEventHandler handler = new ObjectEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
-
-        registerWithMBeanServer();
 
         // connect to the output
 
@@ -158,7 +157,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.collector:type=MessageUnloaderMBean");
+            name = new ObjectName("com.omx.collector:type=MessageUnloaderMBean,name=MessageUnloaderInstance-"+socket.getLocalPort());
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -171,9 +170,9 @@ public class MessageUnloader implements MessageUnloaderMBean {
         }
     }
 
-    static public MessageUnloader getInstance() {
-        return instance;
-    }
+//    static public MessageUnloader getInstance() {
+//        return instance;
+//    }
 
     @Override
     protected void finalize() throws Throwable {
@@ -202,7 +201,6 @@ public class MessageUnloader implements MessageUnloaderMBean {
 
         @Override
         public void run() {
-            Socket socket;
 
             while (!interrupted) {
                 try {
@@ -294,7 +292,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
 
         try {
             logger.info("trying to connect to ArtEngine at: " + address + " port: " + port);
-            Socket socket = new Socket(address, port);
+            socket = new Socket(address, port);
 
             logger.warn("Socket Buffer Size: " + socket.getSendBufferSize());
             socket.setSendBufferSize(262144);
@@ -302,6 +300,9 @@ public class MessageUnloader implements MessageUnloaderMBean {
 
             outputStream = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream(), 128 * 1024));
             logger.info("Success connecting to ArtEngine at:" + address + " port: " + port);
+
+            registerWithMBeanServer();
+
         } catch (IOException io) {
             logger.error("Error connecting to : " + address + " " + io);
             fireConnector(); // fire the connector thread
