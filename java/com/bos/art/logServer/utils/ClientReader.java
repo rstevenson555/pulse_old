@@ -215,7 +215,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
 
-        registerWithMBeanServer();
+//        registerWithMBeanServer();
     }
 
     private void registerWithMBeanServer() {
@@ -453,6 +453,8 @@ public class ClientReader implements Runnable, ClientReaderMBean {
                 logger.warn("Socket Receive Buffer Size: " + inputSocket.getReceiveBufferSize());
                 inputSocket.setReceiveBufferSize(SOCKET_BUFFER);
                 logger.warn("Socket Receive Buffer Size changed to : " + inputSocket.getReceiveBufferSize());
+
+                registerWithMBeanServer();
                 
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
