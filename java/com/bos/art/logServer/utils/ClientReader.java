@@ -64,7 +64,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private static int filecounter = 0;
     private boolean encode_input = false;
     private static int SOCKET_BUFFER = 262144;
-    private static TPSCalculator tpsCalculator = new TPSCalculator();
+    private TPSCalculator tpsCalculator = new TPSCalculator();
 
     static {
         // Initialize SAX Parser factory defaults
