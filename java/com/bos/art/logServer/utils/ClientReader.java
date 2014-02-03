@@ -550,11 +550,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             digester.parse(inputSource);
 
             tpsCalculator.incrementTransaction();
-            //commandUnloader.addMessage((Object) task);
-
-            MessageUnloaderHandler messageUnloaderHandler = nextHandler();
-            messageUnloaderHandler.setTimingRecord((Object) task);
-            executorService.execute(messageUnloaderHandler);
+            commandUnloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
             String message = e.getMessage();
@@ -644,14 +640,14 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
     private static AtomicInteger handlerCount = new AtomicInteger(0);
 
-    private MessageUnloaderHandler nextHandler() {
+    private MessageUnloaderHandler setNextHandler(UserRequestEventDesc timing) {
         int hcount = handlerCount.incrementAndGet();
 
         if ( hcount > messageUnloaderHandlers.length-1) {
             hcount = 0;
             handlerCount.set(hcount);
         }
-
+        messageUnloaderHandlers[hcount].setTimingRecord(timing);
         return messageUnloaderHandlers[hcount];
     }
 
@@ -663,9 +659,9 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
         tpsCalculator.incrementTransaction();
 
-        MessageUnloaderHandler messageUnloaderHandler = nextHandler();
-        messageUnloaderHandler.setTimingRecord(timing);
+        MessageUnloaderHandler messageUnloaderHandler = setNextHandler(timing);
         executorService.execute(messageUnloaderHandler);
+
         //commandUnloader.addMessage((Object) timing);
 
         clientCache.objectsWritten++;
