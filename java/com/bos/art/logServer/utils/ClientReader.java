@@ -218,11 +218,13 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 //        registerWithMBeanServer();
     }
 
+    static private int uniqueClientCounter = 1;
+
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            int port = (inputSocket!=null) ?  inputSocket.getLocalPort() : 9999;
+            int port = (inputSocket!=null) ?  inputSocket.getPort() : uniqueClientCounter++;
             name = new ObjectName("com.omx.collector:type=ClientReaderMBean,name="+port);
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
