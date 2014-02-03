@@ -33,8 +33,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private Socket inputSocket = null;
     private SystemTask task = null;
     private static Logger logger = Logger.getLogger(ClientReader.class.getName());
-    //private static MessageUnloader unloader = MessageUnloader.getInstance();
-    private static MessageUnloader unloader = new MessageUnloader();
+    private MessageUnloader unloader = new MessageUnloader();
     private static Stack saxParsers = new Stack();
     private static SAXParserFactory saxFactory;
     private InputStream inputStream = null;
