@@ -43,18 +43,18 @@ public class EngineClientHandler implements Runnable {
     }
 
     public void run() {
-        LiveLogPriorityQueue queue = LiveLogPriorityQueue.getInstance();
+        LiveLogPriorityQueue priorityQueue = LiveLogPriorityQueue.getInstance();
         LiveLogPriorityQueue systemTaskQueue = LiveLogPriorityQueue.getSystemTaskQueue();
-        ObjectInputStream in = null;
+        ObjectInputStream objectInputStream = null;
 
         try {
             incoming.setReceiveBufferSize(SOCKET_BUFFER);
-            in = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),128*1024)); // 16k
+            objectInputStream = new ObjectInputStream(new BufferedInputStream(incoming.getInputStream(),128*1024)); // 16k
             logger.warn("EngineClientHandler receiveBufferSize after set: " + incoming.getReceiveBufferSize());
 
             while (true) {
                 try {
-                    Object o = readData(in);
+                    Object o = readData(objectInputStream);
 
                     if (o instanceof SystemTask) {
                         logger.warn("SystemTask Entering Priority Queue " + o.toString() + ":Time:" + System.currentTimeMillis());
@@ -64,7 +64,7 @@ public class EngineClientHandler implements Runnable {
                     }
                     if (o instanceof ILiveLogPriorityQueueMessage) {
                         // insert into the priority queue at this point.
-                        ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage) o;
+                        ILiveLogPriorityQueueMessage liveLogPriorityQueueMessage = (ILiveLogPriorityQueueMessage) o;
 
                         if (o instanceof ExternalEventTiming) {
                             logger.debug("ExternalEventTiming: " + o.toString());
@@ -75,7 +75,7 @@ public class EngineClientHandler implements Runnable {
                                 continue;
                             }
                         }
-                        queue.addObject(llpr);
+                        priorityQueue.addObject(liveLogPriorityQueueMessage);
                     } else {
                         logger.warn("Unknown Message entering Art Engine: " + o.getClass().getName());
                     }
@@ -92,7 +92,7 @@ public class EngineClientHandler implements Runnable {
 
         } finally {
             try {
-                if (in!=null) in.close();
+                if (objectInputStream!=null) objectInputStream.close();
                 if (incoming!=null) incoming.close();
             } catch (IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

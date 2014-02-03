@@ -2,14 +2,6 @@ package com.bos.art.logServer.utils;
 
 import com.bos.art.logParser.records.*;
 import com.bos.art.logServer.Queues.MessageUnloader;
-import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.net.Socket;
-import java.util.Calendar;
-import java.util.Stack;
-import javax.management.*;
-import javax.xml.parsers.SAXParser;
-
 import org.apache.commons.digester.Digester;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -18,6 +10,14 @@ import org.joda.time.format.DateTimeFormatter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
+
+import javax.management.*;
+import javax.xml.parsers.SAXParser;
+import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.net.Socket;
+import java.util.Calendar;
+import java.util.Stack;
 
 /**
  * every client-connection has a clientreader
@@ -222,7 +222,8 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.collector:type=ClientReaderMBean");
+            int port = (inputSocket!=null) ?  inputSocket.getLocalPort() : 9999;
+            name = new ObjectName("com.omx.collector:type=ClientReaderMBean,name="+port);
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -518,6 +519,8 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
             // specify an 8k input buffer
             digester.parse(inputSource);
+
+            tpsCalculator.incrementTransaction();
 
             unloader.addMessage((Object) task);
 

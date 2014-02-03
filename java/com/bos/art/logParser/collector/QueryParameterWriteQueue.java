@@ -7,32 +7,25 @@
 package com.bos.art.logParser.collector;
 
 
+import com.bos.art.logParser.db.ConnectionPoolT;
+import com.bos.art.logParser.records.QueryParameters;
+import com.bos.art.logServer.utils.TPSCalculator;
+import com.lmax.disruptor.*;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+import com.lmax.disruptor.util.Util;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+
+import javax.management.*;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import com.bos.art.logServer.utils.TPSCalculator;
-import com.lmax.disruptor.*;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
-import com.lmax.disruptor.util.DaemonThreadFactory;
-import com.lmax.disruptor.util.Util;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.apache.log4j.Logger;
-
-import com.bos.art.logParser.db.ConnectionPoolT;
-import com.bos.art.logParser.records.QueryParameters;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.joda.time.DateTime;
-
-import javax.management.*;
 
 
 /**

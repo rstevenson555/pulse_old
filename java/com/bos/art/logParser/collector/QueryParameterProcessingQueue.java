@@ -7,23 +7,18 @@
 package com.bos.art.logParser.collector;
 
 
-import java.io.Serializable;
-
-import com.bos.art.logParser.records.ILiveLogParserRecord;
+import com.bos.art.logParser.records.QueryParameters;
 import com.bos.art.logServer.utils.TPSCalculator;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.lmax.disruptor.util.Util;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
-import com.bos.art.logParser.records.QueryParameters;
 
 import javax.management.*;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
