@@ -19,6 +19,9 @@ import java.lang.management.ManagementFactory;
 import java.net.Socket;
 import java.util.Calendar;
 import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * every client-connection has a clientreader
@@ -33,7 +36,10 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private Socket inputSocket = null;
     private SystemTask task = null;
     private static Logger logger = Logger.getLogger(ClientReader.class.getName());
-    private MessageUnloader unloader = new MessageUnloader();
+    private static MessageUnloader commandUnloader = new MessageUnloader();
+    private static int NUM_MESSAGE_HANDLERS = 4;
+    private static MessageUnloaderHandler messageUnloaderHandlers[] = new MessageUnloaderHandler[NUM_MESSAGE_HANDLERS];
+    private static ExecutorService executorService = Executors.newFixedThreadPool(NUM_MESSAGE_HANDLERS);
     private static Stack saxParsers = new Stack();
     private static SAXParserFactory saxFactory;
     private InputStream inputStream = null;
@@ -513,7 +519,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
                 // DebugInputStream dis = new DebugInputStream(insource,System.getProperty("user.dir")+File.separator+Thread.currentThread().getName()+"-"+filecounter++);
 
             } else if (mode == COMMAND_MODE) {
-                unloader.exitOnFinish();
+                commandUnloader.exitOnFinish();
                 
                 command = "<?xml version=\"1.0\"?>\n" + command;
                 // System.out.println(command);
@@ -526,7 +532,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             digester.parse(inputSource);
 
             tpsCalculator.incrementTransaction();
-            unloader.addMessage((Object) task);
+            commandUnloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
             String message = e.getMessage();
@@ -580,7 +586,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             releaseSAXParser(parser);
 
             if (mode == FILE_MODE || mode == COMMAND_MODE) {
-                unloader.exitOnFinish();
+                commandUnloader.exitOnFinish();
                 // test_unloader.exitOnFinish();
 
             }
@@ -600,7 +606,29 @@ public class ClientReader implements Runnable, ClientReaderMBean {
      */
     public void saveTask(SystemTask task) {
         this.task = task;
-        
+    }
+
+    private class MessageUnloaderHandler implements Runnable {
+
+        UserRequestEventDesc timing;
+        MessageUnloader unloader = new MessageUnloader();
+
+        public void setTimingRecord(UserRequestEventDesc t) { timing = t;}
+
+        public void run() {
+            unloader.addMessage(timing);
+        }
+    }
+
+    private static AtomicInteger handlerCount = new AtomicInteger(0);
+
+    private MessageUnloaderHandler nextHandler() {
+        int hcount = handlerCount.incrementAndGet();
+        if ( hcount > messageUnloaderHandlers.length-1) {
+            hcount = 0;
+            handlerCount.set(hcount);
+        }
+        return messageUnloaderHandlers[hcount];
     }
 
     private void add(UserRequestEventDesc timing) {
@@ -611,14 +639,18 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
         tpsCalculator.incrementTransaction();
 
-        unloader.addMessage((Object) timing);
+        MessageUnloaderHandler messageUnloaderHandler = nextHandler();
+        messageUnloaderHandler.setTimingRecord(timing);
+        executorService.execute(messageUnloaderHandler);
+        //commandUnloader.addMessage((Object) timing);
 
         clientCache.objectsWritten++;
         if (clientCache.objectsWritten % 10000 == 0) {
 
-            logger.info(
-                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
-                    + " queue size is [" + unloader.size() + "]");
+//            logger.info(
+//                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
+//                    + " queue size is [" + commandUnloader.size() + "]");
+            logger.info("messages per second to the ArtEngine out-queue: " + tpsCalculator.getMessagesPerSecond());
 
             clientCache.writeTime = System.currentTimeMillis();
         }
