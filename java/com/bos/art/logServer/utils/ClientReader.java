@@ -62,7 +62,6 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private boolean debugging = false;
 // for debugging purposes
     private static int filecounter = 0;
-    private static final Object ulock = new Object();
     private boolean encode_input = false;
     private static int SOCKET_BUFFER = 262144;
     private static TPSCalculator tpsCalculator = new TPSCalculator();
