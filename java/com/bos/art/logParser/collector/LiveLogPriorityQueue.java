@@ -53,8 +53,6 @@ public class LiveLogPriorityQueue implements Serializable {
     private Disruptor<LiveLogUnloader.ObjectEvent> disruptor = new Disruptor<LiveLogUnloader.ObjectEvent>(LiveLogUnloader.ObjectEvent.FACTORY, 4 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
-    
-
     private LiveLogPriorityQueue() {
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 

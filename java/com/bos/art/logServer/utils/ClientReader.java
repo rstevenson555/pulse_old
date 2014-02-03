@@ -65,6 +65,8 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private boolean encode_input = false;
     private static int SOCKET_BUFFER = 262144;
     private TPSCalculator tpsCalculator = new TPSCalculator();
+    static private int uniqueClientCounter = 1;
+    private static Object initSyncLock = new Object();
 
     static {
         // Initialize SAX Parser factory defaults
@@ -230,11 +232,10 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 //        registerWithMBeanServer();
     }
 
-    private static Object sync = new Object();
 
     public void initHandlers() {
         logger.info("ClientReader.createHandlers");
-        synchronized (sync) {
+        synchronized (initSyncLock) {
             for(int i = 0;i<messageUnloaderHandlers.length;i++) {
                 if ( messageUnloaderHandlers[i]==null)
                     messageUnloaderHandlers[i] = new MessageUnloaderHandler();
@@ -242,7 +243,21 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         }
     }
 
-    static private int uniqueClientCounter = 1;
+    private static AtomicInteger handlerCount = new AtomicInteger(0);
+
+    private MessageUnloaderHandler setNextHandler(UserRequestEventDesc timing) {
+
+        int current = handlerCount.get();
+        messageUnloaderHandlers[current].setTimingRecord(timing);
+
+        int nextHandlerCount = handlerCount.incrementAndGet();
+        if ( nextHandlerCount > messageUnloaderHandlers.length-1) {
+            nextHandlerCount = 0;
+            handlerCount.set(nextHandlerCount);
+        }
+
+        return messageUnloaderHandlers[current];
+    }
 
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
@@ -635,22 +650,6 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         public void run() {
             unloader.addMessage(timing);
         }
-    }
-
-    private static AtomicInteger handlerCount = new AtomicInteger(0);
-
-    private MessageUnloaderHandler setNextHandler(UserRequestEventDesc timing) {
-
-        int current = handlerCount.get();
-        messageUnloaderHandlers[current].setTimingRecord(timing);
-
-        int nextHandlerCount = handlerCount.incrementAndGet();
-        if ( nextHandlerCount > messageUnloaderHandlers.length-1) {
-            nextHandlerCount = 0;
-            handlerCount.set(nextHandlerCount);
-        }
-
-        return messageUnloaderHandlers[current];
     }
 
     private void add(UserRequestEventDesc timing) {
