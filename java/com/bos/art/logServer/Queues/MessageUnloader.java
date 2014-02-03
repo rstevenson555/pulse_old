@@ -32,9 +32,8 @@ public class MessageUnloader implements MessageUnloaderMBean {
     private boolean exitOnFinish = false;
     private long writeTime = System.currentTimeMillis();
     private Socket socket;
-//    private static MessageUnloader instance = new MessageUnloader();
     private int failCount = 0;
-    private int MESSAGE_QUEUE_SIZE = 4 * 1024;
+    private int MESSAGE_QUEUE_SIZE = 256;
     private static int SOCKET_BUFFER = 262144;
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
             .namingPattern("MessageUnloader-%d")

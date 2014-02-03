@@ -13,6 +13,7 @@ import org.xml.sax.XMLReader;
 
 import javax.management.*;
 import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.Socket;
@@ -33,10 +34,9 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private SystemTask task = null;
     private static Logger logger = Logger.getLogger(ClientReader.class.getName());
     //private static MessageUnloader unloader = MessageUnloader.getInstance();
-    private static MessageUnloader unloader1 = new MessageUnloader();
-    private static MessageUnloader unloader2 = new MessageUnloader();
+    private static MessageUnloader unloader = new MessageUnloader();
     private static Stack saxParsers = new Stack();
-    private static javax.xml.parsers.SAXParserFactory saxFactory;
+    private static SAXParserFactory saxFactory;
     private InputStream inputStream = null;
     private Digester digester = null;
     private SAXParser parser = null;
@@ -514,8 +514,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
                 // DebugInputStream dis = new DebugInputStream(insource,System.getProperty("user.dir")+File.separator+Thread.currentThread().getName()+"-"+filecounter++);
 
             } else if (mode == COMMAND_MODE) {
-                unloader1.exitOnFinish();
-                unloader2.exitOnFinish();
+                unloader.exitOnFinish();
                 
                 command = "<?xml version=\"1.0\"?>\n" + command;
                 // System.out.println(command);
@@ -528,11 +527,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             digester.parse(inputSource);
 
             tpsCalculator.incrementTransaction();
-
-            if (tpsCalculator.getTransactionCount()%2!=0)
-                unloader1.addMessage((Object) task);
-            else
-                unloader2.addMessage((Object) task);
+            unloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
             String message = e.getMessage();
@@ -586,8 +581,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             releaseSAXParser(parser);
 
             if (mode == FILE_MODE || mode == COMMAND_MODE) {
-                unloader1.exitOnFinish();
-                unloader2.exitOnFinish();
+                unloader.exitOnFinish();
                 // test_unloader.exitOnFinish();
 
             }
@@ -618,21 +612,14 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
         tpsCalculator.incrementTransaction();
 
-        if (tpsCalculator.getTransactionCount()%2!=0)
-            unloader1.addMessage((Object) timing);
-        else
-            unloader2.addMessage((Object) timing);
+        unloader.addMessage((Object) timing);
 
         clientCache.objectsWritten++;
         if (clientCache.objectsWritten % 10000 == 0) {
 
             logger.info(
                     "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
-                    + " queue size is [" + unloader1.size() + "]");
-
-            logger.info(
-                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
-                            + " queue size is [" + unloader2.size() + "]");
+                    + " queue size is [" + unloader.size() + "]");
 
             clientCache.writeTime = System.currentTimeMillis();
         }
