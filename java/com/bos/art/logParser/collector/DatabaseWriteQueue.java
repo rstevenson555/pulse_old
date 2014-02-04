@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
  */
 public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(DatabaseWriteQueue.class.getName());
-    private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
+//    private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
     private int objectsRemoved;
     private int objectsWritten;                 
     private long totalWriteTime;
@@ -52,7 +52,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
     {
         private ILiveLogParserRecord record;
 
-        public static final EventFactory<ILiveLogParserRecordEvent> FACTORY = new EventFactory<DatabaseWriteQueue.ILiveLogParserRecordEvent>()
+        public static final EventFactory<ILiveLogParserRecordEvent> FACTORY = new EventFactory<ILiveLogParserRecordEvent>()
         {
             public ILiveLogParserRecordEvent newInstance()
             {
@@ -82,7 +82,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         }
     }
 
-    private DatabaseWriteQueue() {
+    public DatabaseWriteQueue() {
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
@@ -153,9 +153,9 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         }
     }
 
-    public static DatabaseWriteQueue getInstance() {
-        return instance;
-    }
+//    public static DatabaseWriteQueue getInstance() {
+//        return instance;
+//    }
 
 
     public void addLast(Object o) {
