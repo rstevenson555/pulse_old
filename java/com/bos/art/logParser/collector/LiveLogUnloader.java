@@ -38,14 +38,6 @@ public class LiveLogUnloader implements Runnable {
     private LiveLogPriorityQueue queue = null;
     private boolean runstate = false;
 
-    private static int NUM_DB_WRITE_HANDLERS = 2;
-    private static LiveLogUnloaderHandler liveLogUnloaderHandlers[] = new LiveLogUnloaderHandler[NUM_DB_WRITE_HANDLERS];
-    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
-            .namingPattern("LiveLogUnloaderHandler-%d")
-            .build();
-    // this controls how wide to scale the message handlers (very critical)
-    private static ExecutorService executorService = Executors.newFixedThreadPool(NUM_DB_WRITE_HANDLERS,tFactory);
-
     private static final String ST_LIST_STATISTICS_MODULES = "LISTSTATUNITS";
     private static final String ST_LOAD_STAT_UNIT = "LOADSTATUNIT";
     private static final String ST_START_HEAP_THREAD = "STARTHEAPTHREAD";
@@ -71,107 +63,13 @@ public class LiveLogUnloader implements Runnable {
     private static int statUnitCounter = 0;
     private static int systemTaskUnloader = 1;
 
-    private LiveLogUnloader() {
+    public LiveLogUnloader() {
         queue = LiveLogPriorityQueue.getInstance();
-        initHandlers();
     }
 
     public LiveLogUnloader(LiveLogPriorityQueue parmQueue, boolean rs) {
         runstate = rs;
         queue = parmQueue;
-        initHandlers();
-    }
-
-    public static class ObjectEvent {
-        public Object record;
-
-        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
-            public ObjectEvent newInstance() {
-                return new ObjectEvent();
-            }
-        };
-    };
-
-    public class ObjectEventHandler implements EventHandler<ObjectEvent> {
-        LiveLogUnloader unloader = new LiveLogUnloader();
-
-        public ObjectEventHandler() {
-        }
-
-        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
-            StatisticsModule sm = StatisticsModule.getInstance();
-            Object event = pevent.record;
-
-            event = pevent.record;
-            ILiveLogPriorityQueueMessage iLiveLogPriorityQueueMessage = (ILiveLogPriorityQueueMessage)event;
-
-            if (logger.isInfoEnabled()) {
-                if (iLiveLogPriorityQueueMessage.getPriority() != 20) {
-                    logger.debug(
-                            "Unloader Priority: " + iLiveLogPriorityQueueMessage.getPriority() + " : " + iLiveLogPriorityQueueMessage.toString() + ":Time:"
-                                    + System.currentTimeMillis());
-                }
-            }
-            if (iLiveLogPriorityQueueMessage instanceof ILiveLogParserRecord) {
-                Iterator iter = sm.iterator();
-
-                while (iter.hasNext()) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(" Process Record called!");
-                    }
-                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) iLiveLogPriorityQueueMessage);
-                }
-                //DatabaseWriteQueue.getInstance().addLast(llpr);
-                LiveLogUnloaderHandler liveLogUnloaderHandler = setNextHandler(iLiveLogPriorityQueueMessage);
-                executorService.execute(liveLogUnloaderHandler);
-
-                // FileWriteQueue.getInstance().addLast(llpr);
-            } else if (iLiveLogPriorityQueueMessage instanceof SystemTask) {
-                logger.debug("System Task Found " + ((SystemTask) iLiveLogPriorityQueueMessage).getTask());
-                unloader.performSystemTask((SystemTask) iLiveLogPriorityQueueMessage);
-            }
-
-        }
-
-    }
-
-    private class LiveLogUnloaderHandler implements Runnable {
-
-        ILiveLogPriorityQueueMessage iLiveLogPriorityQueueMessage;
-        DatabaseWriteQueue unloader = new DatabaseWriteQueue();
-
-        public void setPriorityQueueMessage(Object t) { iLiveLogPriorityQueueMessage = (ILiveLogPriorityQueueMessage)t;}
-
-        public void run() {
-            unloader.addLast(iLiveLogPriorityQueueMessage);
-        }
-    }
-    static private Object initSyncLock = new Object ();
-
-    public void initHandlers() {
-        logger.info("LiveLogUnloader.createHandlers");
-        synchronized (initSyncLock) {
-            for(int i = 0;i<liveLogUnloaderHandlers.length;i++) {
-                if ( liveLogUnloaderHandlers[i]==null)
-                    liveLogUnloaderHandlers[i] = new LiveLogUnloaderHandler();
-            }
-        }
-    }
-
-    private static AtomicInteger handlerCount = new AtomicInteger(0);
-
-    private LiveLogUnloaderHandler setNextHandler(ILiveLogPriorityQueueMessage iLiveLogPriorityQueueMessage) {
-
-        int current = handlerCount.get();
-        liveLogUnloaderHandlers[current].setPriorityQueueMessage(iLiveLogPriorityQueueMessage);
-
-        int nextHandlerCount = handlerCount.incrementAndGet();
-        if ( nextHandlerCount > liveLogUnloaderHandlers.length-1) {
-            nextHandlerCount = 0;
-            handlerCount.set(nextHandlerCount);
-        }
-
-        return liveLogUnloaderHandlers[current];
     }
 
     /*
@@ -204,8 +102,8 @@ public class LiveLogUnloader implements Runnable {
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
                 }
                 //DatabaseWriteQueue.getInstance().addLast(llpr);
-                LiveLogUnloaderHandler liveLogUnloaderHandler = setNextHandler(llpr);
-                executorService.execute(liveLogUnloaderHandler);
+//                LiveLogUnloaderHandler liveLogUnloaderHandler = setNextHandler(llpr);
+//                executorService.execute(liveLogUnloaderHandler);
 
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
@@ -215,7 +113,7 @@ public class LiveLogUnloader implements Runnable {
         }
     }
 
-    private void performSystemTask(SystemTask st) {
+    public void performSystemTask(SystemTask st) {
         String taskString = st.getTask();
 
         if (taskString == null || taskString.trim().length() == 0) {
@@ -535,7 +433,7 @@ public class LiveLogUnloader implements Runnable {
     }
 
     private void shutdown() {
-        logger.info("shutdonw Called");
+        logger.info("shutdown Called");
     }
 
     private void printMemory() {
