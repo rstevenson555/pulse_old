@@ -57,7 +57,7 @@ public class LiveLogPriorityQueue implements Serializable {
     private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, disruptorExecutor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
-    private static int NUM_DB_WRITE_HANDLERS = 2;
+    private static int NUM_DB_WRITE_HANDLERS = 1;
     private static LiveLogPriorityQueueHandler logPriorityQueueHandlers[] = new LiveLogPriorityQueueHandler[NUM_DB_WRITE_HANDLERS];
     private static BasicThreadFactory writeTFactory = new BasicThreadFactory.Builder()
             .namingPattern("LiveLogPriorityQueueHandler-%d")
