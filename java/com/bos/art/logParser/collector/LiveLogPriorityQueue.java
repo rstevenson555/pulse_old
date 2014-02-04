@@ -68,7 +68,8 @@ public class LiveLogPriorityQueue implements Serializable {
 
     public class ObjectEventHandler implements EventHandler<ObjectEvent> {
         LiveLogUnloader liveLogUnloader = new LiveLogUnloader();
-        DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
+//        DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
+        DatabaseWriteQueue databaseWriteQueue = DatabaseWriteQueue.getInstance();
 
         public ObjectEventHandler() {
         }

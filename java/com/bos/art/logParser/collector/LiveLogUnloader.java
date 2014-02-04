@@ -59,8 +59,9 @@ public class LiveLogUnloader implements Runnable {
     private static final String ST_MEMORY_STATS = "MEMORYSTATS";
     private static int statUnitCounter = 0;
     private static int systemTaskUnloader = 1;
-    private DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
+//    private DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
 
+    private  DatabaseWriteQueue databaseWriteQueue = DatabaseWriteQueue.getInstance();
     public LiveLogUnloader() {
         queue = LiveLogPriorityQueue.getInstance();
     }
