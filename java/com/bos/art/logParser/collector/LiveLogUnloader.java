@@ -6,15 +6,17 @@
  */
 package com.bos.art.logParser.collector;
 
+import com.bos.art.logParser.broadcast.network.CommunicationChannel;
+
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import com.bos.art.logServer.Queues.MessageUnloader;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
@@ -37,7 +39,10 @@ public class LiveLogUnloader implements Runnable {
     private static boolean unloadHeap = true;
     private LiveLogPriorityQueue queue = null;
     private boolean runstate = false;
-
+    private static int countHeapUnloader = 0;
+    private static int databaseUnloader = 0;
+    private static int queryParamProccessingQueue = 0;
+    private static int queryParamUnloader = 0;
     private static final String ST_LIST_STATISTICS_MODULES = "LISTSTATUNITS";
     private static final String ST_LOAD_STAT_UNIT = "LOADSTATUNIT";
     private static final String ST_START_HEAP_THREAD = "STARTHEAPTHREAD";
@@ -63,7 +68,7 @@ public class LiveLogUnloader implements Runnable {
     private static int statUnitCounter = 0;
     private static int systemTaskUnloader = 1;
 
-    public LiveLogUnloader() {
+    private LiveLogUnloader() {
         queue = LiveLogPriorityQueue.getInstance();
     }
 
@@ -72,11 +77,67 @@ public class LiveLogUnloader implements Runnable {
         queue = parmQueue;
     }
 
+    public static class ObjectEvent {
+        public Object record;
+
+        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
+            public ObjectEvent newInstance() {
+                return new ObjectEvent();
+            }
+        };
+    };
+
+    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
+        public int failureCount = 0;
+        public int messagesSeen = 0;
+        LiveLogUnloader unloader = new LiveLogUnloader();
+
+        public ObjectEventHandler() {
+        }
+
+        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
+            CommunicationChannel channel = CommunicationChannel.getInstance();
+            StatisticsModule sm = StatisticsModule.getInstance();
+            Object event = pevent.record;
+
+            event = pevent.record;
+            ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage)event;
+
+            //logger.warn("got event: " + event);
+
+            if (logger.isInfoEnabled()) {
+                if (llpr.getPriority() != 20) {
+                    logger.debug(
+                            "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
+                                    + System.currentTimeMillis());
+                }
+            }
+            if (llpr instanceof ILiveLogParserRecord) {
+                Iterator iter = sm.iterator();
+
+                while (iter.hasNext()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(" Process Record called!");
+                    }
+                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
+                }
+                DatabaseWriteQueue.getInstance().addLast(llpr);
+                // FileWriteQueue.getInstance().addLast(llpr);
+            } else if (llpr instanceof SystemTask) {
+                logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
+                unloader.performSystemTask((SystemTask) llpr);
+            }
+
+        }
+
+    }
+
     /*
      * (non-Javadoc) @see java.lang.Runnable#run()
      */
 
     public void run() {
+        CommunicationChannel channel = CommunicationChannel.getInstance();
         StatisticsModule sm = StatisticsModule.getInstance();
 
         while (unloadHeap || runstate) {
@@ -101,10 +162,7 @@ public class LiveLogUnloader implements Runnable {
                     }
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
                 }
-                //DatabaseWriteQueue.getInstance().addLast(llpr);
-//                LiveLogUnloaderHandler liveLogUnloaderHandler = setNextHandler(llpr);
-//                executorService.execute(liveLogUnloaderHandler);
-
+                DatabaseWriteQueue.getInstance().addLast(llpr);
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
                 logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
@@ -113,7 +171,7 @@ public class LiveLogUnloader implements Runnable {
         }
     }
 
-    public void performSystemTask(SystemTask st) {
+    private void performSystemTask(SystemTask st) {
         String taskString = st.getTask();
 
         if (taskString == null || taskString.trim().length() == 0) {
@@ -231,7 +289,7 @@ public class LiveLogUnloader implements Runnable {
     private void printDBWriteQueue() {
         logger.warn("------------------------------------------------------------------");
         logger.warn("-----------------Database Write Queue ----------------------------");
-        //logger.warn(DatabaseWriteQueue.getInstance().toString());
+        logger.warn(DatabaseWriteQueue.getInstance().toString());
         logger.warn("-----------------Database Write Queue ----------------------------");
         logger.warn("------------------------------------------------------------------");
     }
@@ -253,7 +311,7 @@ public class LiveLogUnloader implements Runnable {
     }
 
     public static void stopDBThreads() {
-        //DatabaseWriteQueue.unloadDB = false;
+        DatabaseWriteQueue.unloadDB = false;
     }
 
     public static void startHeapThread() {
@@ -433,7 +491,7 @@ public class LiveLogUnloader implements Runnable {
     }
 
     private void shutdown() {
-        logger.info("shutdown Called");
+        logger.info("shutdonw Called");
     }
 
     private void printMemory() {

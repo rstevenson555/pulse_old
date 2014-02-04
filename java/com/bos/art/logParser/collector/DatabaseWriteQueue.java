@@ -30,18 +30,20 @@ import java.util.concurrent.Executors;
  */
 public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(DatabaseWriteQueue.class.getName());
+    private static DatabaseWriteQueue instance = new DatabaseWriteQueue();
     private int objectsRemoved;
     private int objectsWritten;                 
     private long totalWriteTime;
+    protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 4500;
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
                 .namingPattern("DatabaseWriteQueue-%d")
                 .build();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
-    private TPSCalculator tpsCalculator = new TPSCalculator();
+    private static TPSCalculator tpsCalculator = new TPSCalculator();
 
-    private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 2*1024, executor,
+    private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 4*1024, executor,
                 ProducerType.SINGLE, new SleepingWaitStrategy());
 
     // guards for boundaries
@@ -80,7 +82,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         }
     }
 
-    public DatabaseWriteQueue() {
+    private DatabaseWriteQueue() {
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
@@ -134,13 +136,11 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         return tpsCalculator.getTransactionCount();
     }
 
-    static private int instanceCount = 0;
-
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean,name=instance-"+(++instanceCount));
+            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean");
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -152,6 +152,11 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
     }
+
+    public static DatabaseWriteQueue getInstance() {
+        return instance;
+    }
+
 
     public void addLast(Object o) {
         addLast((ILiveLogParserRecord)o);
