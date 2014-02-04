@@ -65,7 +65,13 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             if (instance != null) {
                 instance.runnable = false;
             }
+            PersistanceStrategy ps = instance.pStrat;
             instance = (AccessRecordsMinuteStats) su;
+            if (instance.pStrat == null) {
+                logger.error("Strat == null");
+                instance.pStrat  = ps;
+
+            }
         }
     }
 
