@@ -137,11 +137,13 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         return tpsCalculator.getTransactionCount();
     }
 
+    private static int instance = 0;
+
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean");
+            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean,name=instance-"+(++instance));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
