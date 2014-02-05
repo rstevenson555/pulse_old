@@ -106,15 +106,15 @@ public class LiveLogUnloader implements Runnable {
     }
 
     public static void startHeapThread() {
-        unloadHeap = true;
-        LiveLogUnloader llu = new LiveLogUnloader();
-
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("Heap-Unloader No.-%d")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(llu);
+//        unloadHeap = true;
+//        LiveLogUnloader llu = new LiveLogUnloader();
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("Heap-Unloader No.-%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(llu);
     }
 
     public static void startQueryParamProcessor() {
