@@ -461,6 +461,7 @@ public class LiveLogUnloader implements Runnable {
 
     public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
         LiveLogUnloader liveLogUnloader = new LiveLogUnloader();
+        static DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
 
         public ObjectEventHandler() {
         }
@@ -490,7 +491,7 @@ public class LiveLogUnloader implements Runnable {
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
                 }
                 //DatabaseWriteQueue.getInstance().addLast(llpr);
-                liveLogUnloader.databaseWriteQueue.addLast(llpr);
+                databaseWriteQueue.addLast(llpr);
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
                 logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
