@@ -8,16 +8,19 @@ package com.bos.art.logParser.collector;
 
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedPriorityQueue;
+import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.ILiveLogPriorityQueueMessage;
-import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.FatalExceptionHandler;
-import com.lmax.disruptor.SleepingWaitStrategy;
+import com.bos.art.logParser.records.SystemTask;
+import com.bos.art.logParser.statistics.StatisticsModule;
+import com.bos.art.logParser.statistics.StatisticsUnit;
+import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *         Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class LiveLogPriorityQueue implements Serializable {
+    private static Logger logger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
     public static final int PRINT_FREQUENCY = 100000;
     private static final int BOUNDED_QUEUE_CAPACITY = 2000;
     private BoundedPriorityQueue queue = new BoundedPriorityQueue(BOUNDED_QUEUE_CAPACITY, new PriorityQueueComparator());
@@ -48,14 +52,64 @@ public class LiveLogPriorityQueue implements Serializable {
             .build();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
-    private Disruptor<LiveLogUnloader.ObjectEvent> disruptor = new Disruptor<LiveLogUnloader.ObjectEvent>(LiveLogUnloader.ObjectEvent.FACTORY, 4 * 1024, executor,
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
             ProducerType.SINGLE, new SleepingWaitStrategy());
 
+    public static class ObjectEvent {
+        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
+            public ObjectEvent newInstance() {
+                return new ObjectEvent();
+            }
+        };
+        public Object record;
+    }
+
+    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
+        LiveLogUnloader liveLogUnloader = new LiveLogUnloader();
+        static DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
+
+        public ObjectEventHandler() {
+        }
+
+        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
+            StatisticsModule statisticsModule = StatisticsModule.getInstance();
+
+            Object event = pevent.record;
+            ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage) event;
+
+            //logger.warn("got event: " + event);
+
+            if (logger.isInfoEnabled()) {
+                if (llpr.getPriority() != 20) {
+                    logger.debug(
+                            "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
+                                    + System.currentTimeMillis());
+                }
+            }
+            if (llpr instanceof ILiveLogParserRecord) {
+                Iterator iter = statisticsModule.iterator();
+
+                while (iter.hasNext()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(" Process Record called!");
+                    }
+                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
+                }
+                //DatabaseWriteQueue.getInstance().addLast(llpr);
+                databaseWriteQueue.addLast(llpr);
+                // FileWriteQueue.getInstance().addLast(llpr);
+            } else if (llpr instanceof SystemTask) {
+                logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
+                liveLogUnloader.performSystemTask((SystemTask) llpr);
+            }
+
+        }
+    }
 
     private LiveLogPriorityQueue() {
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
-        LiveLogUnloader.ObjectEventHandler handler = new LiveLogUnloader.ObjectEventHandler();
+        ObjectEventHandler handler = new ObjectEventHandler();
         disruptor.handleEventsWith(handler);
         disruptor.start();
     }
@@ -80,8 +134,8 @@ public class LiveLogPriorityQueue implements Serializable {
         if (o instanceof ILiveLogPriorityQueueMessage) {
             try {
                 //queue.put(o);                
-                disruptor.publishEvent(new EventTranslator<LiveLogUnloader.ObjectEvent>() {
-                    public void translateTo(LiveLogUnloader.ObjectEvent event, long sequence) {
+                disruptor.publishEvent(new EventTranslator<ObjectEvent>() {
+                    public void translateTo(ObjectEvent event, long sequence) {
                         event.record = o;
                     }
                 });

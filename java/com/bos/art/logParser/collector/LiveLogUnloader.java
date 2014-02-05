@@ -61,7 +61,7 @@ public class LiveLogUnloader implements Runnable {
     private boolean runstate = false;
     private DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
 
-    private LiveLogUnloader() {
+    public LiveLogUnloader() {
         queue = LiveLogPriorityQueue.getInstance();
     }
 
@@ -180,6 +180,7 @@ public class LiveLogUnloader implements Runnable {
                     }
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
                 }
+                databaseWriteQueue.addLast(llpr);
                 //DatabaseWriteQueue.getInstance().addLast(llpr);
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
@@ -189,7 +190,7 @@ public class LiveLogUnloader implements Runnable {
         }
     }
 
-    private void performSystemTask(SystemTask st) {
+    public void performSystemTask(SystemTask st) {
         String taskString = st.getTask();
 
         if (taskString == null || taskString.trim().length() == 0) {
@@ -450,55 +451,5 @@ public class LiveLogUnloader implements Runnable {
         systemTaskLogger.info("             Used Memory  : " + (totalMemory / 1024 - freeMemory / 1024) + "K:");
     }
 
-    public static class ObjectEvent {
-        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
-            public ObjectEvent newInstance() {
-                return new ObjectEvent();
-            }
-        };
-        public Object record;
-    }
 
-    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
-        LiveLogUnloader liveLogUnloader = new LiveLogUnloader();
-        static DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
-
-        public ObjectEventHandler() {
-        }
-
-        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
-            StatisticsModule sm = StatisticsModule.getInstance();
-
-            Object event = pevent.record;
-            ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage) event;
-
-            //logger.warn("got event: " + event);
-
-            if (logger.isInfoEnabled()) {
-                if (llpr.getPriority() != 20) {
-                    logger.debug(
-                            "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
-                                    + System.currentTimeMillis());
-                }
-            }
-            if (llpr instanceof ILiveLogParserRecord) {
-                Iterator iter = sm.iterator();
-
-                while (iter.hasNext()) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(" Process Record called!");
-                    }
-                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
-                }
-                //DatabaseWriteQueue.getInstance().addLast(llpr);
-                databaseWriteQueue.addLast(llpr);
-                // FileWriteQueue.getInstance().addLast(llpr);
-            } else if (llpr instanceof SystemTask) {
-                logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
-                liveLogUnloader.performSystemTask((SystemTask) llpr);
-            }
-
-        }
-
-    }
 }
