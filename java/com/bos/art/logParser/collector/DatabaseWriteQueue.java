@@ -42,7 +42,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
                 .build();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
-    private static TPSCalculator tpsCalculator = new TPSCalculator();
+    private TPSCalculator tpsCalculator = new TPSCalculator();
 
     private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 2*1024, executor,
                 ProducerType.SINGLE, new SleepingWaitStrategy());
