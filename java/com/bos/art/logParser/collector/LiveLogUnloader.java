@@ -7,25 +7,21 @@
 package com.bos.art.logParser.collector;
 
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.util.DaemonThreadFactory;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.apache.log4j.Logger;
-
 import com.bos.art.logParser.db.QueryParamCleaner;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.ILiveLogPriorityQueueMessage;
 import com.bos.art.logParser.records.SystemTask;
 import com.bos.art.logParser.statistics.StatisticsModule;
 import com.bos.art.logParser.statistics.StatisticsUnit;
+import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventHandler;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.apache.log4j.Logger;
+
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author I0360D3
@@ -34,15 +30,6 @@ import com.bos.art.logParser.statistics.StatisticsUnit;
  */
 public class LiveLogUnloader implements Runnable {
 
-    private static Logger logger = (Logger) Logger.getLogger(LiveLogUnloader.class.getName());
-    private static Logger systemTaskLogger = (Logger) Logger.getLogger("systemTaskLogger");
-    private static boolean unloadHeap = true;
-    private LiveLogPriorityQueue queue = null;
-    private boolean runstate = false;
-    private static int countHeapUnloader = 0;
-    private static int databaseUnloader = 0;
-    private static int queryParamProccessingQueue = 0;
-    private static int queryParamUnloader = 0;
     private static final String ST_LIST_STATISTICS_MODULES = "LISTSTATUNITS";
     private static final String ST_LOAD_STAT_UNIT = "LOADSTATUNIT";
     private static final String ST_START_HEAP_THREAD = "STARTHEAPTHREAD";
@@ -65,8 +52,14 @@ public class LiveLogUnloader implements Runnable {
     private static final String ST_SHUTDOWN = "SHUTDOWN";
     private static final String ST_GC = "GC";
     private static final String ST_MEMORY_STATS = "MEMORYSTATS";
+    private static Logger logger = (Logger) Logger.getLogger(LiveLogUnloader.class.getName());
+    private static Logger systemTaskLogger = (Logger) Logger.getLogger("systemTaskLogger");
+    private static boolean unloadHeap = true;
     private static int statUnitCounter = 0;
     private static int systemTaskUnloader = 1;
+    private LiveLogPriorityQueue queue = null;
+    private boolean runstate = false;
+    private DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
 
     private LiveLogUnloader() {
         queue = LiveLogPriorityQueue.getInstance();
@@ -77,64 +70,89 @@ public class LiveLogUnloader implements Runnable {
         queue = parmQueue;
     }
 
-    public static class ObjectEvent {
-        public Object record;
+    public static void startDBThread() {
+//        DatabaseWriteQueue.unloadDB = true;
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("Database-Unloader No.-%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(DatabaseWriteQueue.getInstance());
+    }
 
-        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
-            public ObjectEvent newInstance() {
-                return new ObjectEvent();
-            }
-        };
-    };
+    ;
 
-    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
-        public int failureCount = 0;
-        public int messagesSeen = 0;
-        LiveLogUnloader unloader = new LiveLogUnloader();
+    public static void startQueryParamCleaner() {
+        QueryParamCleaner.shouldContinue = true;
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("QueryParamCleaner")
+                .build();
 
-        public ObjectEventHandler() {
-        }
-
-        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
-            CommunicationChannel channel = CommunicationChannel.getInstance();
-            StatisticsModule sm = StatisticsModule.getInstance();
-            Object event = pevent.record;
-
-            event = pevent.record;
-            ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage)event;
-
-            //logger.warn("got event: " + event);
-
-            if (logger.isInfoEnabled()) {
-                if (llpr.getPriority() != 20) {
-                    logger.debug(
-                            "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
-                                    + System.currentTimeMillis());
-                }
-            }
-            if (llpr instanceof ILiveLogParserRecord) {
-                Iterator iter = sm.iterator();
-
-                while (iter.hasNext()) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(" Process Record called!");
-                    }
-                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
-                }
-                DatabaseWriteQueue.getInstance().addLast(llpr);
-                // FileWriteQueue.getInstance().addLast(llpr);
-            } else if (llpr instanceof SystemTask) {
-                logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
-                unloader.performSystemTask((SystemTask) llpr);
-            }
-
-        }
-
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(new QueryParamCleaner());
     }
 
     /*
      * (non-Javadoc) @see java.lang.Runnable#run()
      */
+
+    public static void stopQueryParamCleaner() {
+        QueryParamCleaner.shouldContinue = false;
+    }
+
+    public static void stopDBThreads() {
+        DatabaseWriteQueue.unloadDB = false;
+    }
+
+    public static void startHeapThread() {
+        unloadHeap = true;
+        LiveLogUnloader llu = new LiveLogUnloader();
+
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("Heap-Unloader No.-%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(llu);
+    }
+
+    public static void startQueryParamProcessor() {
+//        QueryParameterProcessingQueue qppq = QueryParameterProcessingQueue.getInstance();
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("QueryParam-Proccessor No.-%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(qppq);
+//
+//        logger.warn("Starting QueryParamProcessor ..." + (queryParamProccessingQueue - 1));
+        //t.start();
+    }
+
+    public static void startQueryParamUnloader() {
+//        QueryParameterWriteQueue qpwq = QueryParameterWriteQueue.getInstance();
+//
+//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+//                .namingPattern("QueryParam-Unloader No. -%d")
+//                .build();
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+//        executor.execute(qpwq);
+//
+//        logger.warn("Starting QueryParamUnloader ..." + (queryParamUnloader - 1));
+    }
+
+    public static void startSystemTaskThread() {
+        BasicThreadFactory factory = new BasicThreadFactory.Builder()
+                .namingPattern("SystemTask-Unloader No. -%d")
+                .build();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
+        executor.execute(new LiveLogUnloader(LiveLogPriorityQueue.getSystemTaskQueue(), true));
+
+    }
 
     public void run() {
         CommunicationChannel channel = CommunicationChannel.getInstance();
@@ -162,7 +180,7 @@ public class LiveLogUnloader implements Runnable {
                     }
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
                 }
-                DatabaseWriteQueue.getInstance().addLast(llpr);
+                //DatabaseWriteQueue.getInstance().addLast(llpr);
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
                 logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
@@ -261,35 +279,10 @@ public class LiveLogUnloader implements Runnable {
 
     }
 
-    public static void startDBThread() {
-//        DatabaseWriteQueue.unloadDB = true;
-//
-//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-//                .namingPattern("Database-Unloader No.-%d")
-//                .build();
-//
-//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-//        executor.execute(DatabaseWriteQueue.getInstance());
-    }
-
-    public static void startQueryParamCleaner() {
-        QueryParamCleaner.shouldContinue = true;
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("QueryParamCleaner")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(new QueryParamCleaner());
-    }
-
-    public static void stopQueryParamCleaner() {
-        QueryParamCleaner.shouldContinue = false;
-    }
-
     private void printDBWriteQueue() {
         logger.warn("------------------------------------------------------------------");
         logger.warn("-----------------Database Write Queue ----------------------------");
-        logger.warn(DatabaseWriteQueue.getInstance().toString());
+        //logger.warn(DatabaseWriteQueue.getInstance().toString());
         logger.warn("-----------------Database Write Queue ----------------------------");
         logger.warn("------------------------------------------------------------------");
     }
@@ -308,59 +301,6 @@ public class LiveLogUnloader implements Runnable {
         logger.warn(QueryParameterProcessingQueue.getInstance().toString());
         logger.warn("-----------------Query ParameterProcessing Queue------------------");
         logger.warn("------------------------------------------------------------------");
-    }
-
-    public static void stopDBThreads() {
-        DatabaseWriteQueue.unloadDB = false;
-    }
-
-    public static void startHeapThread() {
-        unloadHeap = true;
-        LiveLogUnloader llu = new LiveLogUnloader();
-
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("Heap-Unloader No.-%d")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(llu);
-    }
-
-    public static void startQueryParamProcessor() {
-//        QueryParameterProcessingQueue qppq = QueryParameterProcessingQueue.getInstance();
-//
-//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-//                .namingPattern("QueryParam-Proccessor No.-%d")
-//                .build();
-//
-//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-//        executor.execute(qppq);
-//
-//        logger.warn("Starting QueryParamProcessor ..." + (queryParamProccessingQueue - 1));
-        //t.start();
-    }
-
-    public static void startQueryParamUnloader() {
-//        QueryParameterWriteQueue qpwq = QueryParameterWriteQueue.getInstance();
-//
-//        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-//                .namingPattern("QueryParam-Unloader No. -%d")
-//                .build();
-//
-//        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-//        executor.execute(qpwq);
-//
-//        logger.warn("Starting QueryParamUnloader ..." + (queryParamUnloader - 1));
-    }
-
-    public static void startSystemTaskThread() {
-        BasicThreadFactory factory = new BasicThreadFactory.Builder()
-                .namingPattern("SystemTask-Unloader No. -%d")
-                .build();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor(factory);
-        executor.execute(new LiveLogUnloader(LiveLogPriorityQueue.getSystemTaskQueue(), true));
-
     }
 
     private void stopHeapThreads() {
@@ -384,14 +324,14 @@ public class LiveLogUnloader implements Runnable {
         StatisticsModule sm = StatisticsModule.getInstance();
 
         try {
-            StatisticsUnit su = ((StatisticsUnit) (Class.forName(unitClassName).newInstance()));
+            StatisticsUnit statisticsUnit = ((StatisticsUnit) (Class.forName(unitClassName).newInstance()));
 
-            su.setInstance(su);
+            statisticsUnit.setInstance(statisticsUnit);
             ++statUnitCounter;
             logger.warn("LiveLogUnloader statunit load counter: " + statUnitCounter + " name: " + unitClassName);
 
-            if (su instanceof StatisticsUnit) {
-                sm.addStatUnit(su);
+            if (statisticsUnit instanceof StatisticsUnit) {
+                sm.addStatUnit(statisticsUnit);
                 systemTaskLogger.info("\tLoaded: " + unitClassName);
             }
         } catch (Exception e) {
@@ -508,5 +448,56 @@ public class LiveLogUnloader implements Runnable {
 
         systemTaskLogger.info("    Memory   total--free  : " + totalMemory / 1024 + "K--" + freeMemory / 1024 + "K");
         systemTaskLogger.info("             Used Memory  : " + (totalMemory / 1024 - freeMemory / 1024) + "K:");
+    }
+
+    public static class ObjectEvent {
+        public static final EventFactory<ObjectEvent> FACTORY = new EventFactory<ObjectEvent>() {
+            public ObjectEvent newInstance() {
+                return new ObjectEvent();
+            }
+        };
+        public Object record;
+    }
+
+    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
+        LiveLogUnloader liveLogUnloader = new LiveLogUnloader();
+
+        public ObjectEventHandler() {
+        }
+
+        public void onEvent(ObjectEvent pevent, long sequence, boolean endOfBatch) throws Exception {
+            StatisticsModule sm = StatisticsModule.getInstance();
+
+            Object event = pevent.record;
+            ILiveLogPriorityQueueMessage llpr = (ILiveLogPriorityQueueMessage) event;
+
+            //logger.warn("got event: " + event);
+
+            if (logger.isInfoEnabled()) {
+                if (llpr.getPriority() != 20) {
+                    logger.debug(
+                            "Unloader Priority: " + llpr.getPriority() + " : " + llpr.toString() + ":Time:"
+                                    + System.currentTimeMillis());
+                }
+            }
+            if (llpr instanceof ILiveLogParserRecord) {
+                Iterator iter = sm.iterator();
+
+                while (iter.hasNext()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(" Process Record called!");
+                    }
+                    ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
+                }
+                //DatabaseWriteQueue.getInstance().addLast(llpr);
+                liveLogUnloader.databaseWriteQueue.addLast(llpr);
+                // FileWriteQueue.getInstance().addLast(llpr);
+            } else if (llpr instanceof SystemTask) {
+                logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
+                liveLogUnloader.performSystemTask((SystemTask) llpr);
+            }
+
+        }
+
     }
 }

@@ -83,7 +83,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         }
     }
 
-    private DatabaseWriteQueue() {
+    public DatabaseWriteQueue() {
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
@@ -154,9 +154,9 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         }
     }
 
-    public static DatabaseWriteQueue getInstance() {
-        return instance;
-    }
+//    public static DatabaseWriteQueue getInstance() {
+//        return instance;
+//    }
 
 
     public void addLast(Object o) {
