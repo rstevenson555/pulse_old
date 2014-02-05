@@ -64,9 +64,9 @@ public class LiveLogPriorityQueue implements Serializable {
         public Object record;
     }
 
-    public static class ObjectEventHandler implements EventHandler<ObjectEvent> {
+    public class ObjectEventHandler implements EventHandler<ObjectEvent> {
         LiveLogUnloader liveLogUnloader = new LiveLogUnloader();
-        static DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
+        DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
 
         public ObjectEventHandler() {
         }
