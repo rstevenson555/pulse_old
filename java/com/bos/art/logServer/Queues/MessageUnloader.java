@@ -42,7 +42,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, MESSAGE_QUEUE_SIZE, executor,
-            ProducerType.SINGLE, new SleepingWaitStrategy());
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
     private static class ObjectEvent {
         private Object record;
