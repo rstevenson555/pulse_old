@@ -38,7 +38,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private SystemTask task = null;
     private static Logger logger = Logger.getLogger(ClientReader.class.getName());
     private static MessageUnloader commandUnloader = new MessageUnloader();
-    private static int NUM_MESSAGE_HANDLERS = 4;
+    private static int NUM_MESSAGE_HANDLERS = 2;
     private static MessageUnloaderHandler messageUnloaderHandlers[] = new MessageUnloaderHandler[NUM_MESSAGE_HANDLERS];
     private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
             .namingPattern("MessageUnloaderHandler-%d")
