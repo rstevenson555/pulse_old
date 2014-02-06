@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 /**
@@ -36,16 +37,15 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
     private static double timePerInsert = 5000.0;
 
     private static int globalAccessRecordCounter = 0;
-    volatile private static int AccessRecordsRecordPK;
-    //private static Object lock = new Object();
+    private static AtomicInteger accessRecordsRecordPK;
     private static AccessRecordPersistanceStrategy instance;
     private static final Object initLock = new Object();
     private static final Logger logger = (Logger)Logger.getLogger(AccessRecordPersistanceStrategy.class.getName());
 
     
     protected AccessRecordPersistanceStrategy() {
-        AccessRecordsRecordPK = selectNextValidAccessRecordsPK();
-        AccessRecordsRecordPK++;
+        accessRecordsRecordPK = new AtomicInteger(selectNextValidAccessRecordsPK());
+        accessRecordsRecordPK.incrementAndGet();
     }
 
     private static AtomicBoolean instanceLock = new AtomicBoolean(false);
@@ -252,7 +252,8 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
         int requestToken = ((UserRequestTiming)record).getRequestToken();
         int recordPK = -1;
 
-        recordPK = ++AccessRecordsRecordPK;
+        int acr = accessRecordsRecordPK.incrementAndGet();
+        recordPK = acr;
 
         try {
             PreparedStatement pstmt = (PreparedStatement)threadLocalPstmt.get();
