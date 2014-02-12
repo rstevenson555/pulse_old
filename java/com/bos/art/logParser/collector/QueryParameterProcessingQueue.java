@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -34,7 +35,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     private static QueryParameterProcessingQueue instance;
     private int objectsRemoved;
     private int objectsProcessed;
-    private volatile long totalSysTime;
+    private AtomicLong totalSysTime = new AtomicLong(0);
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 3000;
     private static long fullCount = 0;
@@ -45,7 +46,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     private static TPSCalculator tpsCalculator = new TPSCalculator();
 
     private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 4 * 1024, executor,
-            ProducerType.SINGLE, new SleepingWaitStrategy());
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
 
     public long size() {
@@ -87,7 +88,8 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
             long sTime2 = System.currentTimeMillis();
 
             ++objectsProcessed;
-            totalSysTime += (sTime2 - sTime);
+            //totalSysTime += (sTime2 - sTime);
+            totalSysTime.set((sTime2 - sTime));
         }
     }
 
@@ -172,7 +174,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         int psize = Util.ceilingNextPowerOfTwo((int) sz);
 
         disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, psize, executor,
-                ProducerType.SINGLE, new SleepingWaitStrategy());
+                ProducerType.SINGLE, new BlockingWaitStrategy());
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
@@ -205,7 +207,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         sb.append("\n\tObjects Popped              :  ").append(objectsRemoved);
         sb.append("\n\tObjects Processed           :  ").append(objectsProcessed);
         if (objectsProcessed > 1000) {
-            sb.append("\n\tProc Time millis per 1000  :  ").append(totalSysTime / (objectsProcessed / 1000));
+            sb.append("\n\tProc Time millis per 1000  :  ").append(totalSysTime.get() / (objectsProcessed / 1000));
         } else {
             sb.append("\n\tProc Time millis per 1000  :  0");
         }

@@ -59,7 +59,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     private static TPSCalculator tpsCalculator = new TPSCalculator();
 
     private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 4 * 1024, executor,
-            ProducerType.SINGLE, new SleepingWaitStrategy());
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
     private static class DBQueryParamRecordEvent {
         private QueryParameters.DBQueryParamRecord record;
@@ -203,7 +203,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         int psize = Util.ceilingNextPowerOfTwo((int) sz);
 
         disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 4 * 1024, executor,
-                ProducerType.SINGLE, new SleepingWaitStrategy());
+                ProducerType.SINGLE, new BlockingWaitStrategy());
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 

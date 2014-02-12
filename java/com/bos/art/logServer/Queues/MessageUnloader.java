@@ -38,7 +38,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
     private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
             .namingPattern("MessageUnloader-%d")
             .build();
-    private static TPSCalculator tpsCalculator = new TPSCalculator();
+    private  TPSCalculator tpsCalculator = new TPSCalculator();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
 
     private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, MESSAGE_QUEUE_SIZE, executor,
@@ -350,7 +350,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
         int psize = Util.ceilingNextPowerOfTwo((int) sz);
 
         disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, psize, executor,
-                ProducerType.SINGLE, new SleepingWaitStrategy());
+                ProducerType.SINGLE, new BlockingWaitStrategy());
 
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 

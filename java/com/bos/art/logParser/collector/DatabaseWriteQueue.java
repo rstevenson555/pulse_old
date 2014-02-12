@@ -117,7 +117,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         int psize = Util.ceilingNextPowerOfTwo((int) sz);
 
         disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, psize, executor,
-                ProducerType.SINGLE, new SleepingWaitStrategy());
+                ProducerType.SINGLE, new BlockingWaitStrategy());
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
         LiveLogParserRecordEventHandler handler = new LiveLogParserRecordEventHandler();
