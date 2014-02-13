@@ -248,10 +248,14 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private MessageUnloaderHandler setNextHandler(UserRequestEventDesc timing) {
 
         int current = handlerCount.get();
+        if ( current>=messageUnloaderHandlers.length) {
+            current = 0;
+            handlerCount.set(current);
+        }
         messageUnloaderHandlers[current].setTimingRecord(timing);
 
         int nextHandlerCount = handlerCount.incrementAndGet();
-        if ( nextHandlerCount > NUM_MESSAGE_HANDLERS-1) {
+        if ( nextHandlerCount > messageUnloaderHandlers.length-1) {
             nextHandlerCount = 0;
             handlerCount.set(nextHandlerCount);
         }
