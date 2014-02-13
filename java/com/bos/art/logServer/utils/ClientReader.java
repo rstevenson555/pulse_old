@@ -251,7 +251,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         messageUnloaderHandlers[current].setTimingRecord(timing);
 
         int nextHandlerCount = handlerCount.incrementAndGet();
-        if ( nextHandlerCount > messageUnloaderHandlers.length-1) {
+        if ( nextHandlerCount > NUM_MESSAGE_HANDLERS-1) {
             nextHandlerCount = 0;
             handlerCount.set(nextHandlerCount);
         }
