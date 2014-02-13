@@ -2,15 +2,8 @@ package com.bos.art.logServer.utils;
 
 import com.bos.art.logParser.records.*;
 import com.bos.art.logServer.Queues.MessageUnloader;
-import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.net.Socket;
-import java.util.Calendar;
-import java.util.Stack;
-import javax.management.*;
-import javax.xml.parsers.SAXParser;
-
 import org.apache.commons.digester.Digester;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -18,6 +11,18 @@ import org.joda.time.format.DateTimeFormatter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
+
+import javax.management.*;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.net.Socket;
+import java.util.Calendar;
+import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * every client-connection has a clientreader
@@ -32,9 +37,16 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private Socket inputSocket = null;
     private SystemTask task = null;
     private static Logger logger = Logger.getLogger(ClientReader.class.getName());
-    private static MessageUnloader unloader = MessageUnloader.getInstance();
+    private static MessageUnloader commandUnloader = new MessageUnloader();
+    private static int NUM_MESSAGE_HANDLERS = 2;
+    private static MessageUnloaderHandler messageUnloaderHandlers[] = new MessageUnloaderHandler[NUM_MESSAGE_HANDLERS];
+    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+            .namingPattern("MessageUnloaderHandler-%d")
+            .build();
+    // this controls how wide to scale the message handlers (very critical)
+    private static ExecutorService executorService = Executors.newFixedThreadPool(NUM_MESSAGE_HANDLERS,tFactory);
     private static Stack saxParsers = new Stack();
-    private static javax.xml.parsers.SAXParserFactory saxFactory;
+    private static SAXParserFactory saxFactory;
     private InputStream inputStream = null;
     private Digester digester = null;
     private SAXParser parser = null;
@@ -50,10 +62,11 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private boolean debugging = false;
 // for debugging purposes
     private static int filecounter = 0;
-    private static final Object ulock = new Object();
     private boolean encode_input = false;
     private static int SOCKET_BUFFER = 262144;
-    private static TPSCalculator tpsCalculator = new TPSCalculator();
+    private TPSCalculator tpsCalculator = new TPSCalculator();
+    static private int uniqueClientCounter = 1;
+    private static Object initSyncLock = new Object();
 
     static {
         // Initialize SAX Parser factory defaults
@@ -215,14 +228,43 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         c.set(Calendar.MINUTE, 1);
         c.set(Calendar.SECOND, 0);
 
-        registerWithMBeanServer();
+        initHandlers();
+//        registerWithMBeanServer();
+    }
+
+
+    public void initHandlers() {
+        logger.info("ClientReader.createHandlers");
+        synchronized (initSyncLock) {
+            for(int i = 0;i<messageUnloaderHandlers.length;i++) {
+                if ( messageUnloaderHandlers[i]==null)
+                    messageUnloaderHandlers[i] = new MessageUnloaderHandler();
+            }
+        }
+    }
+
+    private static AtomicInteger handlerCount = new AtomicInteger(0);
+
+    private MessageUnloaderHandler setNextHandler(UserRequestEventDesc timing) {
+
+        int current = handlerCount.get();
+        messageUnloaderHandlers[current].setTimingRecord(timing);
+
+        int nextHandlerCount = handlerCount.incrementAndGet();
+        if ( nextHandlerCount > messageUnloaderHandlers.length-1) {
+            nextHandlerCount = 0;
+            handlerCount.set(nextHandlerCount);
+        }
+
+        return messageUnloaderHandlers[current];
     }
 
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.collector:type=ClientReaderMBean");
+            int port = (inputSocket!=null) ?  inputSocket.getPort() : uniqueClientCounter++;
+            name = new ObjectName("com.omx.collector:type=ClientReaderMBean,name=ClientReaderInstance-"+port);
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -318,7 +360,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
     public void run() {
         InputStream insource = null;
-        Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+//        Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 
         try {
             parser = getSAXParser();
@@ -452,6 +494,8 @@ public class ClientReader implements Runnable, ClientReaderMBean {
                 logger.warn("Socket Receive Buffer Size: " + inputSocket.getReceiveBufferSize());
                 inputSocket.setReceiveBufferSize(SOCKET_BUFFER);
                 logger.warn("Socket Receive Buffer Size changed to : " + inputSocket.getReceiveBufferSize());
+
+                registerWithMBeanServer();
                 
                 if (!encode_input) {
                     pinput = new PushbackInputStream(
@@ -507,7 +551,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
                 // DebugInputStream dis = new DebugInputStream(insource,System.getProperty("user.dir")+File.separator+Thread.currentThread().getName()+"-"+filecounter++);
 
             } else if (mode == COMMAND_MODE) {
-                unloader.exitOnFinish();
+                commandUnloader.exitOnFinish();
                 
                 command = "<?xml version=\"1.0\"?>\n" + command;
                 // System.out.println(command);
@@ -519,7 +563,8 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             // specify an 8k input buffer
             digester.parse(inputSource);
 
-            unloader.addMessage((Object) task);
+            tpsCalculator.incrementTransaction();
+            commandUnloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
             String message = e.getMessage();
@@ -573,7 +618,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             releaseSAXParser(parser);
 
             if (mode == FILE_MODE || mode == COMMAND_MODE) {
-                unloader.exitOnFinish();
+                commandUnloader.exitOnFinish();
                 // test_unloader.exitOnFinish();
 
             }
@@ -593,7 +638,18 @@ public class ClientReader implements Runnable, ClientReaderMBean {
      */
     public void saveTask(SystemTask task) {
         this.task = task;
-        
+    }
+
+    private class MessageUnloaderHandler implements Runnable {
+
+        UserRequestEventDesc timing;
+        MessageUnloader unloader = new MessageUnloader();
+
+        public void setTimingRecord(Object t) { timing = (UserRequestEventDesc)t;}
+
+        public void run() {
+            unloader.addMessage(timing);
+        }
     }
 
     private void add(UserRequestEventDesc timing) {
@@ -604,14 +660,18 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 
         tpsCalculator.incrementTransaction();
 
-        unloader.addMessage((Object) timing);
+        MessageUnloaderHandler messageUnloaderHandler = setNextHandler(timing);
+        executorService.execute(messageUnloaderHandler);
+
+        //commandUnloader.addMessage((Object) timing);
 
         clientCache.objectsWritten++;
         if (clientCache.objectsWritten % 10000 == 0) {
 
-            logger.info(
-                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
-                    + " queue size is [" + unloader.size() + "]");
+//            logger.info(
+//                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
+//                    + " queue size is [" + commandUnloader.size() + "]");
+            logger.info("messages per second to the ArtEngine out-queue: " + tpsCalculator.getMessagesPerSecond());
 
             clientCache.writeTime = System.currentTimeMillis();
         }
