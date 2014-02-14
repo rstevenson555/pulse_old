@@ -111,14 +111,14 @@ public class LiveLogPriorityQueue implements Serializable {
     private DatabaseWriteQueueHandler setNextHandler(ILiveLogPriorityQueueMessage iLiveLogPriorityQueueMessage) {
 
         int current = handlerCount.get();
-        if ( current>=databaseWriteQueueHandlers.length) {
+        if ( current >= databaseWriteQueueHandlers.length) {
             current = 0;
             handlerCount.set(current);
         }
         databaseWriteQueueHandlers[current].setRecord(iLiveLogPriorityQueueMessage);
 
         int nextHandlerCount = handlerCount.incrementAndGet();
-        if (nextHandlerCount > databaseWriteQueueHandlers.length - 1) {
+        if (nextHandlerCount >= databaseWriteQueueHandlers.length ) {
             nextHandlerCount = 0;
             handlerCount.set(nextHandlerCount);
         }

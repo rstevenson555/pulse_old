@@ -240,7 +240,7 @@ public class UserRequestTiming extends UserRequestEventDesc implements Serializa
                 startPos = 1;
             }
             int endPos = page.indexOf(SLASH, startPos);
-            String mycontext = null;;
+            String mycontext = null;
             if (page.equals(SHOP_ORDER_XM_LSHOPEDIT_ORDERXSL) || page.equals(PRODUCT_GROUP_XM_LSHOPPRODUCT_GROUPXSL)) {
                 // if we see these pages we know the context is NASApp/boiseop
                 mycontext = NAS_APP_BOISEOP;

@@ -152,10 +152,8 @@ public class Engine {
             server.setReceiveBufferSize(SOCKET_BUFFER);
             server.bind(localSocketAddress);
 
-            while (true) {
-                for (;;) {
-                    pool.execute(new EngineClientHandler(server.accept(), connections++));
-                }
+            while(true) {
+                pool.execute(new EngineClientHandler(server.accept(), connections++));
             }
 
         } catch (Exception e) {

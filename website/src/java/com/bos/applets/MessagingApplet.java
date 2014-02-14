@@ -175,11 +175,11 @@ public class MessagingApplet extends JApplet implements ChatDelegate, UserDelega
 	DefaultListModel listModel = new DefaultListModel();
     ImageIcon sendIcon = null;
 
-    private AudioClip artMessage = null;;
-    private AudioClip firstConnect = null;;
-    private AudioClip memberLeaving = null;;
-    private AudioClip newMember = null;;
-    private AudioClip typing = null;;
+    private AudioClip artMessage = null;
+    private AudioClip firstConnect = null;
+    private AudioClip memberLeaving = null;
+    private AudioClip newMember = null;
+    private AudioClip typing = null;
 	private boolean firstTimeClicked = false;
     private static boolean firstTime = true;
 
