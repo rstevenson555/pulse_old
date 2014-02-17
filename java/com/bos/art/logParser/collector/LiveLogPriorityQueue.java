@@ -105,7 +105,7 @@ public class LiveLogPriorityQueue implements Serializable {
         }
     }
 
-    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 4 * 1024, executor,
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 2 * 1024, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
 
     private DatabaseWriteQueueHandler setNextHandler(ILiveLogPriorityQueueMessage iLiveLogPriorityQueueMessage) {

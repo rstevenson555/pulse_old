@@ -45,7 +45,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private static TPSCalculator tpsCalculator = new TPSCalculator();
 
-    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 4 * 1024, executor,
+    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 2 * 1024, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
 
 
