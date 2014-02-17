@@ -13,7 +13,9 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+import com.bos.art.logServer.utils.TimeIntervalConstants;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -25,14 +27,14 @@ import org.joda.time.format.DateTimeFormatter;
  *         Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class TimeSpanEventContainer implements Serializable, IEventContainer {
-    private static final int FIFTEEN_SECONDS = 15000;
-    private static final int FIVE_SECONDS = 5000;
+    private static final int FIFTEEN_SECONDS = TimeIntervalConstants.FIFTEEN_SECONDS_MILLIS;//15000;
+    private static final int FIVE_SECONDS = TimeIntervalConstants.FIVE_SECOND_DELAY;//5000;
 
     private static final int MILLISECOND_RESOLUTION = 1000;
     private static final int MILLISECOND_BUCKET_RESOLUTION = 100;
-    private static final int TEN_SECONDS = 10000;
-    private static final int THIRTY_SECONDS = 30000;
-    private static final int TWENTY_SECONDS = 20000;
+    private static final int TEN_SECONDS = TimeIntervalConstants.TEN_SECONDS_MILLIS;// 10000;
+    private static final int THIRTY_SECONDS = TimeIntervalConstants.THIRTY_SECONDS_MILLIS; //30000;
+    private static final int TWENTY_SECONDS = TimeIntervalConstants.TWENTY_SECONDS_MILLIS; //20000;
 
     private static final Logger logger = (Logger) Logger.getLogger(TimeSpanEventContainer.class.getName());
     private static final DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss");
@@ -46,7 +48,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     // persistOpportunities  - Count How Many Times this is Persisted.
     private boolean dirty = true;
     private boolean databaseDirty = true;
-    private java.util.Date lastModDate = new java.util.Date();
+    private Date lastModDate = new Date();
     private boolean isReload = false;
     private int timesPersisted = 0;
     private int persistOpportunities = 0;
@@ -67,14 +69,16 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     //	private String hashLookupKey;
     private AccessRecordsForeignKeys accessRecordsForeignKeys;
     // Statistical Data
-    private int totalLoads;
-    private int averageLoadTime;
-    private long totalLoadTime;
-    private int maxLoadTime;
-    private int minLoadTime;
-    private int distinctUsers;
-    private int totalUsers;
-    private int errorPages;
+
+    private AtomicInteger totalLoads = new AtomicInteger(0);
+    private AtomicInteger averageLoadTime = new AtomicInteger(0);
+    private AtomicLong totalLoadTime = new AtomicLong(0);
+    private AtomicInteger maxLoadTime = new AtomicInteger(0);
+    private AtomicInteger minLoadTime = new AtomicInteger(0);
+    private AtomicInteger distinctUsers = new AtomicInteger(0);
+    private AtomicInteger totalUsers = new AtomicInteger(0);
+    private AtomicInteger errorPages = new AtomicInteger(0);
+
     private AtomicInteger thirtySecondLoads = new AtomicInteger(0);
     private AtomicInteger twentySecondLoads = new AtomicInteger(0);
     private AtomicInteger fifteenSecondLoads = new AtomicInteger(0);
@@ -132,14 +136,14 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
                                   int preload25Percentile
     ) {
         this(machine, app, context, remoteHost, time, instance);
-        totalLoads = ptotalLoads;
-        averageLoadTime = paverageLoadTime;
-        totalLoadTime = ptotalLoadTime;
-        maxLoadTime = pmaxLoadTime;
-        minLoadTime = pminLoadTime;
-        distinctUsers = pdistinctUsers;
-        totalUsers = ptotalUsers;
-        errorPages = perrorPages;
+        totalLoads = new AtomicInteger(ptotalLoads);
+        averageLoadTime = new AtomicInteger(paverageLoadTime);
+        totalLoadTime = new AtomicLong(ptotalLoadTime);
+        maxLoadTime = new AtomicInteger(pmaxLoadTime);
+        minLoadTime = new AtomicInteger(pminLoadTime);
+        distinctUsers = new AtomicInteger(pdistinctUsers);
+        totalUsers = new AtomicInteger(ptotalUsers);
+        errorPages = new AtomicInteger(perrorPages);
         thirtySecondLoads = new AtomicInteger(pthirtySecondLoads);
         twentySecondLoads = new AtomicInteger(ptwentySecondLoads);
         fifteenSecondLoads = new AtomicInteger(pfifteenSecondLoads);
@@ -158,7 +162,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     /*synchronized */
     public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage, int userId, int pageID) {
         tally(loadtime, firstTimeUser, isErrorPage);
-        if (loadtime > maxLoadTime) {
+        if (loadtime > maxLoadTime.intValue()) {
             maxLoadTimeUserID = userId;
             maxLoadTimePageID = pageID;
         }
@@ -172,20 +176,25 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
         closeTimeForMod.setTime(lastModDate);
         closeTimeForMod.add(Calendar.MINUTE, modDelayMinutes);
 
-        ++totalLoads;
-        totalLoadTime += loadtime;
-        averageLoadTime = (int) (totalLoadTime / totalLoads);
-        if (maxLoadTime < loadtime) {
-            maxLoadTime = loadtime;
-        } else if (minLoadTime > loadtime) {
-            minLoadTime = loadtime;
+        //++totalLoads;
+        totalLoads.incrementAndGet();
+        //totalLoadTime += loadtime;
+        totalLoadTime.addAndGet(loadtime);
+        averageLoadTime.set((int)(totalLoadTime.longValue() / totalLoads.intValue()));
+        if (maxLoadTime.intValue() < loadtime) {
+            maxLoadTime.set(loadtime);
+        } else if (minLoadTime.intValue() > loadtime) {
+            minLoadTime.set(loadtime);
         }
         if (firstTimeUser) {
-            ++distinctUsers;
+            //++distinctUsers;
+            distinctUsers.incrementAndGet();
         }
-        ++totalUsers;
+        //++totalUsers;
+        totalUsers.incrementAndGet();
         if (isErrorPage) {
-            ++errorPages;
+            //++errorPages;
+            errorPages.incrementAndGet();
         }
         if (loadtime >= THIRTY_SECONDS) {
             thirtySecondLoads.incrementAndGet();
@@ -246,7 +255,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getAverageLoadTime() {
-        return averageLoadTime;
+        return averageLoadTime.intValue();
     }
 
     /**
@@ -260,14 +269,14 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getDistinctUsers() {
-        return distinctUsers;
+        return distinctUsers.intValue();
     }
 
     /**
      * @return
      */
     public int getErrorPages() {
-        return errorPages;
+        return errorPages.intValue();
     }
 
     /**
@@ -303,14 +312,14 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getMaxLoadTime() {
-        return maxLoadTime;
+        return maxLoadTime.intValue();
     }
 
     /**
      * @return
      */
     public int getMinLoadTime() {
-        return minLoadTime;
+        return minLoadTime.intValue();
     }
 
     /**
@@ -345,14 +354,14 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getTotalLoads() {
-        return totalLoads;
+        return totalLoads.intValue();
     }
 
     /**
      * @return
      */
     public int getTotalUsers() {
-        return totalUsers;
+        return totalUsers.intValue();
     }
 
     /**
@@ -468,7 +477,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public long getTotalLoadTime() {
-        return totalLoadTime;
+        return totalLoadTime.intValue();
     }
 
     /**
