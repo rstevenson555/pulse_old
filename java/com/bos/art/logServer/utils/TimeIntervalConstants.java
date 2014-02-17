@@ -16,7 +16,10 @@ public interface TimeIntervalConstants {
     static final int FIFTEEN_SECONDS_MILLIS = (int)(new Interval(new DateTime(),new DateTime().plusSeconds(15)).toDurationMillis());
     static final int THIRTY_SECONDS_MILLIS = (int)(new Interval(new DateTime(),new DateTime().plusSeconds(30)).toDurationMillis());
     static final int FIVE_SECOND_DELAY = 5;
-    
+
+    static final int TWENTY_SECONDS_MILLIS = (int)(new Interval(new DateTime(),new DateTime().plusSeconds(20)).toDurationMillis());
+    static final int TEN_SECONDS_MILLIS = (int)(new Interval(new DateTime(),new DateTime().plusSeconds(10)).toDurationMillis());
+
     static final long THREE_MINUTES_MILLIS = new Interval(new DateTime(),new DateTime().plusMinutes(3)).toDurationMillis();
     static final long THIRTY_MINUTES_MILLIS = new Interval(new DateTime(),new DateTime().plusMinutes(30)).toDurationMillis();
     static final long TEN_MINUTES_MILLIS = new Interval(new DateTime(),new DateTime().plusMinutes(10)).toDurationMillis();
