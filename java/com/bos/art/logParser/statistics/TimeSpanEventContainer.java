@@ -75,11 +75,11 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     private int distinctUsers;
     private int totalUsers;
     private int errorPages;
-    private int thirtySecondLoads;
-    private int twentySecondLoads;
-    private int fifteenSecondLoads;
-    private int tenSecondLoads;
-    private int fiveSecondLoads;
+    private AtomicInteger thirtySecondLoads = new AtomicInteger(0);
+    private AtomicInteger twentySecondLoads = new AtomicInteger(0);
+    private AtomicInteger fifteenSecondLoads = new AtomicInteger(0);
+    private AtomicInteger tenSecondLoads = new AtomicInteger(0);
+    private AtomicInteger fiveSecondLoads = new AtomicInteger(0);
     private int maxLoadTimeUserID;
     private int maxLoadTimePageID;
     //  Used for 90%, 75%, 50%, 25%
@@ -140,11 +140,11 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
         distinctUsers = pdistinctUsers;
         totalUsers = ptotalUsers;
         errorPages = perrorPages;
-        thirtySecondLoads = pthirtySecondLoads;
-        twentySecondLoads = ptwentySecondLoads;
-        fifteenSecondLoads = pfifteenSecondLoads;
-        tenSecondLoads = ptenSecondLoads;
-        fiveSecondLoads = pfiveSecondLoads;
+        thirtySecondLoads = new AtomicInteger(pthirtySecondLoads);
+        twentySecondLoads = new AtomicInteger(ptwentySecondLoads);
+        fifteenSecondLoads = new AtomicInteger(pfifteenSecondLoads);
+        tenSecondLoads = new AtomicInteger(ptenSecondLoads);
+        fiveSecondLoads = new AtomicInteger(pfiveSecondLoads);
         maxLoadTimeUserID = pmaxLoadTimeUserID;
         maxLoadTimePageID = pmaxLoadTimePageID;
         reload90Percentile = preload90Percentile;
@@ -188,25 +188,25 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
             ++errorPages;
         }
         if (loadtime >= THIRTY_SECONDS) {
-            ++thirtySecondLoads;
-            ++twentySecondLoads;
-            ++fifteenSecondLoads;
-            ++tenSecondLoads;
-            ++fiveSecondLoads;
+            thirtySecondLoads.incrementAndGet();
+            twentySecondLoads.incrementAndGet();
+            fifteenSecondLoads.incrementAndGet();
+            tenSecondLoads.incrementAndGet();
+            fiveSecondLoads.incrementAndGet();
         } else if (loadtime >= TWENTY_SECONDS) {
-            ++twentySecondLoads;
-            ++fifteenSecondLoads;
-            ++tenSecondLoads;
-            ++fiveSecondLoads;
+            twentySecondLoads.incrementAndGet();
+            fifteenSecondLoads.incrementAndGet();
+            tenSecondLoads.incrementAndGet();
+            fiveSecondLoads.incrementAndGet();
         } else if (loadtime >= FIFTEEN_SECONDS) {
-            ++fifteenSecondLoads;
-            ++tenSecondLoads;
-            ++fiveSecondLoads;
+            fifteenSecondLoads.incrementAndGet();
+            tenSecondLoads.incrementAndGet();
+            fiveSecondLoads.incrementAndGet();
         } else if (loadtime >= TEN_SECONDS) {
-            ++tenSecondLoads;
-            ++fiveSecondLoads;
+            tenSecondLoads.incrementAndGet();
+            fiveSecondLoads.incrementAndGet();
         } else if (loadtime >= FIVE_SECONDS) {
-            ++fiveSecondLoads;
+            fiveSecondLoads.incrementAndGet();
         }
         addRecordToPercentileUnit(loadtime);
     }
@@ -274,7 +274,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
 /*	public String getHashLookupKey() {
-		return hashLookupKey;
+        return hashLookupKey;
 	}
 */
 
@@ -282,7 +282,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getFiveSecondLoads() {
-        return fiveSecondLoads;
+        return fiveSecondLoads.intValue();
     }
 
     /**
@@ -324,14 +324,14 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getTenSecondLoads() {
-        return tenSecondLoads;
+        return tenSecondLoads.intValue();
     }
 
     /**
      * @return
      */
     public int getThirtySecondLoads() {
-        return thirtySecondLoads;
+        return thirtySecondLoads.intValue();
     }
 
     /**
@@ -359,7 +359,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getTwentySecondLoads() {
-        return twentySecondLoads;
+        return twentySecondLoads.intValue();
     }
 
     public int getSize() {
@@ -447,7 +447,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public int getFifteenSecondLoads() {
-        return fifteenSecondLoads;
+        return fifteenSecondLoads.intValue();
     }
 
     /**
