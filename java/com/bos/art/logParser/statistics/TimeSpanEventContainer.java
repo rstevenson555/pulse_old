@@ -68,19 +68,19 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     //	private String hashLookupKey;
     private AccessRecordsForeignKeys accessRecordsForeignKeys;
     // Statistical Data
-    private AtomicInteger totalLoads;
-    private AtomicInteger averageLoadTime;
-    private AtomicLong totalLoadTime;
-    private AtomicInteger maxLoadTime;
-    private AtomicInteger minLoadTime;
-    private AtomicInteger distinctUsers;
-    private AtomicInteger totalUsers;
-    private AtomicInteger errorPages;
-    private AtomicInteger thirtySecondLoads;
-    private AtomicInteger twentySecondLoads;
-    private AtomicInteger fifteenSecondLoads;
-    private AtomicInteger tenSecondLoads;
-    private AtomicInteger fiveSecondLoads;
+    private AtomicInteger totalLoads = new AtomicInteger(0);
+    private AtomicInteger averageLoadTime = new AtomicInteger(0);
+    private AtomicLong totalLoadTime = new AtomicLong(0);
+    private AtomicInteger maxLoadTime = new AtomicInteger(0);
+    private AtomicInteger minLoadTime = new AtomicInteger(0);
+    private AtomicInteger distinctUsers = new AtomicInteger(0);
+    private AtomicInteger totalUsers = new AtomicInteger(0);
+    private AtomicInteger errorPages = new AtomicInteger(0);
+    private AtomicInteger thirtySecondLoads = new AtomicInteger(0);
+    private AtomicInteger twentySecondLoads = new AtomicInteger(0);
+    private AtomicInteger fifteenSecondLoads = new AtomicInteger(0);
+    private AtomicInteger tenSecondLoads = new AtomicInteger(0);
+    private AtomicInteger fiveSecondLoads = new AtomicInteger(0);
     private int maxLoadTimeUserID;
     private int maxLoadTimePageID;
     //  Used for 90%, 75%, 50%, 25%
