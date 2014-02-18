@@ -59,7 +59,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private static TPSCalculator tpsCalculator = new TPSCalculator();
 
-    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 512, executor,
+    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 256, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
 
     private static class DBQueryParamRecordEvent {
