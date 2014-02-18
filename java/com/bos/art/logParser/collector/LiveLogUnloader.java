@@ -59,7 +59,7 @@ public class LiveLogUnloader implements Runnable {
     private static int systemTaskUnloader = 1;
     private LiveLogPriorityQueue queue = null;
     private boolean runstate = false;
-    private DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
+    private static DatabaseWriteQueue databaseWriteQueue = new DatabaseWriteQueue();
 
     public LiveLogUnloader() {
         queue = LiveLogPriorityQueue.getInstance();
@@ -180,11 +180,13 @@ public class LiveLogUnloader implements Runnable {
                     }
                     ((StatisticsUnit) iter.next()).processRecord((ILiveLogParserRecord) llpr);
                 }
+                logger.warn("LiveLogUnloader thread execution");
                 databaseWriteQueue.addLast(llpr);
                 //DatabaseWriteQueue.getInstance().addLast(llpr);
                 // FileWriteQueue.getInstance().addLast(llpr);
             } else if (llpr instanceof SystemTask) {
                 logger.debug("System Task Found " + ((SystemTask) llpr).getTask());
+                logger.warn("LiveLogUnloader thread SystemTask execution");
                 performSystemTask((SystemTask) llpr);
             }
         }
