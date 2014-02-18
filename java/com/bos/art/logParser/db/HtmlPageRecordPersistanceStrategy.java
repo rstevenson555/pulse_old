@@ -248,7 +248,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             oneMinute = now.plusMinutes(1);
             recordsPerMinute = 0;
         }
-        
+
         fk.fkContextID =
                 ForeignKeyStore.getInstance().getForeignKey(
                 fk,
