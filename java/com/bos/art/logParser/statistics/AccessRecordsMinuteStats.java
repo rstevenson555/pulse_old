@@ -67,7 +67,6 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             } else {
                 getInstance();
             }
-            logger.warn("AccessRecordsMinuteStats.setInstance "+instance);
             PersistanceStrategy ps = instance.pStrat;
             instance = (AccessRecordsMinuteStats) su;
             if (instance.pStrat == null) {
