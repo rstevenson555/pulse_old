@@ -85,6 +85,8 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
 
     public DatabaseWriteQueue() {
 
+        Exception e = new Exception();
+        logger.warn("DatabaseWriteQueue created from: " ,e);
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
         LiveLogParserRecordEventHandler handler = new LiveLogParserRecordEventHandler();
