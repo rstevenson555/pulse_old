@@ -44,7 +44,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private TPSCalculator tpsCalculator = new TPSCalculator();
 
-    private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 1*1024, executor,
+    private Disruptor<ILiveLogParserRecordEvent> disruptor = new Disruptor<ILiveLogParserRecordEvent>(ILiveLogParserRecordEvent.FACTORY, 512, executor,
                 ProducerType.SINGLE, new BlockingWaitStrategy());
 
     // guards for boundaries
