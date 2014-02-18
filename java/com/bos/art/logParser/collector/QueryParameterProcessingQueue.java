@@ -107,6 +107,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         registerWithMBeanServer();
     }
 
+    private static int instance = 0;
     /**
      * register the mbean with JMX
      */
@@ -114,7 +115,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=QueryParameterProcessingQueueMBean");
+            name = new ObjectName("com.omx.engine:type=QueryParameterProcessingQueueMBean"+(++instance));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
