@@ -324,7 +324,7 @@ public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStra
             stackTrace = ere.getEncodedException();
         }
 
-        logger.warn("stackTrace is: " + stackTrace);
+//        logger.warn("stackTrace is: " + stackTrace);
 
         if ( logger.isDebugEnabled())
             logger.debug("stackTrace" + stackTrace);
