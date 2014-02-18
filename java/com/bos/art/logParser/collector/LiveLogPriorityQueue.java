@@ -65,7 +65,7 @@ public class LiveLogPriorityQueue implements Serializable {
     /**
      * disruptor
      */
-    private BasicThreadFactory disruptorThreadFactory = new BasicThreadFactory.Builder()
+    private static BasicThreadFactory disruptorThreadFactory = new BasicThreadFactory.Builder()
             .namingPattern("LiveLogProcessor-%d")
             .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(disruptorThreadFactory);

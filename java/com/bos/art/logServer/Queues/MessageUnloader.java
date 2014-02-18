@@ -35,7 +35,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
     private int failCount = 0;
     private int MESSAGE_QUEUE_SIZE = 1*1024;
     private static int SOCKET_BUFFER = 262144;
-    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
             .namingPattern("MessageUnloader-%d")
             .build();
     private TPSCalculator tpsCalculator = new TPSCalculator();

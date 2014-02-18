@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -39,7 +40,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 3000;
     private static long fullCount = 0;
-    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
                 .namingPattern("QueryParameterProcessingQueue-%d")
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
@@ -107,7 +108,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         registerWithMBeanServer();
     }
 
-    private static int qpInstance = 0;
+    private static AtomicInteger qpInstance = new AtomicInteger(0);
     /**
      * register the mbean with JMX
      */
@@ -115,7 +116,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=QueryParameterProcessingQueueMBean-"+(++qpInstance));
+            name = new ObjectName("com.omx.engine:type=QueryParameterProcessingQueueMBean-"+(qpInstance.incrementAndGet()));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

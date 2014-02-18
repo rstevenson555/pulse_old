@@ -11,6 +11,7 @@ import com.bos.art.logParser.records.ILiveLogParserRecord;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.bos.art.logServer.utils.TPSCalculator;
 import com.lmax.disruptor.*;
@@ -37,7 +38,7 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
     private long totalWriteTime;
     protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 4500;
-    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
                 .namingPattern("DatabaseWriteQueue-%d")
                 .build();
 
@@ -139,13 +140,13 @@ public class DatabaseWriteQueue implements DatabaseWriteQueueMBean,Serializable 
         return tpsCalculator.getTransactionCount();
     }
 
-    private static int instance = 0;
+    private static AtomicInteger dbInstance = new AtomicInteger(0);
 
     private void registerWithMBeanServer() {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean,name=instance-"+(++instance));
+            name = new ObjectName("com.omx.engine:type=DatabaseWriteQueueMBean,name=instance-"+(dbInstance.incrementAndGet()));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

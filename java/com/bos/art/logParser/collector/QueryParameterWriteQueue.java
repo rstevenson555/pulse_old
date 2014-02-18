@@ -52,7 +52,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     private static DateTime oneMinute = new DateTime().plusMinutes(1);
     private static long recordsPerMinute = 0;
     private static long fullCount = 0;
-    private BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
+    private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
                 .namingPattern("QueryParameterWriteQueue-%d")
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
