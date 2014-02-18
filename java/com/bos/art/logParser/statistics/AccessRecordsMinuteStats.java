@@ -64,7 +64,10 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
         if (su instanceof AccessRecordsMinuteStats) {
             if (instance != null) {
                 instance.runnable = false;
+            } else {
+                getInstance();
             }
+            logger.warn("AccessRecordsMinuteStats.setInstance "+instance);
             PersistanceStrategy ps = instance.pStrat;
             instance = (AccessRecordsMinuteStats) su;
             if (instance.pStrat == null) {
