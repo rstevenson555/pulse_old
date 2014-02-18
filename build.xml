@@ -96,7 +96,7 @@
         <java  classname="com.bos.art.logParser.server.Engine"
               fork="true"
               failonerror="true" >
-            <jvmarg line="-server -Dbase64Encoded=true -DCONFIG_OVERRIDE=./solutions_collector_config.yml -DLOG4J_OVERRIDE=./solutions_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9800 -Dcom.sun.management.jmxremote.ssl=false -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:GCTimeRatio=95 -Xmx4536m -Xloggc:sol_gcFile.log"/>
+            <jvmarg line="-server -Dbase64Encoded=true -DCONFIG_OVERRIDE=./solutions_collector_config.yml -DLOG4J_OVERRIDE=./solutions_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9800 -Dcom.sun.management.jmxremote.ssl=false -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:GCTimeRatio=95 -Xmx5536m -XX:MaxJavaStackTraceDepth=0 -Xloggc:sol_gcFile.log"/>
             <classpath>
                 <pathelement location="dist/LiveLogParser.jar"/>
             </classpath>
@@ -108,7 +108,7 @@
         <java  classname="com.bos.art.logParser.server.Engine"
               fork="true"
               failonerror="true" >
-            <jvmarg line="-server -Dbase64Encoded=false -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9810 -Dcom.sun.management.jmxremote.ssl=false -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -Xmx6000m -XX:GCTimeRatio=95 -Xloggc:omx_gcFile.log"/>
+            <jvmarg line="-server -Dbase64Encoded=false -DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9810 -Dcom.sun.management.jmxremote.ssl=false -XX:+PrintGCTimeStamps -XX:+PrintGCDetails -Xmx6000m -XX:GCTimeRatio=95 -XX:MaxJavaStackTraceDepth=0 -Xloggc:omx_gcFile.log"/>
             <classpath>
                 <pathelement location="dist/LiveLogParser.jar"/>
             </classpath>
