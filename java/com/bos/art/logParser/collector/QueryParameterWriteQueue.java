@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -58,7 +59,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private static TPSCalculator tpsCalculator = new TPSCalculator();
 
-    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 1 * 1024, executor,
+    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 512, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
 
     private static class DBQueryParamRecordEvent {
@@ -131,6 +132,8 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         registerWithMBeanServer();
     }
 
+    static AtomicInteger qpInstance = new AtomicInteger(0);
+
     /**
      * register the mbean with JMX
      */
@@ -138,7 +141,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean");
+            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean-"+(qpInstance.incrementAndGet()));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
