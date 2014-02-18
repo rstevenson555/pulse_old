@@ -86,6 +86,11 @@ public class EngineClientHandler implements Runnable {
                     break;
                 }
             }
+        } catch (EOFException eofe) {
+            // This is the end.
+            logger.info(
+                    "End of File Reached for Connection: " + counter + " on thread Id : " + Thread.currentThread().getName());
+
         } catch (Throwable t) {
             // Figure out what to do if an exception happens.
             logger.error("Error in EngineClientHandler: ", t);
