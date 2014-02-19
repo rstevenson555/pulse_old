@@ -19,6 +19,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.bos.helper.MutableSingletonInstanceHelper;
+import com.bos.helper.SingletonInstanceHelper;
 import org.apache.log4j.Logger;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
@@ -33,8 +36,9 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class AccessRecordsDailyStats extends StatisticsUnit {
 
-	private static final Logger logger = (Logger)Logger.getLogger(AccessRecordsDailyStats.class.getName());
-	private static AccessRecordsDailyStats instance;
+	private static final Logger logger = (Logger)Logger.getLogger(AccessRecordsDailyStats.class.getName());//
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsDailyStats>(AccessRecordsDailyStats.class);
+
     private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMdd"); 
 
 	private ConcurrentHashMap<String,TimeSpanEventContainer> days;
@@ -51,19 +55,16 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
 	}
     
 	public static AccessRecordsDailyStats getInstance(){
-		if(instance == null){
-			instance = new AccessRecordsDailyStats();
-		}
-		return instance;
+		return (AccessRecordsDailyStats)instance.getInstance();
 	}
     
 	public void setInstance(StatisticsUnit su){
 
 		if(su instanceof AccessRecordsDailyStats){
-            if ( instance !=null) {
-                instance.runnable =false;
+            if ( instance.getInstance()!=null) {
+                ((AccessRecordsDailyStats)instance.getInstance()).setRunnable(false);
+                instance.setInstance(su);
             }
-			instance = (AccessRecordsDailyStats)su;
 		}
 	}
 	

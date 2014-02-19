@@ -9,31 +9,30 @@ package com.bos.art.logParser.db;
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.records.AccumulatorEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
+import com.bos.helper.SingletonInstanceHelper;
+import org.apache.log4j.Logger;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.apache.log4j.Logger;
 
 /**
  * @author I0360D3
- *
- * To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
+ *         <p/>
+ *         To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy implements PersistanceStrategy {
 
+    public static final String INTEGER_CLASS_NAME = "Integer";
     private static final int BATCH_INSERT_SIZE = 2;
-
-    private AccumulatorEventPersistanceStrategy() {
-    }
-    private static AccumulatorEventPersistanceStrategy instance;
-
-    public static AccumulatorEventPersistanceStrategy getInstance() {
-        if (instance == null) {
-            instance = new AccumulatorEventPersistanceStrategy();
-        }
-        return instance;
-    }
     private static final Logger logger = (Logger) Logger.getLogger(AccumulatorEventPersistanceStrategy.class.getName());
+    private static final String DOUBLE_CLASS_NAME = "Double";
+    private static final String BIG_DECIMAL_CLASS_NAME = "BigDecimal";
+    private static final String FLOAT_CLASS_NAME = "Float";
+    private static final String LONG_CLASS_NAME = "Long";
+    private static final String NUMBER_CLASS_NAME = "Number";
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccumulatorEventPersistanceStrategy>(AccumulatorEventPersistanceStrategy.class);
+
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
@@ -45,14 +44,18 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             return null;
         }
     };
+    /*
+     * (non-Javadoc) @see
+     * com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
+     */
     private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
 
         protected synchronized Object initialValue() {
             try {
                 return ((Connection) threadLocalCon.get()).prepareStatement(
                         "insert into AccumulatorEvent "
-                        + "(AccumulatorStat_ID, Machine_ID, Context_ID, Branch_ID, App_ID, Time,intValue, doubleValue, stringValue, dataType,Instance_ID ) "
-                        + "values (?,?,?,?,?,?,?,?,?,?,?)");
+                                + "(AccumulatorStat_ID, Machine_ID, Context_ID, Branch_ID, App_ID, Time,intValue, doubleValue, stringValue, dataType,Instance_ID ) "
+                                + "values (?,?,?,?,?,?,?,?,?,?,?)");
             } catch (SQLException se) {
                 logger.error("SQL Exception ", se);
             }
@@ -65,6 +68,13 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             return new Integer(0);
         }
     };
+
+    private AccumulatorEventPersistanceStrategy() {
+    }
+
+    public static AccumulatorEventPersistanceStrategy getInstance() {
+        return (AccumulatorEventPersistanceStrategy) instance.getInstance();
+    }
 
     public void resetThreadLocalPstmt() {
         logger.info("Resetting the Pstmt!");
@@ -86,9 +96,9 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             con = ConnectionPoolT.getConnection();
             ps =
                     con.prepareStatement(
-                    "insert into AccumulatorEvent "
-                    + "(AccumulatorStat_ID, Machine_ID, Context_ID, Branch_ID, App_ID, Time,intValue, doubleValue, stringValue, dataType,Instance_ID ) "
-                    + "values (?,?,?,?,?,?,?,?,?,?,?)");
+                            "insert into AccumulatorEvent "
+                                    + "(AccumulatorStat_ID, Machine_ID, Context_ID, Branch_ID, App_ID, Time,intValue, doubleValue, stringValue, dataType,Instance_ID ) "
+                                    + "values (?,?,?,?,?,?,?,?,?,?,?)");
             threadLocalCon.set(con);
             threadLocalPstmt.set(ps);
         } catch (Exception e) {
@@ -111,10 +121,6 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             resetThreadLocalPstmt();
         }
     }
-    /*
-     * (non-Javadoc) @see
-     * com.bos.art.logParser.db.PersistanceStrategy#writeToDatabase(com.bos.art.logParser.records.ILiveLogParserRecord)
-     */
 
     public boolean writeToDatabase(ILiveLogParserRecord record) {
         //SimpleDateFormat sdfMySQLDate = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -123,33 +129,33 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
         //warnAccumulatorEvent(eet);
         fk.fkMachineID =
                 ForeignKeyStore.getInstance().getForeignKey(
-                fk,
-                record.getServerName(),
-                ForeignKeyStore.FK_MACHINES_MACHINE_ID,
-                this);
-        if ( record.getInstance()!=null) {
-                fk.fkInstanceID =
+                        fk,
+                        record.getServerName(),
+                        ForeignKeyStore.FK_MACHINES_MACHINE_ID,
+                        this);
+        if (record.getInstance() != null) {
+            fk.fkInstanceID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                    fk,
-                    record.getInstance(),
-                    ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-                    this);
+                            fk,
+                            record.getInstance(),
+                            ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                            this);
         }
         fk.fkAppID =
                 ForeignKeyStore.getInstance().getForeignKey(
-                fk,
-                record.getAppName(),
-                ForeignKeyStore.FK_DEPLOYEDAPPS_APP_ID,
-                this);
+                        fk,
+                        record.getAppName(),
+                        ForeignKeyStore.FK_DEPLOYEDAPPS_APP_ID,
+                        this);
         fk.fkBranchTagID =
                 ForeignKeyStore.getInstance().getForeignKey(fk, eet.getBranchName(), ForeignKeyStore.FK_BRANCH_TAG_ID, this);
         if (eet.getContext() != null) {
             fk.fkContextID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                    fk,
-                    eet.getContext(),
-                    ForeignKeyStore.FK_CONTEXTS_CONTEXT_ID,
-                    this);
+                            fk,
+                            eet.getContext(),
+                            ForeignKeyStore.FK_CONTEXTS_CONTEXT_ID,
+                            this);
         } else {
             fk.fkContextID = 0;
         }
@@ -182,7 +188,6 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
         }
         return true;
     }
-    public static final String INTEGER_CLASS_NAME = "Integer";
 
     private int getIntValue(AccumulatorEventTiming aet) {
         if (aet.getType().indexOf(INTEGER_CLASS_NAME) > -1) {
@@ -191,11 +196,6 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             return -1;
         }
     }
-    private static final String DOUBLE_CLASS_NAME = "Double";
-    private static final String BIG_DECIMAL_CLASS_NAME = "BigDecimal";
-    private static final String FLOAT_CLASS_NAME = "Float";
-    private static final String LONG_CLASS_NAME = "Long";
-    private static final String NUMBER_CLASS_NAME = "Number";
 
     private double getDoubleValue(AccumulatorEventTiming aet) {
         if ((aet.getType().indexOf(DOUBLE_CLASS_NAME) > -1)

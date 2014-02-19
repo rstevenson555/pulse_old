@@ -9,6 +9,7 @@ package com.bos.art.logParser.collector;
 
 import com.bos.art.logParser.records.QueryParameters;
 import com.bos.art.logServer.utils.TPSCalculator;
+import com.bos.helper.SingletonInstanceHelper;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -33,7 +34,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class QueryParameterProcessingQueue implements QueryParameterProcessingQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterProcessingQueue.class.getName());
-    private static QueryParameterProcessingQueue instance;
     private int objectsRemoved;
     private int objectsProcessed;
     private AtomicLong totalSysTime = new AtomicLong(0);
@@ -45,6 +45,8 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private static TPSCalculator tpsCalculator = new TPSCalculator();
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterProcessingQueue>(QueryParameterProcessingQueue.class);
+
 
     private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 256, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
@@ -130,10 +132,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     }
 
     public static QueryParameterProcessingQueue getInstance() {
-        if (instance == null) {
-            instance = new QueryParameterProcessingQueue();
-        }
-        return instance;
+        return (QueryParameterProcessingQueue)instance.getInstance();
     }
 
     public void addLast(Object o) {

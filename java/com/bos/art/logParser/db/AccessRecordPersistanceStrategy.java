@@ -14,9 +14,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.bos.helper.SingletonInstanceHelper;
 import org.apache.log4j.Logger;
 /**
  * @author I0360D3
@@ -35,28 +35,20 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
     private static int lastBatchInsertSize = MINBATCHINSERTSIZE;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
     private static double timePerInsert = 5000.0;
-
     private static int globalAccessRecordCounter = 0;
     private static AtomicInteger accessRecordsRecordPK;
-    private static AccessRecordPersistanceStrategy instance;
     private static final Object initLock = new Object();
     private static final Logger logger = (Logger)Logger.getLogger(AccessRecordPersistanceStrategy.class.getName());
-
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccessRecordPersistanceStrategy>(AccessRecordPersistanceStrategy.class);
     
     protected AccessRecordPersistanceStrategy() {
         accessRecordsRecordPK = new AtomicInteger(selectNextValidAccessRecordsPK());
         accessRecordsRecordPK.incrementAndGet();
     }
 
-    private static AtomicBoolean instanceLock = new AtomicBoolean(false);
-
     public static AccessRecordPersistanceStrategy getInstance() {
-        if (instanceLock.compareAndSet(false,true)==false) {
-            if (instance == null) {
-                instance = new AccessRecordPersistanceStrategy();
-            }
-        }
-        return instance;
+
+        return (AccessRecordPersistanceStrategy) instance.getInstance();
     }
 
     private int selectNextValidAccessRecordsPK() {

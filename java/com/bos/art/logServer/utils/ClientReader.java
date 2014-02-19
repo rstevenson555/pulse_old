@@ -678,7 +678,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 //            logger.info(
 //                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
 //                    + " queue size is [" + commandUnloader.size() + "]");
-            logger.info("messages per second to the ArtEngine out-queue: " + outTPSCalculator.getMessagesPerSecond());
+            logger.info("messages per second to the MessageUnloader out-queue: " + outTPSCalculator.getMessagesPerSecond());
 
             clientCache.writeTime = System.currentTimeMillis();
         }

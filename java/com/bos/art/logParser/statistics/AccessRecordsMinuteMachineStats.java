@@ -20,6 +20,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import com.bos.helper.MutableSingletonInstanceHelper;
+import com.bos.helper.SingletonInstanceHelper;
 import org.apache.log4j.Logger;
 
 
@@ -51,7 +53,8 @@ import org.joda.time.format.DateTimeFormatter;
 public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     private static final Logger logger =(Logger) Logger.getLogger(AccessRecordsMinuteMachineStats.class.getName());
-    private static AccessRecordsMinuteMachineStats instance;
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsMinuteMachineStats>(AccessRecordsMinuteMachineStats.class);
+
     private static final DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private static final DateTimeFormatter fdfMySQLTime = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final DateTimeFormatter fdfKey = DateTimeFormat.forPattern("yyyyMMddHHmm");
@@ -66,32 +69,28 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     private static final int SECONDS_DELAY = 5;
     transient private PersistanceStrategy pStrat;
     private static DateTimeFormatter sdfDate = DateTimeFormat.forPattern("yyyyMMddHHmmss");
-
-    private java.util.Date lastPersistDate;
+    private Date lastPersistDate;
 
 
     public AccessRecordsMinuteMachineStats() {
 
         minutes = new ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new Date();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
 
     }
 
     public static AccessRecordsMinuteMachineStats getInstance() {
-        if (instance == null) {
-            instance = new AccessRecordsMinuteMachineStats();
-        }
-        return instance;
+        return (AccessRecordsMinuteMachineStats)instance.getInstance();
     }
 
 
     public void setInstance(StatisticsUnit su) {
         if (su instanceof AccessRecordsMinuteMachineStats) {
-            if (instance != null) {
-                instance.runnable = false;
+            if (instance.getInstance() != null) {
+                ((AccessRecordsMinuteMachineStats)instance.getInstance()).setRunnable(false);
             }
-            instance = (AccessRecordsMinuteMachineStats) su;
+            instance.setInstance(su);
         }
     }
 

@@ -15,6 +15,7 @@ import com.bos.art.logParser.records.UserRequestEventDesc;
 import com.bos.art.logParser.statistics.StatisticsModule;
 import com.bos.art.logParser.statistics.StatisticsUnit;
 import com.bos.art.logServer.Queues.MessageUnloader;
+import com.bos.helper.SingletonInstanceHelper;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -41,8 +42,9 @@ public class LiveLogPriorityQueue implements Serializable {
     private BoundedPriorityQueue queue = new BoundedPriorityQueue(BOUNDED_QUEUE_CAPACITY, new PriorityQueueComparator());
     private static final Logger heapLogger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
     private static Logger logger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
-    private static LiveLogPriorityQueue instance;
-    private static LiveLogPriorityQueue systemTaskInstance;
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class);
+    private static SingletonInstanceHelper systemTaskInstance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class);
+
     private static AtomicBoolean instanceLock = new AtomicBoolean(false);
     private static AtomicBoolean instanceTaskLock = new AtomicBoolean(false);
     /**
@@ -82,17 +84,12 @@ public class LiveLogPriorityQueue implements Serializable {
     }
 
     public static LiveLogPriorityQueue getInstance() {
-        if (instanceTaskLock.compareAndSet(false, true)) {
-            instance = new LiveLogPriorityQueue();
-        }
-        return instance;
+
+        return (LiveLogPriorityQueue)instance.getInstance();
     }
 
     public static LiveLogPriorityQueue getSystemTaskQueue() {
-        if (instanceLock.compareAndSet(false, true)) {
-            systemTaskInstance = new LiveLogPriorityQueue();
-        }
-        return systemTaskInstance;
+        return (LiveLogPriorityQueue)systemTaskInstance.getInstance();
     }
 
     public void initHandlers() {

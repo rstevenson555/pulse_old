@@ -10,6 +10,7 @@ package com.bos.art.logParser.collector;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
 import com.bos.art.logServer.utils.TPSCalculator;
+import com.bos.helper.SingletonInstanceHelper;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -37,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
-    private static QueryParameterWriteQueue instance;
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterWriteQueue>(QueryParameterWriteQueue.class);
     private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
@@ -156,10 +157,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
 
 
     public static QueryParameterWriteQueue getInstance() {
-        if (instance == null) {
-            instance = new QueryParameterWriteQueue();
-        }
-        return instance;
+        return (QueryParameterWriteQueue)instance.getInstance();
     }
 
     public void addLast(Object o) {
