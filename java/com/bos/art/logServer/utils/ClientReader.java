@@ -65,6 +65,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     private boolean encode_input = false;
     private static int SOCKET_BUFFER = 262144;
     private TPSCalculator tpsCalculator = new TPSCalculator();
+    private static TPSCalculator outTPSCalculator = new TPSCalculator();
     static private int uniqueClientCounter = 1;
     private static Object initSyncLock = new Object();
 
@@ -568,6 +569,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
             digester.parse(inputSource);
 
             tpsCalculator.incrementTransaction();
+            outTPSCalculator.incrementTransaction();
             commandUnloader.addMessage((Object) task);
 
         } catch (java.io.IOException e) {
@@ -663,6 +665,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         }
 
         tpsCalculator.incrementTransaction();
+        outTPSCalculator.incrementTransaction();
 
         MessageUnloaderHandler messageUnloaderHandler = setNextHandler(timing);
         executorService.execute(messageUnloaderHandler);
@@ -675,7 +678,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
 //            logger.info(
 //                    "time per 1000 puts to the ArtEngine out-queue: " + (System.currentTimeMillis() - clientCache.writeTime) / 10
 //                    + " queue size is [" + commandUnloader.size() + "]");
-            logger.info("messages per second to the ArtEngine out-queue: " + tpsCalculator.getMessagesPerSecond());
+            logger.info("messages per second to the ArtEngine out-queue: " + outTPSCalculator.getMessagesPerSecond());
 
             clientCache.writeTime = System.currentTimeMillis();
         }
