@@ -156,7 +156,7 @@ public class MessageUnloader implements MessageUnloaderMBean {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.collector:type=MessageUnloaderMBean,name=MessageUnloaderInstance-"+socket.getLocalPort());
+            name = new ObjectName("com.omx.collector:type=MessageUnloaderMBean,name=MessageUnloader-"+socket.getLocalPort());
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

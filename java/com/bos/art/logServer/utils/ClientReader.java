@@ -268,7 +268,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
         ObjectName name = null;
         try {
             int port = (inputSocket!=null) ?  inputSocket.getPort() : uniqueClientCounter++;
-            name = new ObjectName("com.omx.collector:type=ClientReaderMBean,name=ClientReaderInstance-"+port);
+            name = new ObjectName("com.omx.collector:type=ClientReaderMBean,name=ClientReader-"+port);
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.

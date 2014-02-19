@@ -141,7 +141,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean-"+(qpInstance.incrementAndGet()));
+            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean,name=QueryParameterWriteQueue-"+(qpInstance.incrementAndGet()));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
