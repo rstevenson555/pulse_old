@@ -72,7 +72,6 @@ public class LiveLogPriorityQueue implements Serializable {
             .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(disruptorThreadFactory);
 
-
     private LiveLogPriorityQueue() {
         disruptor.handleExceptionsWith(new FatalExceptionHandler());
 
