@@ -25,7 +25,12 @@ public class AccumulatorRecordsCleanerDriver extends TimerTask {
 
     private static final Logger logger = (Logger) Logger.getLogger(AccumulatorRecordsCleanerDriver.class.getName());
     private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM HH:mm:ss yyyy ");
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccumulatorRecordsCleanerDriver>(AccumulatorRecordsCleanerDriver.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccumulatorRecordsCleanerDriver>(AccumulatorRecordsCleanerDriver.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new AccumulatorRecordsCleanerDriver();
+        }
+    };
 
     public static AccumulatorRecordsCleanerDriver getInstance() {
         return (AccumulatorRecordsCleanerDriver)instance.getInstance();

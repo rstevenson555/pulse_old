@@ -18,33 +18,14 @@ public class SingletonInstanceHelper<X> {
         this.createClass = create;
     }
 
+    public Object createInstance() {
+        return null;
+    }
+
     public X getInstance() {
         if (instanceInitialized.compareAndSet(false, true)) {
             if (instance == null && !instanceComplete.get()) {
-                try {
-                    //instance = (X) createClass.newInstance();
-//                    createClass.getDeclaredConstructor()
-                    Constructor<X> createClass;// .getDeclaredConstructors(new Class[0]);
-                    try {
-                        Constructor<X> constructor = this.createClass.getDeclaredConstructor(new Class[0]);
-                        constructor.setAccessible(true);
-                        try {
-                            instance = constructor.newInstance(new Object[0]);
-                        } catch (InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
-                    //constructor.setAccessible(true);
-                    //X foo = constructor.newInstance(new Object[0]);
-                    //System.out.println(foo);
-
-                } catch (InstantiationException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                instance = (X)createInstance();
                 instanceComplete.set(true);
                 synchronized (objectLock) {
                     objectLock.notify();

@@ -53,7 +53,12 @@ import org.joda.time.format.DateTimeFormatter;
 public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     private static final Logger logger =(Logger) Logger.getLogger(AccessRecordsMinuteMachineStats.class.getName());
-    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsMinuteMachineStats>(AccessRecordsMinuteMachineStats.class);
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsMinuteMachineStats>(AccessRecordsMinuteMachineStats.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new AccessRecordsMinuteMachineStats();
+        }
+    };
 
     private static final DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private static final DateTimeFormatter fdfMySQLTime = DateTimeFormat.forPattern("yyyyMMddHHmmss");

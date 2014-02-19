@@ -52,7 +52,12 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
     private static final Logger browser_logger = (Logger) Logger.getLogger("com.bos.art.browser.log");
     private static final Logger FK_Cachelogger = (Logger) Logger.getLogger("com.bos.art.logparser.db.FK_Cachelogger");
     private static final DateTimeFormatter sdfMySQLTimestamp = DateTimeFormat.forPattern("yyyyMMddHHmmss");
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccumulatorEventPersistanceStrategy>(AccumulatorEventPersistanceStrategy.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ForeignKeyStore>(ForeignKeyStore.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ForeignKeyStore();
+        }
+    };
     private static int sessionBroadcastCounter = 0;
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 

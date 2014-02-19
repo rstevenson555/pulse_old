@@ -32,8 +32,8 @@ public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStra
     private final static int MAXBATCHINSERTSIZE = 100;
     private final static int INCREMENT_AMOUNT = 10;
     private final static int MINBATCHINSERTSIZE = 10;
-    private static int currentBatchItemInsertSize = MINBATCHINSERTSIZE;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
+    private static int currentBatchItemInsertSize = MINBATCHINSERTSIZE;
     private static final Object initLock = new Object();
     private static final Logger logger = (Logger) Logger.getLogger(ExceptionRecordEventPersistanceStrategy.class.getName());
     private static final String STACK_TRACE_INSERT = "insert into stacktraces (trace_id,trace_key,trace_message,trace_time,art_user_id) values (?,?,?,?,?)";
@@ -73,7 +73,12 @@ public class ExceptionRecordEventPersistanceStrategy extends BasePersistanceStra
     private static int AccessRecordsRecordPK;
     private static AtomicInteger nextTraceID;
     private static Object lock = new Object();
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExceptionRecordEventPersistanceStrategy>(ExceptionRecordEventPersistanceStrategy.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExceptionRecordEventPersistanceStrategy>(ExceptionRecordEventPersistanceStrategy.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ExceptionRecordEventPersistanceStrategy();
+        }
+    };
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
         protected synchronized Object initialValue() {
             try {

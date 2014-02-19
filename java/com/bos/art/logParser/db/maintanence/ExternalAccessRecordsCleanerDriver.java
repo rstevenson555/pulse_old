@@ -25,7 +25,12 @@ public class ExternalAccessRecordsCleanerDriver extends TimerTask {
 
     private static final Logger logger = (Logger) Logger.getLogger(ExternalAccessRecordsCleanerDriver.class.getName());
     private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM HH:mm:ss yyyy ");
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExternalAccessRecordsCleanerDriver>(ExternalAccessRecordsCleanerDriver.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExternalAccessRecordsCleanerDriver>(ExternalAccessRecordsCleanerDriver.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ExternalAccessRecordsCleanerDriver();
+        }
+    };
 
 
     public static ExternalAccessRecordsCleanerDriver getInstance() {

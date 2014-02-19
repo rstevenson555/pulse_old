@@ -39,8 +39,13 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
     private static AtomicInteger accessRecordsRecordPK;
     private static final Object initLock = new Object();
     private static final Logger logger = (Logger)Logger.getLogger(AccessRecordPersistanceStrategy.class.getName());
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccessRecordPersistanceStrategy>(AccessRecordPersistanceStrategy.class);
-    
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccessRecordPersistanceStrategy>(AccessRecordPersistanceStrategy.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new AccessRecordPersistanceStrategy();
+        }
+    };
+
     protected AccessRecordPersistanceStrategy() {
         accessRecordsRecordPK = new AtomicInteger(selectNextValidAccessRecordsPK());
         accessRecordsRecordPK.incrementAndGet();

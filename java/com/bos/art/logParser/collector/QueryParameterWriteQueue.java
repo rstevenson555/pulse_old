@@ -38,8 +38,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterWriteQueue>(QueryParameterWriteQueue.class);
-    private int objectsRemoved;
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterWriteQueue>(QueryParameterWriteQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new QueryParameterWriteQueue();
+        }
+    };    private int objectsRemoved;
     private int objectsWritten;
     private long totalWriteTime;
 

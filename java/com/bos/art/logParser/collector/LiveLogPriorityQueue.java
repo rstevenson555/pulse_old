@@ -42,8 +42,18 @@ public class LiveLogPriorityQueue implements Serializable {
     private BoundedPriorityQueue queue = new BoundedPriorityQueue(BOUNDED_QUEUE_CAPACITY, new PriorityQueueComparator());
     private static final Logger heapLogger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
     private static Logger logger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class);
-    private static SingletonInstanceHelper systemTaskInstance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new LiveLogPriorityQueue();
+        }
+    };
+    private static SingletonInstanceHelper systemTaskInstance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new LiveLogPriorityQueue();
+        }
+    };
 
     private static AtomicBoolean instanceLock = new AtomicBoolean(false);
     private static AtomicBoolean instanceTaskLock = new AtomicBoolean(false);

@@ -31,7 +31,12 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
     private static final String FLOAT_CLASS_NAME = "Float";
     private static final String LONG_CLASS_NAME = "Long";
     private static final String NUMBER_CLASS_NAME = "Number";
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccumulatorEventPersistanceStrategy>(AccumulatorEventPersistanceStrategy.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<AccumulatorEventPersistanceStrategy>(AccumulatorEventPersistanceStrategy.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new AccumulatorEventPersistanceStrategy();
+        }
+    };
 
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 

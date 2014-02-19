@@ -35,7 +35,12 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
     private static final Object initLock = new Object();
     private static final Logger logger = (Logger) Logger.getLogger(HtmlPageRecordPersistanceStrategy.class.getName());
     private static double timePerInsert = 5000.0;
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<HtmlPageRecordPersistanceStrategy>(HtmlPageRecordPersistanceStrategy.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<HtmlPageRecordPersistanceStrategy>(HtmlPageRecordPersistanceStrategy.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new HtmlPageRecordPersistanceStrategy();
+        }
+    };
     private static long batch = 0;
     private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
     private static DateTime batchNow = new DateTime();

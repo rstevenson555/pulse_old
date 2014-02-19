@@ -37,7 +37,12 @@ import org.joda.time.format.DateTimeFormatter;
 public class AccessRecordsDailyStats extends StatisticsUnit {
 
 	private static final Logger logger = (Logger)Logger.getLogger(AccessRecordsDailyStats.class.getName());//
-    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsDailyStats>(AccessRecordsDailyStats.class);
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsDailyStats>(AccessRecordsDailyStats.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new AccessRecordsDailyStats();
+        }
+    };
 
     private static DateTimeFormatter sdf = DateTimeFormat.forPattern("yyyyMMdd"); 
 

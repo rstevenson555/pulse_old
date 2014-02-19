@@ -48,7 +48,12 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
     protected static final Logger logger = (Logger) Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName());
 
     private static final int BATCH_INSERT_SIZE = 2;
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExternalTimingPersistanceStrategy>(ExternalTimingPersistanceStrategy.class);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExternalTimingPersistanceStrategy>(ExternalTimingPersistanceStrategy.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ExternalTimingPersistanceStrategy();
+        }
+    };
 
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 

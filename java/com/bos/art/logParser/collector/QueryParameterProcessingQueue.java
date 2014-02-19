@@ -45,8 +45,12 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
                 .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private static TPSCalculator tpsCalculator = new TPSCalculator();
-    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterProcessingQueue>(QueryParameterProcessingQueue.class);
-
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterProcessingQueue>(QueryParameterProcessingQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new QueryParameterProcessingQueue();
+        }
+    };
 
     private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 256, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
