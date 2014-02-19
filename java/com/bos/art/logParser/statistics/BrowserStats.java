@@ -11,6 +11,7 @@ import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.UserRequestTiming;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -28,13 +30,23 @@ import org.joda.time.format.DateTimeFormatter;
 
 /**
  * @author I0360D3
- *
- * To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
+ *         <p/>
+ *         To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class BrowserStats extends StatisticsUnit {
 
     private static final Logger logger = (Logger) Logger.getLogger(BrowserStats.class.getName());
+    private static final int MINUTE_DELAY = 5;
     private static BrowserStats instance = new BrowserStats();
+    private static long writeCount = 0;
+    //private SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
+    //private SimpleDateFormat sdfFullDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static DateTimeFormatter sdfDate = DateTimeFormat.forPattern("yyyy-MM-dd");
+    private static DateTimeFormatter sdfFullDate = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private final String SQL_INSERT_STATEMENT = "insert into browserstats" + " (day, browser_id, count, state) values "
+            + "(?, (select browser_id from browsers where patternmatchstring=? limit 1),?,?)";
+    private final String SQL_UPDATE_STATEMENT = "update browserstats "
+            + "  set count=?, state = ? where day =? and browser_id = (select browser_id from browsers where patternmatchstring = ? ) ";
     private ConcurrentHashMap<String, BrowserRecord> browsers;
     //private TreeMap sessionsTallied;
     private ConcurrentHashMap<String, Date> sessionsTallied;
@@ -42,7 +54,6 @@ public class BrowserStats extends StatisticsUnit {
     //private int eventsProcessed;
     //private int timeSlices;
     private java.util.Date lastDataWriteTime;
-    private static final int MINUTE_DELAY = 5;
     //private static int counter = 0;
     private java.util.Date currentDate;
     private BrowserRecord totalBrowsers;
@@ -254,60 +265,6 @@ public class BrowserStats extends StatisticsUnit {
         }
     }
 
-    static class BrowserRecord {
-
-        BrowserRecord(String s, String s2) {
-            browserString = s;
-
-            desc = s2;
-            try {
-                pattern = Pattern.compile(browserString);
-            } catch (java.util.regex.PatternSyntaxException e) {
-                logger.warn(" Exception with pattern " + browserString, e);
-            }
-
-            count = 0;
-            isNew = true;
-            isDirty = true;
-        }
-        public String recordType;
-
-        public void setType(String t) {
-            recordType = t;
-            if (recordType.equalsIgnoreCase("O")) {
-                isOs = true;
-            } else {
-                isOs = false;
-            }
-        }
-
-        public void setBrowserString(String s) {
-            try {
-                pattern = Pattern.compile(s);
-            } catch (java.util.regex.PatternSyntaxException e) {
-                logger.warn(" Exception with pattern " + browserString, e);
-            }
-        }
-        public Pattern pattern;
-        public String browserString;
-        public String desc;
-        public boolean isOs;
-        public int count;
-        public java.util.Date date;
-        public boolean isDirty;
-        public boolean isNew;
-
-        void incrementCount() {
-            count++;
-            isDirty = true;
-        }
-
-        public String toString() {
-            return browserString + ":" + count + ":" + isNew + ":" + isDirty;
-        }
-    }
-    private static long writeCount = 0;
-
     /*
      * (non-Javadoc) @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
@@ -338,10 +295,6 @@ public class BrowserStats extends StatisticsUnit {
             }
         }
     }
-    //private SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
-    //private SimpleDateFormat sdfFullDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static DateTimeFormatter sdfDate = DateTimeFormat.forPattern("yyyy-MM-dd");
-    private static DateTimeFormatter sdfFullDate = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
     private void insertOrUpdate(BrowserRecord br) {
         if (br.isNew) {
@@ -366,10 +319,6 @@ public class BrowserStats extends StatisticsUnit {
             br.count = 0;
         }
     }
-    private final String SQL_INSERT_STATEMENT = "insert into browserstats" + " (day, browser_id, count, state) values "
-            + "(?, (select browser_id from browsers where patternmatchstring=? limit 1),?,?)";
-    private final String SQL_UPDATE_STATEMENT = "update browserstats "
-            + "  set count=?, state = ? where day =? and browser_id = (select browser_id from browsers where patternmatchstring = ? ) ";
 
     private void insertBrowserRecord(BrowserRecord br) {
         Connection con = null;
@@ -449,11 +398,11 @@ public class BrowserStats extends StatisticsUnit {
             pstmt.close();
         } catch (SQLException se) {
             se.printStackTrace();
-            try {
-                con.rollback();
-            } catch (SQLException sse) {
-                sse.printStackTrace();
-            }
+//            try {
+//                con.rollback();
+//            } catch (SQLException sse) {
+//                sse.printStackTrace();
+//            }
 
         } finally {
             if (con != null) {
@@ -488,6 +437,60 @@ public class BrowserStats extends StatisticsUnit {
             CommunicationChannel.getInstance().broadcast(bean, null);
         } catch (Exception e) {
             logger.error("Error broadcasting data", e);
+        }
+    }
+
+    static class BrowserRecord {
+
+        public String recordType;
+        public Pattern pattern;
+        public String browserString;
+        public String desc;
+        public boolean isOs;
+        public int count;
+        public java.util.Date date;
+        public boolean isDirty;
+        public boolean isNew;
+
+        BrowserRecord(String s, String s2) {
+            browserString = s;
+
+            desc = s2;
+            try {
+                pattern = Pattern.compile(browserString);
+            } catch (java.util.regex.PatternSyntaxException e) {
+                logger.warn(" Exception with pattern " + browserString, e);
+            }
+
+            count = 0;
+            isNew = true;
+            isDirty = true;
+        }
+
+        public void setType(String t) {
+            recordType = t;
+            if (recordType.equalsIgnoreCase("O")) {
+                isOs = true;
+            } else {
+                isOs = false;
+            }
+        }
+
+        public void setBrowserString(String s) {
+            try {
+                pattern = Pattern.compile(s);
+            } catch (java.util.regex.PatternSyntaxException e) {
+                logger.warn(" Exception with pattern " + browserString, e);
+            }
+        }
+
+        void incrementCount() {
+            count++;
+            isDirty = true;
+        }
+
+        public String toString() {
+            return browserString + ":" + count + ":" + isNew + ":" + isDirty;
         }
     }
 }
