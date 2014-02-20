@@ -46,12 +46,7 @@ public class LiveLogPriorityQueue implements Serializable {
             return new LiveLogPriorityQueue();
         }
     };
-    private static SingletonInstanceHelper systemTaskInstance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class) {
-        @Override
-        public java.lang.Object createInstance() {
-            return new LiveLogPriorityQueue();
-        }
-    };
+    private static LiveLogPriorityQueue systemTaskInstance;
     private static AtomicBoolean instanceLock = new AtomicBoolean(false);
     private static AtomicBoolean instanceTaskLock = new AtomicBoolean(false);
     /**
@@ -95,7 +90,10 @@ public class LiveLogPriorityQueue implements Serializable {
     }
 
     public static LiveLogPriorityQueue getSystemTaskQueue() {
-        return (LiveLogPriorityQueue) systemTaskInstance.getInstance();
+        if (instanceLock.compareAndSet(false, true)) {
+            systemTaskInstance = new LiveLogPriorityQueue();
+        }
+        return systemTaskInstance;
     }
 
     public void initHandlers() {
@@ -125,6 +123,9 @@ public class LiveLogPriorityQueue implements Serializable {
 
         return databaseWriteQueueHandlers[current];
     }
+
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 1 * 1024, executor,
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
     public void addObject(final Object o) {
         long startTime = System.currentTimeMillis();
@@ -156,9 +157,6 @@ public class LiveLogPriorityQueue implements Serializable {
         addTime += (System.currentTimeMillis() - startTime);
     }
 
-    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 1 * 1024, executor,
-            ProducerType.SINGLE, new BlockingWaitStrategy());
-
     public ILiveLogPriorityQueueMessage getFirst() {
         try {
             if (objectsRemoved % PRINT_FREQUENCY == 0) {
@@ -180,13 +178,13 @@ public class LiveLogPriorityQueue implements Serializable {
         }
         return null;
     }
+    /*
+    * disruptor end
+     */
 
     public boolean isEmpty() {
         return queue.size() == 0;
     }
-    /*
-    * disruptor end
-     */
 
     @Override
     public String toString() {
