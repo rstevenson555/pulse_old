@@ -10,6 +10,7 @@ package com.bos.art.logParser.collector;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.QueryParameters;
 import com.bos.art.logServer.utils.TPSCalculator;
+import com.bos.helper.SingletonInstanceHelper;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -35,91 +36,69 @@ import java.util.concurrent.atomic.AtomicInteger;
  *         To change the template for this generated type comment go to
  *         Window>Preferences>Java>Code Generation>Code and Comments
  */
-public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,Serializable {
+public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean, Serializable {
     private static final Logger logger = (Logger) Logger.getLogger(QueryParameterWriteQueue.class.getName());
-    private static QueryParameterWriteQueue instance;
-    private int objectsRemoved;
-    private int objectsWritten;
-    private long totalWriteTime;
-
     private final static int MAXBATCHINSERTSIZE = 5000;
     private final static int INCREMENT_AMOUNT = 100;
     private final static int MINBATCHINSERTSIZE = 3000;
     private static int currentBatchInsertSize = MINBATCHINSERTSIZE;
-    private static double timePerInsert = 5000.0;
-    protected static boolean unloadDB = true;
     private static final int MAX_DB_QUEUE_SIZE = 3000;
+    protected static boolean unloadDB = true;
+    static AtomicInteger qpInstance = new AtomicInteger(0);
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<QueryParameterWriteQueue>(QueryParameterWriteQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new QueryParameterWriteQueue();
+        }
+    };
+    private static double timePerInsert = 5000.0;
     private static DateTime now = null;
     private static DateTime oneMinute = new DateTime().plusMinutes(1);
     private static long recordsPerMinute = 0;
     private static long fullCount = 0;
     private static BasicThreadFactory tFactory = new BasicThreadFactory.Builder()
-                .namingPattern("QueryParameterWriteQueue-%d")
-                .build();
+            .namingPattern("QueryParameterWriteQueue-%d")
+            .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(tFactory);
     private static TPSCalculator tpsCalculator = new TPSCalculator();
-
+    private static ThreadLocal threadLocalCon = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ConnectionPoolT.getConnection();
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            try {
+                return ((Connection) threadLocalCon.get()).prepareStatement(
+                        "insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
+            } catch (SQLException se) {
+                logger.error("SQL Exception ", se);
+            }
+            return null;
+        }
+    };
+    private static ThreadLocal threadLocalInserts = new ThreadLocal() {
+        @Override
+        protected synchronized Object initialValue() {
+            return new Integer(0);
+        }
+    };
     private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 256, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
-
-    private static class DBQueryParamRecordEvent {
-        private QueryParameters.DBQueryParamRecord record;
-
-        public static final EventFactory<DBQueryParamRecordEvent> FACTORY = new EventFactory<DBQueryParamRecordEvent>() {
-            public DBQueryParamRecordEvent newInstance() {
-                return new DBQueryParamRecordEvent();
-            }
-        };
-    };
-
-    private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent> {
-
-        public DBQueryParamRecordEventHandler() {
-        }
-
-        public void onEvent(DBQueryParamRecordEvent event, long sequence, boolean endOfBatch) throws Exception {
-
-            now = new DateTime();
-            recordsPerMinute++;
-
-            if (now.isAfter(oneMinute)) {
-                logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
-                oneMinute = now.plusMinutes(1);
-                recordsPerMinute = 0;
-            }
-            if (logger.isInfoEnabled()) {
-                if (objectsRemoved % 10000 == 0) {
-                    logger.info(toString());
-                }
-            }
-
-            QueryParameters.DBQueryParamRecord dbqp = event.record;
-            ++objectsRemoved;
-            tpsCalculator.incrementTransaction();
-            long sTime = System.currentTimeMillis();
-
-            try {
-                PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
-
-                pstmt.setInt(1, dbqp.getRecordPK().intValue());
-                pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
-                blockInsert(pstmt);
-                ++objectsWritten;
-                // requestType, requestToken, userServiceTime
-            } catch (SQLException se) {
-                logger.error("Exception", se);
-                resetThreadLocalPstmt();
-                // return false;
-            }
-            finally {
-                // Removed because of Thread Local.
-                long sTime2 = System.currentTimeMillis();
-
-                totalWriteTime += (sTime2 - sTime);
-            }
-
-        }
-    }
+    private static long batch = 0;
+    ;
+    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
+    private static DateTime batchNow = new DateTime();
+    private int objectsRemoved;
+    private int objectsWritten;
+    private long totalWriteTime;
 
     private QueryParameterWriteQueue() {
 
@@ -132,7 +111,9 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         registerWithMBeanServer();
     }
 
-    static AtomicInteger qpInstance = new AtomicInteger(0);
+    public static QueryParameterWriteQueue getInstance() {
+        return (QueryParameterWriteQueue) instance.getInstance();
+    }
 
     /**
      * register the mbean with JMX
@@ -141,7 +122,7 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = null;
         try {
-            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean,name=QueryParameterWriteQueue-"+(qpInstance.incrementAndGet()));
+            name = new ObjectName("com.omx.engine:type=QueryParameterWriteQueueMBean,name=QueryParameterWriteQueue-" + (qpInstance.incrementAndGet()));
             mbs.registerMBean(this, name);
         } catch (MalformedObjectNameException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -152,14 +133,6 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         } catch (NotCompliantMBeanException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-    }
-
-
-    public static QueryParameterWriteQueue getInstance() {
-        if (instance == null) {
-            instance = new QueryParameterWriteQueue();
-        }
-        return instance;
     }
 
     public void addLast(Object o) {
@@ -189,15 +162,8 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     }
 
     /**
-     * get the remaining capacity of the ringbuffer
-     * @return
-     */
-    public long getRemainingCapacity() {
-        return disruptor.getRingBuffer().remainingCapacity();
-    }
-
-    /**
      * change the buffer size to nearest power of two
+     *
      * @param sz
      */
     public void setBufferSize(long sz) {
@@ -216,7 +182,17 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     }
 
     /**
+     * get the remaining capacity of the ringbuffer
+     *
+     * @return
+     */
+    public long getRemainingCapacity() {
+        return disruptor.getRingBuffer().remainingCapacity();
+    }
+
+    /**
      * return messages per second calculation
+     *
      * @return
      */
     public long getMessagesPerSecond() {
@@ -226,7 +202,6 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
     public long getWriteCount() {
         return tpsCalculator.getTransactionCount();
     }
-
 
     @Override
     public String toString() {
@@ -245,39 +220,6 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
         }
         return sb.toString();
     }
-
-
-    private static ThreadLocal threadLocalCon = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ConnectionPoolT.getConnection();
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
-
-    private static ThreadLocal threadLocalPstmt = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            try {
-                return ((Connection) threadLocalCon.get()).prepareStatement(
-                        "insert into QueryParamRecords (RecordPK, QueryParameter_ID) values (?,?) ");
-            } catch (SQLException se) {
-                logger.error("SQL Exception ", se);
-            }
-            return null;
-        }
-    };
-
-    private static ThreadLocal threadLocalInserts = new ThreadLocal() {
-        @Override
-        protected synchronized Object initialValue() {
-            return new Integer(0);
-        }
-    };
 
     public void resetThreadLocalPstmt() {
         logger.info("Resetting the Pstmt!");
@@ -305,10 +247,6 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
             logger.error("Exception ", e);
         }
     }
-
-    private static long batch = 0;
-    private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
-    private static DateTime batchNow = new DateTime();
 
     public void blockInsert(PreparedStatement pstmt) {
         try {
@@ -358,5 +296,64 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean,S
             resetThreadLocalPstmt();
         }
     }
+
+    private static class DBQueryParamRecordEvent {
+        public static final EventFactory<DBQueryParamRecordEvent> FACTORY = new EventFactory<DBQueryParamRecordEvent>() {
+            public DBQueryParamRecordEvent newInstance() {
+                return new DBQueryParamRecordEvent();
+            }
+        };
+        private QueryParameters.DBQueryParamRecord record;
+    }
+
+    private class DBQueryParamRecordEventHandler implements EventHandler<DBQueryParamRecordEvent> {
+
+        public DBQueryParamRecordEventHandler() {
+        }
+
+        public void onEvent(DBQueryParamRecordEvent event, long sequence, boolean endOfBatch) throws Exception {
+
+            now = new DateTime();
+            recordsPerMinute++;
+
+            if (now.isAfter(oneMinute)) {
+                logger.warn("QueryParameterWriteQueue records per minute: " + (recordsPerMinute));
+                oneMinute = now.plusMinutes(1);
+                recordsPerMinute = 0;
+            }
+            if (logger.isInfoEnabled()) {
+                if (objectsRemoved % 10000 == 0) {
+                    logger.info(toString());
+                }
+            }
+
+            QueryParameters.DBQueryParamRecord dbqp = event.record;
+            ++objectsRemoved;
+            tpsCalculator.incrementTransaction();
+            long sTime = System.currentTimeMillis();
+
+            try {
+                PreparedStatement pstmt = (PreparedStatement) threadLocalPstmt.get();
+
+                pstmt.setInt(1, dbqp.getRecordPK().intValue());
+                pstmt.setInt(2, dbqp.getQueryParameterID().intValue());
+                blockInsert(pstmt);
+                ++objectsWritten;
+                // requestType, requestToken, userServiceTime
+            } catch (SQLException se) {
+                logger.error("Exception", se);
+                resetThreadLocalPstmt();
+                // return false;
+            } finally {
+                // Removed because of Thread Local.
+                long sTime2 = System.currentTimeMillis();
+
+                totalWriteTime += (sTime2 - sTime);
+            }
+
+        }
+    }
+
+
 }
 

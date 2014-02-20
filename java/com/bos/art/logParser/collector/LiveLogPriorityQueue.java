@@ -11,10 +11,9 @@ import EDU.oswego.cs.dl.util.concurrent.BoundedPriorityQueue;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.ILiveLogPriorityQueueMessage;
 import com.bos.art.logParser.records.SystemTask;
-import com.bos.art.logParser.records.UserRequestEventDesc;
 import com.bos.art.logParser.statistics.StatisticsModule;
 import com.bos.art.logParser.statistics.StatisticsUnit;
-import com.bos.art.logServer.Queues.MessageUnloader;
+import com.bos.helper.SingletonInstanceHelper;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -41,8 +40,18 @@ public class LiveLogPriorityQueue implements Serializable {
     private BoundedPriorityQueue queue = new BoundedPriorityQueue(BOUNDED_QUEUE_CAPACITY, new PriorityQueueComparator());
     private static final Logger heapLogger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
     private static Logger logger = (Logger) Logger.getLogger(LiveLogPriorityQueue.class.getName());
-    private static LiveLogPriorityQueue instance;
-    private static LiveLogPriorityQueue systemTaskInstance;
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new LiveLogPriorityQueue();
+        }
+    };
+    private static SingletonInstanceHelper systemTaskInstance = new SingletonInstanceHelper<LiveLogPriorityQueue>(LiveLogPriorityQueue.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new LiveLogPriorityQueue();
+        }
+    };
     private static AtomicBoolean instanceLock = new AtomicBoolean(false);
     private static AtomicBoolean instanceTaskLock = new AtomicBoolean(false);
     /**
@@ -57,11 +66,6 @@ public class LiveLogPriorityQueue implements Serializable {
     private static ExecutorService writeQueuePool = Executors.newFixedThreadPool(NUM_DB_WRITE_QUEUE_HANDLERS, writeQueueThreadFactory);
     private static AtomicInteger handlerCount = new AtomicInteger(0);
     private static Object initSyncLock = new Object();
-    private long addTime;
-    private long removeTime;
-    private int objectsAdded;
-    private int objectsRemoved;
-    private int maxDepth;
     /**
      * disruptor
      */
@@ -69,6 +73,11 @@ public class LiveLogPriorityQueue implements Serializable {
             .namingPattern("LiveLogProcessor-%d")
             .build();
     private final ExecutorService executor = Executors.newSingleThreadExecutor(disruptorThreadFactory);
+    private long addTime;
+    private long removeTime;
+    private int objectsAdded;
+    private int objectsRemoved;
+    private int maxDepth;
 
 
     private LiveLogPriorityQueue() {
@@ -82,17 +91,11 @@ public class LiveLogPriorityQueue implements Serializable {
     }
 
     public static LiveLogPriorityQueue getInstance() {
-        if (instanceTaskLock.compareAndSet(false, true)) {
-            instance = new LiveLogPriorityQueue();
-        }
-        return instance;
+        return (LiveLogPriorityQueue) instance.getInstance();
     }
 
     public static LiveLogPriorityQueue getSystemTaskQueue() {
-        if (instanceLock.compareAndSet(false, true)) {
-            systemTaskInstance = new LiveLogPriorityQueue();
-        }
-        return systemTaskInstance;
+        return (LiveLogPriorityQueue) systemTaskInstance.getInstance();
     }
 
     public void initHandlers() {
@@ -105,20 +108,17 @@ public class LiveLogPriorityQueue implements Serializable {
         }
     }
 
-    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 1 * 1024, executor,
-            ProducerType.SINGLE, new BlockingWaitStrategy());
-
     private DatabaseWriteQueueHandler setNextHandler(ILiveLogPriorityQueueMessage iLiveLogPriorityQueueMessage) {
 
         int current = handlerCount.get();
-        if ( current >= databaseWriteQueueHandlers.length) {
+        if (current >= databaseWriteQueueHandlers.length) {
             current = 0;
             handlerCount.set(current);
         }
         databaseWriteQueueHandlers[current].setRecord(iLiveLogPriorityQueueMessage);
 
         int nextHandlerCount = handlerCount.incrementAndGet();
-        if (nextHandlerCount >= databaseWriteQueueHandlers.length ) {
+        if (nextHandlerCount >= databaseWriteQueueHandlers.length) {
             nextHandlerCount = 0;
             handlerCount.set(nextHandlerCount);
         }
@@ -155,9 +155,9 @@ public class LiveLogPriorityQueue implements Serializable {
         }
         addTime += (System.currentTimeMillis() - startTime);
     }
-    /*
-    * disruptor end
-     */
+
+    private Disruptor<ObjectEvent> disruptor = new Disruptor<ObjectEvent>(ObjectEvent.FACTORY, 1 * 1024, executor,
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
     public ILiveLogPriorityQueueMessage getFirst() {
         try {
@@ -184,6 +184,9 @@ public class LiveLogPriorityQueue implements Serializable {
     public boolean isEmpty() {
         return queue.size() == 0;
     }
+    /*
+    * disruptor end
+     */
 
     @Override
     public String toString() {
