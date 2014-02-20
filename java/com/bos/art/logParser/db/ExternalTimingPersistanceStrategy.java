@@ -12,21 +12,15 @@
 
 package com.bos.art.logParser.db;
 
-import java.sql.Connection;
-
-import java.sql.PreparedStatement;
-
-import java.sql.SQLException;
-
-import java.text.SimpleDateFormat;
-
+import com.bos.art.logParser.records.AccessRecordsForeignKeys;
+import com.bos.art.logParser.records.ExternalEventTiming;
+import com.bos.art.logParser.records.ILiveLogParserRecord;
+import com.bos.art.logParser.tools.SingletonInstanceHelper;
 import org.apache.log4j.Logger;
 
-import com.bos.art.logParser.records.AccessRecordsForeignKeys;
-
-import com.bos.art.logParser.records.ExternalEventTiming;
-
-import com.bos.art.logParser.records.ILiveLogParserRecord;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * @author I0360D3
@@ -47,7 +41,15 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
     protected static final Logger logger = (Logger) Logger.getLogger(ExternalTimingPersistanceStrategy.class.getName());
 
     private static final int BATCH_INSERT_SIZE = 2;
-    private static ExternalTimingPersistanceStrategy instance;
+//    private static ExternalTimingPersistanceStrategy instance;
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExternalTimingPersistanceStrategy>(ExternalTimingPersistanceStrategy.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ExternalTimingPersistanceStrategy();
+        }
+    };
+
+
     private static ThreadLocal threadLocalCon = new ThreadLocal() {
 
         @Override
@@ -92,11 +94,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
     }
 
     public static ExternalTimingPersistanceStrategy getInstance() {
-        if (instance == null) {
-            instance = new ExternalTimingPersistanceStrategy();
-        }
-
-        return instance;
+        return (ExternalTimingPersistanceStrategy)instance.getInstance();
     }
 
     public void resetThreadLocalPstmt() {
