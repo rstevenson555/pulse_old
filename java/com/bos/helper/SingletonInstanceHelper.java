@@ -8,11 +8,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by i0360b6 on 2/19/14.
  */
 public class SingletonInstanceHelper<X> {
+    protected X instance;
     private AtomicBoolean instanceInitialized = new AtomicBoolean(false);
     private AtomicBoolean instanceComplete = new AtomicBoolean(false);
     private Object objectLock = new Object();
     private Class createClass = null;
-    protected X instance;
 
     public SingletonInstanceHelper(Class create) {
         this.createClass = create;
@@ -25,7 +25,7 @@ public class SingletonInstanceHelper<X> {
     public X getInstance() {
         if (instanceInitialized.compareAndSet(false, true)) {
             if (instance == null && !instanceComplete.get()) {
-                instance = (X)createInstance();
+                instance = (X) createInstance();
                 instanceComplete.set(true);
                 synchronized (objectLock) {
                     objectLock.notify();
@@ -44,3 +44,4 @@ public class SingletonInstanceHelper<X> {
         return instance;
     }
 }
+
