@@ -13,16 +13,6 @@
 package com.bos.art.logParser.statistics;
 
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-import org.apache.log4j.Logger;
-
-
 import com.bos.art.logParser.broadcast.beans.AccessRecordsMinuteBean;
 import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 import com.bos.art.logParser.db.AccessRecordPersistanceStrategy;
@@ -30,12 +20,19 @@ import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.db.ForeignKeyStore;
 import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
-
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.bos.helper.MutableSingletonInstanceHelper;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -50,23 +47,50 @@ import org.joda.time.format.DateTimeFormatter;
 
 public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
-    private static final Logger logger =(Logger) Logger.getLogger(AccessRecordsMinuteMachineStats.class.getName());
-    private static AccessRecordsMinuteMachineStats instance;
+    private static final Logger logger = (Logger) Logger.getLogger(AccessRecordsMinuteMachineStats.class.getName());
     private static final DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private static final DateTimeFormatter fdfMySQLTime = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final DateTimeFormatter fdfKey = DateTimeFormat.forPattern("yyyyMMddHHmm");
+    private static final int HOUR_DELAY = 1;
+    private static final int MINUTE_DELAY = 1;
+    private static final int SECONDS_DELAY = 5;
+    private static final String SQL_INSERT_STATEMENT =
+
+            "insert into MinuteStatistics ("
+                    + "Machine_id,             Time,  "
+                    + "TotalLoads,             AverageLoadTime,  "
+                    + "NinetiethPercentile,    TwentyFifthPercentile,"
+                    + "FiftiethPercentile,     SeventyFifthPercentile, "
+                    + "MaxLoadTime,            MinLoadTime, "
+                    + "DistinctUsers,          ErrorPages, "
+                    + "ThirtySecondLoads,      TwentySecondLoads, "
+                    + "FifteenSecondLoads,     TenSecondLoads, "
+                    + "FiveSecondLoads, instance_id) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String SQL_UPDATE_STATEMENT =
+
+            "update MinuteStatistics set "
+                    + "TotalLoads = ?,             AverageLoadTime = ?,  "
+                    + "NinetiethPercentile = ?,    TwentyFifthPercentile = ?,"
+                    + "FiftiethPercentile = ?,     SeventyFifthPercentile = ?, "
+                    + "MaxLoadTime = ?,            MinLoadTime = ?, "
+                    + "DistinctUsers = ?,          ErrorPages = ?, "
+                    + "ThirtySecondLoads = ?,      TwentySecondLoads = ?, "
+                    + "FifteenSecondLoads = ?,     TenSecondLoads = ?, "
+                    + "FiveSecondLoads = ?,        State = ? where "
+                    + "Machine_id = ? and Time = ? and instance_id = ?";
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<AccessRecordsMinuteMachineStats>(AccessRecordsMinuteMachineStats.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new AccessRecordsMinuteMachineStats();
+        }
+    };
+    private static DateTimeFormatter sdfDate = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer> minutes;
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
-
     private java.util.Date lastDataWriteTime;
-    private static final int HOUR_DELAY = 1;
-    private static final int MINUTE_DELAY = 1;
-    private static final int SECONDS_DELAY = 5;
     transient private PersistanceStrategy pStrat;
-    private static DateTimeFormatter sdfDate = DateTimeFormat.forPattern("yyyyMMddHHmmss");
-
     private java.util.Date lastPersistDate;
 
 
@@ -78,29 +102,25 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     }
 
-    public static AccessRecordsMinuteMachineStats getInstance() {
-        if (instance == null) {
-            instance = new AccessRecordsMinuteMachineStats();
-        }
-        return instance;
-    }
-
-
-    public void setInstance(StatisticsUnit su) {
-        if (su instanceof AccessRecordsMinuteMachineStats) {
-            if (instance != null) {
-                instance.runnable = false;
-            }
-            instance = (AccessRecordsMinuteMachineStats) su;
-        }
-    }
-
 
     /* (non-Javadoc)
 
       * @see com.bos.art.logParser.statistics.StatisticsUnit#processRecord(com.bos.art.logParser.records.LiveLogParserRecord)
 
       */
+
+    public static AccessRecordsMinuteMachineStats getInstance() {
+        return (AccessRecordsMinuteMachineStats) instance.getInstance();
+    }
+
+    public void setInstance(StatisticsUnit su) {
+        if (su instanceof AccessRecordsMinuteMachineStats) {
+            if (instance.getInstance() != null) {
+                ((AccessRecordsMinuteMachineStats) instance.getInstance()).setRunnable(false);
+            }
+            instance.setInstance(su);
+        }
+    }
 
     public void processRecord(ILiveLogParserRecord record) {
 
@@ -123,16 +143,12 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
 
-//        String key =
-//                fdfKey.print(record.getEventTime().getTime().getTime())
-//                        + record.getServerName() + record.getInstance();
         MinuteStatsKey key = new MinuteStatsKey();
-        key.setTime( new DateTime(record.getEventTime().getTime()).withSecondOfMinute(0).toDate());
-        key.setServerName( record.getServerName());
+        key.setTime(new DateTime(record.getEventTime().getTime()).withSecondOfMinute(0).toDate());
+        key.setServerName(record.getServerName());
         key.setInstanceName(record.getInstance());
 
-        TimeSpanEventContainer container =
-                (TimeSpanEventContainer) minutes.get(key);
+        TimeSpanEventContainer container = minutes.get(key);
         if (container == null) {
             ++timeSlices;
             container =
@@ -149,7 +165,6 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     }
 
-
     public String toString() {
 
         StringBuffer sb = new StringBuffer();
@@ -164,7 +179,6 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
         sb.append(minutes.toString());
         return sb.toString();
     }
-
 
     /**
      * This persist Data will do the following:
@@ -192,43 +206,15 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             logger.info("persistCalled for Minute Stats time:nextWriteDate: -- " + System.currentTimeMillis() + ":" + nextWriteDate.getTime() + " diff:" + (System.currentTimeMillis() - nextWriteDate.getTime()));
             lastDataWriteTime = new java.util.Date();
 
-            for(MinuteStatsKey nextKey:minutes.keySet()) {
-                    TimeSpanEventContainer tsec =
-                            (TimeSpanEventContainer) minutes.get(nextKey);
+            for (MinuteStatsKey nextKey : minutes.keySet()) {
+                TimeSpanEventContainer tsec =
+                        (TimeSpanEventContainer) minutes.get(nextKey);
                 if (persistData(tsec, nextKey)) {
                     minutes.remove(nextKey);
                 }
             }
         }
     }
-
-
-    private static final String SQL_INSERT_STATEMENT =
-
-            "insert into MinuteStatistics ("
-                    + "Machine_id,             Time,  "
-                    + "TotalLoads,             AverageLoadTime,  "
-                    + "NinetiethPercentile,    TwentyFifthPercentile,"
-                    + "FiftiethPercentile,     SeventyFifthPercentile, "
-                    + "MaxLoadTime,            MinLoadTime, "
-                    + "DistinctUsers,          ErrorPages, "
-                    + "ThirtySecondLoads,      TwentySecondLoads, "
-                    + "FifteenSecondLoads,     TenSecondLoads, "
-                    + "FiveSecondLoads, instance_id) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-
-    private static final String SQL_UPDATE_STATEMENT =
-
-            "update MinuteStatistics set "
-                    + "TotalLoads = ?,             AverageLoadTime = ?,  "
-                    + "NinetiethPercentile = ?,    TwentyFifthPercentile = ?,"
-                    + "FiftiethPercentile = ?,     SeventyFifthPercentile = ?, "
-                    + "MaxLoadTime = ?,            MinLoadTime = ?, "
-                    + "DistinctUsers = ?,          ErrorPages = ?, "
-                    + "ThirtySecondLoads = ?,      TwentySecondLoads = ?, "
-                    + "FifteenSecondLoads = ?,     TenSecondLoads = ?, "
-                    + "FiveSecondLoads = ?,        State = ? where "
-                    + "Machine_id = ? and Time = ? and instance_id = ?";
-
 
     private String getString(TimeSpanEventContainer tsec, String nextKey) {
 
@@ -319,8 +305,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
         AccessRecordsMinuteBean bean = new AccessRecordsMinuteBean(tsec, nextKey);
         try {
             CommunicationChannel.getInstance().broadcast(bean, null);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Error broadcasting data", e);
         }
     }
@@ -360,8 +345,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
                 //DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
                 DateTime dt = new DateTime(nextKey.time).withSecondOfMinute(0);
                 d = dt.toDate();
-            }
-            catch (IllegalArgumentException pe) {
+            } catch (IllegalArgumentException pe) {
                 d = new Date();
             }
 
@@ -431,11 +415,11 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
                             pStrat);
 
             int instanceID =
-				ForeignKeyStore.getInstance().getForeignKey(
-					tsec.getAccessRecordsForeignKeys(),
-					nextKey.instanceName,
-					ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-					pStrat);
+                    ForeignKeyStore.getInstance().getForeignKey(
+                            tsec.getAccessRecordsForeignKeys(),
+                            nextKey.instanceName,
+                            ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                            pStrat);
 
             con = getConnection();
             PreparedStatement pstmt =
@@ -459,12 +443,9 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
             pstmt.setInt(17, machineID);
             Date d = null;
             try {
-                //DateTime dt = sdfDate.parseDateTime(nextKey.substring(0, 12) + "00");
                 DateTime dt = new DateTime(nextKey.time).withSecondOfMinute(0);
                 d = dt.toDate();
-            }
-
-            catch (IllegalArgumentException pe) {
+            } catch (IllegalArgumentException pe) {
                 d = new Date();
             }
 
@@ -498,7 +479,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     }
 
-    private void updateAndCloseData(TimeSpanEventContainer tsec,MinuteStatsKey nextKey) {
+    private void updateAndCloseData(TimeSpanEventContainer tsec, MinuteStatsKey nextKey) {
         updateData(tsec, nextKey, "C");
     }
 
