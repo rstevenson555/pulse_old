@@ -14,7 +14,12 @@ import com.bos.art.logParser.db.ForeignKeyStore;
 import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.ExternalEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
-import static com.bos.art.logServer.utils.TimeIntervalConstants.FIVE_SECOND_DELAY;
+import com.bos.helper.MutableSingletonInstanceHelper;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -22,24 +27,49 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+
 import static com.bos.art.logServer.utils.StringConstants.*;
+import static com.bos.art.logServer.utils.TimeIntervalConstants.FIVE_SECOND_DELAY;
 
 /**
  * @author I0360D3
- *
- * To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
+ *         <p/>
+ *         To change the template for this generated type comment go to Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUnit {
 
     private static final Logger logger =
             (Logger) Logger.getLogger(ExternalTimingMachineClassificationMinuteStats.class.getName());
-    private static ExternalTimingMachineClassificationMinuteStats instance;
-    private static final DateTimeFormatter fdf  = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
-    private static final DateTimeFormatter fdfKey  = DateTimeFormat.forPattern("yyyyMMddHHmm");
+    private static final DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
+    private static final DateTimeFormatter fdfKey = DateTimeFormat.forPattern("yyyyMMddHHmm");
+    private static final String SQL_INSERT_STATEMENT =
+            "insert into ExternalMinuteStatistics ("
+                    + "Machine_id,             Time,  "
+                    + "TotalLoads,             AverageLoadTime,  "
+                    + "NinetiethPercentile,    TwentyFifthPercentile,"
+                    + "FiftiethPercentile,     SeventyFifthPercentile, "
+                    + "MaxLoadTime,            MinLoadTime, "
+                    + "DistinctUsers,          ErrorPages, "
+                    + "ThirtySecondLoads,      TwentySecondLoads, "
+                    + "FifteenSecondLoads,     TenSecondLoads, "
+                    + "FiveSecondLoads, Classification_ID) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String SQL_UPDATE_STATEMENT =
+            "update ExternalMinuteStatistics set "
+                    + "TotalLoads = ?,             AverageLoadTime = ?,  "
+                    + "NinetiethPercentile = ?,    TwentyFifthPercentile = ?,"
+                    + "FiftiethPercentile = ?,     SeventyFifthPercentile = ?, "
+                    + "MaxLoadTime = ?,            MinLoadTime = ?, "
+                    + "DistinctUsers = ?,          ErrorPages = ?, "
+                    + "ThirtySecondLoads = ?,      TwentySecondLoads = ?, "
+                    + "FifteenSecondLoads = ?,     TenSecondLoads = ?, "
+                    + "FiveSecondLoads = ?,        State = ? where "
+                    + "Machine_id = ? and Time = ? and Classification_ID= ?";
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<ExternalTimingMachineClassificationMinuteStats>(ExternalTimingMachineClassificationMinuteStats.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ExternalTimingMachineClassificationMinuteStats();
+        }
+    };
     private static DateTimeFormatter sdf2 = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private ConcurrentHashMap<String, TimeSpanEventContainer> minutes;
     private int calls;
@@ -56,18 +86,15 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
     }
 
     public static ExternalTimingMachineClassificationMinuteStats getInstance() {
-        if (instance == null) {
-            instance = new ExternalTimingMachineClassificationMinuteStats();
-        }
-        return instance;
+        return (ExternalTimingMachineClassificationMinuteStats) instance.getInstance();
     }
 
     public void setInstance(StatisticsUnit su) {
         if (su instanceof ExternalTimingMachineClassificationMinuteStats) {
-            if (instance != null) {
-                instance.runnable = false;
+            if (instance.getInstance() != null) {
+                ((ExternalTimingMachineClassificationMinuteStats) instance.getInstance()).setRunnable(false);
             }
-            instance = (ExternalTimingMachineClassificationMinuteStats) su;
+            instance.setInstance(su);
         }
     }
 
@@ -100,27 +127,26 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         return;
     }
 
-    
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         ExternalEventTiming eet = (ExternalEventTiming) record;
         String key = fdfKey.print(record.getEventTime().getTime().getTime())
                 + START_INSTANCE + eet.getInstance()
                 + START_SERVER + eet.getServerName()
                 + START_CLASSIFICATION + eet.getClassification();
-        
+
         TimeSpanEventContainer container =
                 (TimeSpanEventContainer) minutes.get(key);
-        
+
         if (container == null) {
             ++timeSlices;
             container =
                     new TimeSpanEventContainer(
-                    record.getServerName(),
-                    record.getAppName(),
-                    record.getContext(),
-                    record.getRemoteHost(),
-                    record.getEventTime(),
-                    record.getInstance());
+                            record.getServerName(),
+                            record.getAppName(),
+                            record.getContext(),
+                            record.getRemoteHost(),
+                            record.getEventTime(),
+                            record.getInstance());
             minutes.put(key, container);
         }
         return container;
@@ -153,27 +179,27 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         gc = new DateTime();
         gc = gc.minusHours(2);
         Date broadcastCutOff = gc.toDate();
-        
+
         if (logger.isDebugEnabled()) {
             logger.debug(
                     "persistCalled for External Minute Stats time:nextWriteDate: -- "
-                    + System.currentTimeMillis()
-                    + ":"
-                    + nextWriteDate.getTime()
-                    + " diff:"
-                    + (System.currentTimeMillis() - nextWriteDate.getTime()));
+                            + System.currentTimeMillis()
+                            + ":"
+                            + nextWriteDate.getTime()
+                            + " diff:"
+                            + (System.currentTimeMillis() - nextWriteDate.getTime()));
         }
 
         DateTime now = new DateTime();
-        if ( now.isAfter(nextWriteDate.getTime())) {
+        if (now.isAfter(nextWriteDate.getTime())) {
             if (logger.isDebugEnabled()) {
                 logger.debug(
                         "persistCalled for External Minute Stats time:nextWriteDate: -- "
-                        + System.currentTimeMillis()
-                        + ":"
-                        + nextWriteDate.getTime()
-                        + " diff:"
-                        + (System.currentTimeMillis() - nextWriteDate.getTime()));
+                                + System.currentTimeMillis()
+                                + ":"
+                                + nextWriteDate.getTime()
+                                + " diff:"
+                                + (System.currentTimeMillis() - nextWriteDate.getTime()));
             }
             lastDataWriteTime = now.toDate();
             for (String nextKey : minutes.keySet()) {
@@ -185,37 +211,15 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
             }
         }
     }
-    private static final String SQL_INSERT_STATEMENT =
-            "insert into ExternalMinuteStatistics ("
-            + "Machine_id,             Time,  "
-            + "TotalLoads,             AverageLoadTime,  "
-            + "NinetiethPercentile,    TwentyFifthPercentile,"
-            + "FiftiethPercentile,     SeventyFifthPercentile, "
-            + "MaxLoadTime,            MinLoadTime, "
-            + "DistinctUsers,          ErrorPages, "
-            + "ThirtySecondLoads,      TwentySecondLoads, "
-            + "FifteenSecondLoads,     TenSecondLoads, "
-            + "FiveSecondLoads, Classification_ID) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    private static final String SQL_UPDATE_STATEMENT =
-            "update ExternalMinuteStatistics set "
-            + "TotalLoads = ?,             AverageLoadTime = ?,  "
-            + "NinetiethPercentile = ?,    TwentyFifthPercentile = ?,"
-            + "FiftiethPercentile = ?,     SeventyFifthPercentile = ?, "
-            + "MaxLoadTime = ?,            MinLoadTime = ?, "
-            + "DistinctUsers = ?,          ErrorPages = ?, "
-            + "ThirtySecondLoads = ?,      TwentySecondLoads = ?, "
-            + "FifteenSecondLoads = ?,     TenSecondLoads = ?, "
-            + "FiveSecondLoads = ?,        State = ? where "
-            + "Machine_id = ? and Time = ? and Classification_ID= ?";
 
     private String getString(TimeSpanEventContainer tsec, String nextKey) {
         StringBuilder sb = new StringBuilder();
         int machineID =
                 ForeignKeyStore.getInstance().getForeignKey(
-                tsec.getAccessRecordsForeignKeys(),
-                nextKey.substring(12),
-                ForeignKeyStore.FK_MACHINES_MACHINE_ID,
-                pStrat);
+                        tsec.getAccessRecordsForeignKeys(),
+                        nextKey.substring(12),
+                        ForeignKeyStore.FK_MACHINES_MACHINE_ID,
+                        pStrat);
         sb.append("\nKey: " + nextKey);
         sb.append("\n sql:" + SQL_INSERT_STATEMENT);
         sb.append(",\n" + machineID);
@@ -251,45 +255,45 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         if (tsec.getTimesPersisted() == 0) {
             logger.info(
                     "External Timing FirstTime Persist for getTime()--lastModTime()"
-                    + fdf.print(tsec.getTime().getTime().getTime())
-                    + "--"
-                    + fdf.print(tsec.getLastModDate().getTime()));
+                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + "--"
+                            + fdf.print(tsec.getLastModDate().getTime()));
             insertData(tsec, nextKey);
             logger.info(
                     "External Timing persistData Broadcast Called for ...[Initial Write]:"
-                    + fdfKey.print(tsec.getTime().getTime().getTime()));
+                            + fdfKey.print(tsec.getTime().getTime().getTime()));
 
             broadcast(tsec, nextKey);
         } else if (shouldCloseRecord(tsec)) {
             logger.info(
                     "External Timing Closing Data for getTime()--lastModTime()"
-                    + fdf.print(tsec.getTime().getTime().getTime())
-                    + "--"
-                    + fdf.print(tsec.getLastModDate().getTime()));
+                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + "--"
+                            + fdf.print(tsec.getLastModDate().getTime()));
             updateAndCloseData(tsec, nextKey);
             shouldRemove = true;
             logger.info(
                     "External Timing persistData Broadcast Called for ...[Close Time Period]:"
-                    + fdfKey.print(tsec.getTime().getTimeInMillis()));
+                            + fdfKey.print(tsec.getTime().getTimeInMillis()));
             broadcast(tsec, nextKey);
         } else if (tsec.isDatabaseDirty()) {
             if (tsec.getTime().getTime().after(broadcastCutOffTime)) {
                 logger.debug(
                         "External Timing Re-persist for getTime()--lastModTime()"
-                        + fdf.print(tsec.getTime().getTime().getTime())
-                        + "--"
-                        + fdf.print(tsec.getLastModDate().getTime()));
+                                + fdf.print(tsec.getTime().getTime().getTime())
+                                + "--"
+                                + fdf.print(tsec.getLastModDate().getTime()));
                 updateData(tsec, nextKey, "O");
                 logger.debug(
                         "External Timing persistData Broadcast Called for ...[Update Time Period]:"
-                        + fdfKey.print(tsec.getTime().getTime().getTime()));
+                                + fdfKey.print(tsec.getTime().getTime().getTime()));
                 broadcast(tsec, nextKey);
             } else {
                 logger.warn(
                         "External Timing Late Data for Minute Stats nextKey:Actuall Time : "
-                        + nextKey
-                        + ":"
-                        + fdf.print(tsec.getTime().getTime().getTime()));
+                                + nextKey
+                                + ":"
+                                + fdf.print(tsec.getTime().getTime().getTime()));
             }
         }
         return shouldRemove;
@@ -310,17 +314,17 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                        tsec.getAccessRecordsForeignKeys(),
-                        nextKey.substring(startMachine, endMachine),
-                        ForeignKeyStore.FK_MACHINES_MACHINE_ID,
-                        pStrat);
-            
+                            tsec.getAccessRecordsForeignKeys(),
+                            nextKey.substring(startMachine, endMachine),
+                            ForeignKeyStore.FK_MACHINES_MACHINE_ID,
+                            pStrat);
+
             int instanceID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                        tsec.getAccessRecordsForeignKeys(),
-                        nextKey.substring(startInstance, endInstance),
-                        ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-                        pStrat);
+                            tsec.getAccessRecordsForeignKeys(),
+                            nextKey.substring(startInstance, endInstance),
+                            ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                            pStrat);
             int classificationID = 0;
             try {
                 classificationID = Integer.parseInt(nextKey.substring(startClassification));
@@ -397,7 +401,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 //FIXME update query with instance ID
         Connection con = null;
         try {
-            
+
             int startInstance = nextKey.indexOf(START_INSTANCE) + START_INSTANCE.length();
             int endInstance = nextKey.indexOf(START_SERVER);
             int startMachine = nextKey.indexOf(START_SERVER) + START_SERVER.length();
@@ -406,23 +410,23 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 
             int machineID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                    tsec.getAccessRecordsForeignKeys(),
-                    nextKey.substring(startMachine, endMachine),
-                    ForeignKeyStore.FK_MACHINES_MACHINE_ID,
-                    pStrat);
-            
+                            tsec.getAccessRecordsForeignKeys(),
+                            nextKey.substring(startMachine, endMachine),
+                            ForeignKeyStore.FK_MACHINES_MACHINE_ID,
+                            pStrat);
+
             int instanceID =
                     ForeignKeyStore.getInstance().getForeignKey(
-                        tsec.getAccessRecordsForeignKeys(),
-                        nextKey.substring(startInstance, endInstance),
-                        ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
-                        pStrat);
-            
+                            tsec.getAccessRecordsForeignKeys(),
+                            nextKey.substring(startInstance, endInstance),
+                            ForeignKeyStore.FK_INSTANCES_INSTANCE_ID,
+                            pStrat);
+
             int classificationID = 0;
             try {
                 classificationID = Integer.parseInt(nextKey.substring(startClassification));
-            } catch (NumberFormatException e) {                
-                logger.error("updateData parse exception",e);
+            } catch (NumberFormatException e) {
+                logger.error("updateData parse exception", e);
             }
             con = getConnection();
             PreparedStatement pstmt =
@@ -452,7 +456,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                 d = dt.toDate();
 
             } catch (IllegalArgumentException pe) {
-                logger.error("ExternalTimingMachingClassificationMinutStats bad date format: ",pe);
+                logger.error("ExternalTimingMachingClassificationMinutStats bad date format: ", pe);
                 d = new Date();
             }
 
@@ -496,7 +500,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
     Connection getConnection() throws SQLException {
         return ConnectionPoolT.getConnection();
     }
- 
+
     public void flush() {
         persistData();
     }
