@@ -15,7 +15,7 @@ package com.bos.art.logParser.db;
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.records.ExternalEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
-import com.bos.art.logParser.tools.SingletonInstanceHelper;
+import com.bos.helper.SingletonInstanceHelper;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
