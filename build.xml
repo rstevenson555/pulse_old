@@ -376,7 +376,7 @@
     <target name="start-collector-command-sol" description="Start the logServer...">
         <echo message="${ant.java.version}"/>
         <java  classname="com.bos.art.logServer.main.Collector"
-              fork="true"
+              fork="false"
               failonerror="true" >
             <jvmarg line="-DCONFIG_OVERRIDE=./solutions_collector_config.yml -DLOG4J_OVERRIDE=./solutions_log4j.properties"/>
             <arg value="${param}"/> 
@@ -391,7 +391,7 @@
     <target name="start-collector-command-omx" description="Start the logServer...">
         <echo message="${ant.java.version}"/>
         <java  classname="com.bos.art.logServer.main.Collector"
-              fork="true"
+              fork="false"
               failonerror="true" >
             <jvmarg line="-DCONFIG_OVERRIDE=./omx_collector_config.yml -DLOG4J_OVERRIDE=./omx_log4j.properties"/>
             <arg value="${param}"/> 
