@@ -71,10 +71,6 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
 
     public void setInstance(StatisticsUnit su) {
         if (su instanceof OnlineReportingDailyStats) {
-//            if (instance != null) {
-//                instance.runnable = false;
-//            }
-//            instance = (OnlineReportingDailyStats) su;
             if (instance.getInstance()!=null) {
                 ((OnlineReportingDailyStats)instance.getInstance()).setRunnable(false);
             }
