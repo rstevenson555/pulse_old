@@ -8,17 +8,16 @@ package com.bos.art.logParser.statistics;
 
 import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.tools.MemoryTool;
+import com.bos.art.logServer.utils.TimeIntervalConstants;
+import org.apache.log4j.Logger;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.bos.art.logServer.utils.TimeIntervalConstants;
-import org.apache.log4j.Logger;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 /**
  * @author I0360D3
@@ -180,7 +179,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
         totalLoads.incrementAndGet();
         //totalLoadTime += loadtime;
         totalLoadTime.addAndGet(loadtime);
-        averageLoadTime.set((int)(totalLoadTime.longValue() / totalLoads.intValue()));
+        averageLoadTime.set((int) (totalLoadTime.longValue() / totalLoads.intValue()));
         if (maxLoadTime.intValue() < loadtime) {
             maxLoadTime.set(loadtime);
         } else if (minLoadTime.intValue() > loadtime) {
