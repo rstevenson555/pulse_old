@@ -118,7 +118,7 @@ public class ClientReader implements Runnable, ClientReaderMBean {
     public static void initSAXFactory(String factoryClassName,
             boolean namespaceAware,
             boolean validating) {
-        System.setProperty("javax.xml.parsers.SAXParserFactory","org.apache.xerces.jaxp.SAXParserFactoryImpl");
+//        System.setProperty("javax.xml.parsers.SAXParserFactory","org.apache.xerces.jaxp.SAXParserFactoryImpl");
         saxFactory = javax.xml.parsers.SAXParserFactory.newInstance();
         saxFactory.setNamespaceAware(namespaceAware);
         saxFactory.setValidating(validating);
