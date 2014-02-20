@@ -11,6 +11,11 @@ import com.bos.art.logParser.broadcast.network.CommunicationChannel;
 import com.bos.art.logParser.db.ConnectionPoolT;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.art.logParser.records.UserRequestTiming;
+import com.bos.helper.MutableSingletonInstanceHelper;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,11 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
 /**
  * @author I0360D3
  *         <p/>
@@ -37,10 +37,13 @@ public class BrowserStats extends StatisticsUnit {
 
     private static final Logger logger = (Logger) Logger.getLogger(BrowserStats.class.getName());
     private static final int MINUTE_DELAY = 5;
-    private static BrowserStats instance = new BrowserStats();
+    private static MutableSingletonInstanceHelper instance = new MutableSingletonInstanceHelper<BrowserStats>(BrowserStats.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new BrowserStats();
+        }
+    };
     private static long writeCount = 0;
-    //private SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
-    //private SimpleDateFormat sdfFullDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static DateTimeFormatter sdfDate = DateTimeFormat.forPattern("yyyy-MM-dd");
     private static DateTimeFormatter sdfFullDate = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private final String SQL_INSERT_STATEMENT = "insert into browserstats" + " (day, browser_id, count, state) values "
@@ -51,10 +54,7 @@ public class BrowserStats extends StatisticsUnit {
     //private TreeMap sessionsTallied;
     private ConcurrentHashMap<String, Date> sessionsTallied;
     private int calls;
-    //private int eventsProcessed;
-    //private int timeSlices;
     private java.util.Date lastDataWriteTime;
-    //private static int counter = 0;
     private java.util.Date currentDate;
     private BrowserRecord totalBrowsers;
 
@@ -66,19 +66,17 @@ public class BrowserStats extends StatisticsUnit {
     }
 
     public static BrowserStats getInstance() {
-        if (instance == null) {
-            instance = new BrowserStats();
-        }
-        return instance;
+        return (BrowserStats) instance.getInstance();
     }
 
     public void setInstance(StatisticsUnit su) {
 
         if (su instanceof BrowserStats) {
-            if (instance != null) {
-                instance.runnable = false;
+
+            if (instance.getInstance() != null) {
+                ((BrowserStats) instance.getInstance()).setRunnable(false);
             }
-            instance = (BrowserStats) su;
+            instance.setInstance(su);
         }
     }
 
