@@ -93,7 +93,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
     }
 
     public static ExternalTimingPersistanceStrategy getInstance() {
-        return (ExternalTimingPersistanceStrategy) instance.getInstance();
+        return (ExternalTimingPersistanceStrategy)instance.getInstance();
     }
 
     public void resetThreadLocalPstmt() {
