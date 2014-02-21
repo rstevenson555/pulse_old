@@ -52,7 +52,7 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     private int objectsRemoved;
     private int objectsProcessed;
     private AtomicLong totalSysTime = new AtomicLong(0);
-    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 256, executor,
+    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 512, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
 
 
