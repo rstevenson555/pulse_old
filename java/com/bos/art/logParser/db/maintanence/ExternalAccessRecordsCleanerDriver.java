@@ -7,25 +7,32 @@
 package com.bos.art.logParser.db.maintanence;
 
 import com.bos.art.logParser.server.Engine;
+import com.bos.helper.SingletonInstanceHelper;
+import org.apache.log4j.Logger;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimerTask;
-import org.apache.log4j.Logger;
 
 /**
  * @author I0360D3
- *
- * TODO To change the template for this generated type comment go to Window - Preferences - Java - Code Style - Code
- * Templates
+ *         <p/>
+ *         TODO To change the template for this generated type comment go to Window - Preferences - Java - Code Style - Code
+ *         Templates
  */
 public class ExternalAccessRecordsCleanerDriver extends TimerTask {
 
-    private static ExternalAccessRecordsCleanerDriver instance = new ExternalAccessRecordsCleanerDriver();
-
-    public static ExternalAccessRecordsCleanerDriver getInstance() {
-        return instance;
-    }
     private static final Logger logger = (Logger) Logger.getLogger(ExternalAccessRecordsCleanerDriver.class.getName());
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM HH:mm:ss yyyy ");
+    private static SingletonInstanceHelper instance = new SingletonInstanceHelper<ExternalAccessRecordsCleanerDriver>(ExternalAccessRecordsCleanerDriver.class) {
+        @Override
+        public java.lang.Object createInstance() {
+            return new ExternalAccessRecordsCleanerDriver();
+        }
+    };
+    public static ExternalAccessRecordsCleanerDriver getInstance() {
+        return (ExternalAccessRecordsCleanerDriver)instance.getInstance();
+    }
 
     public static void main(String args[]) {
         //  If we are in main, then we don't have a logger yet:
@@ -55,6 +62,19 @@ public class ExternalAccessRecordsCleanerDriver extends TimerTask {
         }
     }
 
+    /**
+     * @param arc
+     */
+    private static void printStatus(ExternalAccessRecordsCleaner arc) {
+        System.out.println("-------------");
+        System.out.println("Max RecordPK " + arc.getMaxRecordPK());
+        System.out.println("Min RecordPK " + arc.getMinRecordPK());
+        System.out.println("Cur RecordPK " + arc.getCurrentRecordPK());
+        System.out.println("Est. Fin. T  " + sdf.format(new Date(arc.getEstimatedFinishTime())));
+        System.out.println("Increment sz " + arc.getInitialIncrementAmount());
+        System.out.println("\n");
+    }
+
     public void run() {
         com.bos.art.logParser.server.Engine.initializeDatabaseConnectionPooling();
         ExternalAccessRecordsCleaner arc = new ExternalAccessRecordsCleaner();
@@ -71,19 +91,5 @@ public class ExternalAccessRecordsCleanerDriver extends TimerTask {
                 e.printStackTrace();
             }
         }
-    }
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM HH:mm:ss yyyy ");
-
-    /**
-     * @param arc
-     */
-    private static void printStatus(ExternalAccessRecordsCleaner arc) {
-        System.out.println("-------------");
-        System.out.println("Max RecordPK " + arc.getMaxRecordPK());
-        System.out.println("Min RecordPK " + arc.getMinRecordPK());
-        System.out.println("Cur RecordPK " + arc.getCurrentRecordPK());
-        System.out.println("Est. Fin. T  " + sdf.format(new Date(arc.getEstimatedFinishTime())));
-        System.out.println("Increment sz " + arc.getInitialIncrementAmount());
-        System.out.println("\n");
     }
 }
