@@ -1,7 +1,5 @@
 package com.bos.helper;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -16,6 +14,7 @@ abstract public class SingletonInstanceHelper<X> {
 
     /**
      * constructor the singleton creator
+     *
      * @param create
      */
     public SingletonInstanceHelper(Class create) {
@@ -24,12 +23,14 @@ abstract public class SingletonInstanceHelper<X> {
 
     /**
      * override the createInstance method
+     *
      * @return
      */
     abstract public Object createInstance();
 
     /**
      * ensure that only 1 instance gets created.
+     *
      * @return
      */
     public X getInstance() {
