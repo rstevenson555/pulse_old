@@ -267,7 +267,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
         if (tsec.getTimesPersisted() == 0) {
             logger.info(
                     "FirstTime Persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
 
@@ -278,7 +278,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
         } else if (shouldCloseRecord(tsec)) {
             logger.info(
                     "Closing Data for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateAndCloseData(tsec, nextKey);
@@ -289,7 +289,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
         } else if (tsec.isDatabaseDirty()) {
             logger.debug(
                     "Re-persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateData(tsec, nextKey, "O");

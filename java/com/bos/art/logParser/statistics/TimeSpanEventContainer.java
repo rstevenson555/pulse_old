@@ -68,7 +68,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     private String appName;
     private String context;
     private String remoteHost;
-    private Calendar mtime;
+    private DateTime mtime;
     //	private String hashLookupKey;
     private AccessRecordsForeignKeys accessRecordsForeignKeys;
     // Statistical Data
@@ -105,7 +105,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
         this.appName = app;
         this.context = context;
         this.remoteHost = remoteHost;
-        this.mtime = time;
+        this.mtime = new DateTime(time);
 
         closeTimeForData = new DateTime(mtime);
         closeTimeForData = closeTimeForData.plusMinutes(dataDelayMinutes);
@@ -347,7 +347,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public Calendar getTime() {
-        return mtime;
+        return mtime.toGregorianCalendar();
     }
 
     /**
@@ -414,7 +414,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n\nmachine:").append(machine).append("  :time:").append(fdf.print(mtime.getTime().getTime()));
+        sb.append("\n\nmachine:").append(machine).append("  :time:").append(fdf.print(mtime.getMillis()));
         return sb.toString();
     }
 

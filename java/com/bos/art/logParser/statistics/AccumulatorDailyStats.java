@@ -143,7 +143,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
     /*synchronized*/
     private AccumulatorEventContainer getAccumulatorEventContainer(AccumulatorEventTiming record) {
         //String dateKey = sdf.format(record.getEventTime().getTime());
-        String dateKey = sdf.print(record.getEventTime().getTime().getTime());
+        String dateKey = sdf.print(record.getEventTime().getTimeInMillis());
         String context = record.getContext();
         String key = dateKey + record.getClassification() + context;
         AccumulatorEventContainer lcontainer = (AccumulatorEventContainer) days.get(key);
@@ -154,7 +154,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
             java.util.Date date = null;
 
             try {
-                date = new DateMidnight(record.getEventTime().getTime().getTime()).toDateTime().toDate();
+                date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDateTime().toDate();
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
@@ -260,7 +260,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
         if (aec.getTimesPersisted() == 0) {
             logger.info(
                     "FirstTime Persist for getTime()--lastModTime()"
-                            + fdf.print(aec.getTime().getTime().getTime())
+                            + fdf.print(aec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(aec.getLastModDate().getTime()));
             insertData(aec, nextKey);
@@ -268,7 +268,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
         } else if (shouldCloseRecord(aec)) {
             logger.info(
                     "Closing Data for getTime()--lastModTime()"
-                            + fdf.print(aec.getTime().getTime().getTime())
+                            + fdf.print(aec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(aec.getLastModDate().getTime()));
             updateAndCloseData(aec, nextKey);
@@ -277,7 +277,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
         } else if (aec.isDatabaseDirty()) {
             logger.info(
                     "Re-persist for getTime()--lastModTime()"
-                            + fdf.print(aec.getTime().getTime().getTime())
+                            + fdf.print(aec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(aec.getLastModDate().getTime()));
             updateData(aec, nextKey, "O");
@@ -297,7 +297,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
         Date d = null;
         try {
             try {
-                d = new DateMidnight(tsec.getTime().getTime()).toDate();
+                d = new DateMidnight(tsec.getTime()).toDate();
 
             } catch (IllegalArgumentException pe) {
                 logger.error("AccumlatorDailStats error: ", pe);
@@ -360,7 +360,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
             Date d = null;
             try {
 
-                d = new DateMidnight(tsec.getTime().getTime()).toDate();
+                d = new DateMidnight(tsec.getTime()).toDate();
 
             } catch (IllegalArgumentException pe) {
                 d = new Date();

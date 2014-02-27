@@ -260,7 +260,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
             if (logger.isDebugEnabled()) {
                 logger.debug(
                         "FirstTime Persist for getTime()--lastModTime()"
-                                + fdf.print(tsec.getTime().getTime().getTime())
+                                + fdf.print(tsec.getTime().getTimeInMillis())
                                 + "--"
                                 + fdf.print(tsec.getLastModDate().getTime()));
             }
@@ -275,7 +275,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
         } else if (shouldCloseRecord(tsec)) {
             logger.info(
                     "Closing Data for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateAndCloseData(tsec, nextKey);
@@ -289,7 +289,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
                 if (logger.isDebugEnabled()) {
                     logger.debug(
                             "Re-persist for getTime()--lastModTime()"
-                                    + fdf.print(tsec.getTime().getTime().getTime())
+                                    + fdf.print(tsec.getTime().getTimeInMillis())
                                     + "--"
                                     + fdf.print(tsec.getLastModDate().getTime()));
                 }
@@ -305,7 +305,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
                         "Late Data for AccessRecordsMinute Stats nextKey:Actual Time : "
                                 + nextKey
                                 + ":"
-                                + fdf.print(tsec.getTime().getTime().getTime()));
+                                + fdf.print(tsec.getTime().getTimeInMillis()));
             }
         }
         return shouldRemove;

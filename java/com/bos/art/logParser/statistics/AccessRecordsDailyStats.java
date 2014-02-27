@@ -147,7 +147,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
     }
 
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
-        String key = sdf.print(record.getEventTime().getTime().getTime());
+        String key = sdf.print(record.getEventTime().getTimeInMillis());
         TimeSpanEventContainer container = (TimeSpanEventContainer) days.get(key);
         if (container == null) {
 
@@ -156,7 +156,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
 
             try {
                 //date = record.getEventTime().getTime();
-                date = new DateMidnight(record.getEventTime().getTime().getTime()).toDate();
+                date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDate();
 
             } catch (IllegalArgumentException e) {
                 // TODO Auto-generated catch block
@@ -303,7 +303,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         if (dec.getTimesPersisted() == 0) {
             logger.info(
                     "FirstTime Persist for getTime()--lastModTime()"
-                            + fdf.print(dec.getTime().getTime().getTime())
+                            + fdf.print(dec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(dec.getLastModDate().getTime()));
             insertData(dec, nextKey);
@@ -311,7 +311,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         } else if (shouldCloseRecord(dec)) {
             logger.info(
                     "Closing Data for getTime()--lastModTime()"
-                            + fdf.print(dec.getTime().getTime().getTime())
+                            + fdf.print(dec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(dec.getLastModDate().getTime()));
             updateAndCloseData(dec, nextKey);
@@ -320,7 +320,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         } else if (dec.isDatabaseDirty()) {
             logger.info(
                     "Re-persist for getTime()--lastModTime()"
-                            + fdf.print(dec.getTime().getTime().getTime())
+                            + fdf.print(dec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(dec.getLastModDate().getTime()));
             updateData(dec, nextKey, "O");

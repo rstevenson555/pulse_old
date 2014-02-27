@@ -131,7 +131,7 @@ public class AccumulatorEventContainer implements Serializable,IEventContainer{
     @Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
-		sb.append("\n\time:").append(fdf.print(mtime.getTime().getTime()));
+		sb.append("\n\time:").append(fdf.print(mtime.getTimeInMillis()));
 		return sb.toString();
 	}
 	public String tooString(){

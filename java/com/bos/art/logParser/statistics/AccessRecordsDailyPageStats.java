@@ -134,7 +134,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         UserRequestTiming urt = (UserRequestTiming) record;
         String key =
-                sdf.print(record.getEventTime().getTime().getTime())
+                sdf.print(record.getEventTime().getTimeInMillis())
                         + CONTEXT
                         + record.getContext()
                         + PAGE
@@ -299,7 +299,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             //logger.warn("AccessRecords DailyPageStats persistDataM2 times persisted ==0 : " +nextKey);
             logger.info(
                     "FirstTime Persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             insertData(tsec, nextKey);
@@ -309,7 +309,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             //logger.warn("AccessRecords DailyPageStats persistDataM2 shouldCloseRecord: " +nextKey);
             logger.info(
                     "Closing Data for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateAndCloseData(tsec, nextKey);
@@ -318,7 +318,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
             //logger.warn("AccessRecords DailyPageStats persistDataM2 isDatabaseDirty: " +nextKey);
             logger.info(
                     "Re-persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateData(tsec, nextKey, "O");

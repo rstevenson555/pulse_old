@@ -120,7 +120,7 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
 
     /*synchronized */
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
-        String key = sdf.print(record.getEventTime().getTime().getTime()) + record.getServerName() + record.getInstance();
+        String key = sdf.print(record.getEventTime().getTimeInMillis()) + record.getServerName() + record.getInstance();
         TimeSpanEventContainer container = (TimeSpanEventContainer) hours.get(key);
         if (container == null) {
             ++timeSlices;
@@ -192,14 +192,14 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
         if (tsec.getTimesPersisted() == 0) {
             logger.info(
                     "FirstTime Persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             insertData(tsec, nextKey);
         } else if (shouldCloseRecord(tsec)) {
             logger.info(
                     "Closing Data for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateAndCloseData(tsec, nextKey);
@@ -207,7 +207,7 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
         } else if (tsec.isDatabaseDirty()) {
             logger.info(
                     "Re-persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateData(tsec, nextKey, "O");

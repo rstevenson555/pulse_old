@@ -169,23 +169,23 @@ public class StatisticsModule extends TimerTask implements Serializable {
         List<TransferBean> beans = new ArrayList<TransferBean>();
 
         AccessRecordsMinuteStats mStats = AccessRecordsMinuteStats.getInstance();
-        Map<MinuteStatsKey, TimeSpanEventContainer> h = mStats.getData();
+        Map<MinuteStatsKey, TimeSpanEventContainer> mStatsData = mStats.getData();
 
-        for (MinuteStatsKey s : h.keySet()) {
-            TimeSpanEventContainer tsec = (TimeSpanEventContainer) h.get(s);
-            if (tsec.getTime().getTime().getTime() > broadCastLimitTime) {
-                beans.add(new AccessRecordsMinuteBean(tsec, s));
+        for (MinuteStatsKey s : mStatsData.keySet()) {
+            TimeSpanEventContainer timeSpanEventContainer = mStatsData.get(s);
+            if (timeSpanEventContainer.getTime().getTimeInMillis() > broadCastLimitTime) {
+                beans.add(new AccessRecordsMinuteBean(timeSpanEventContainer, s));
             }
         }
 
         logger.warn("AccessRecords Minute Stat Beans Collected... :" + beans.size()
                 + " : Total Time to Collect those Beans : " + (System.currentTimeMillis() - now.toInstant().getMillis()));
         ExternalTimingMachineClassificationMinuteStats emStats = ExternalTimingMachineClassificationMinuteStats.getInstance();
-        Map<String, TimeSpanEventContainer> h2 = emStats.getData();
+        Map<String, TimeSpanEventContainer> timeSpanEventContainerMap = emStats.getData();
 
-        for (String s : h2.keySet()) {
-            TimeSpanEventContainer timeSpanEventContainer = h2.get(s);
-            if (timeSpanEventContainer.getTime().getTime().getTime() > broadCastLimitTime) {
+        for (String s : timeSpanEventContainerMap.keySet()) {
+            TimeSpanEventContainer timeSpanEventContainer = timeSpanEventContainerMap.get(s);
+            if (timeSpanEventContainer.getTime().getTimeInMillis() > broadCastLimitTime) {
                 beans.add(new ExternalAccessRecordsMinuteBean(timeSpanEventContainer, s));
             }
         }

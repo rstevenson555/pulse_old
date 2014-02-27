@@ -9,6 +9,7 @@ package com.bos.art.logParser.statistics;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import org.apache.log4j.Logger;
 import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -56,10 +57,10 @@ public abstract class StatisticsUnit extends TimerTask implements Serializable {
     }
 
     protected boolean shouldCloseRecord(IEventContainer tsec) {
-        Date currentDate = new Date();
+        DateTime currentDate = new DateTime();
 
-        if (currentDate.after(tsec.getCloseTimeForData().getTime())
-                && currentDate.after(tsec.getCloseTimeForMod().getTime())) {
+        if ( currentDate.isAfter(tsec.getCloseTimeForData().getTimeInMillis())
+                && currentDate.isAfter(tsec.getCloseTimeForMod().getTimeInMillis())) {
             return true;
         }
         return false;

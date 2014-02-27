@@ -74,7 +74,7 @@ public class ExternalAccessHourlyStats extends StatisticsUnit {
 
     /*synchronized */
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
-        String key = sdf.print(record.getEventTime().getTime().getTime());
+        String key = sdf.print(record.getEventTime().getTimeInMillis());
         TimeSpanEventContainer container = (TimeSpanEventContainer) hours.get(key);
         if (container == null) {
             ++timeSlices;

@@ -129,7 +129,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
 
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         ExternalEventTiming eet = (ExternalEventTiming) record;
-        String key = fdfKey.print(record.getEventTime().getTime().getTime())
+        String key = fdfKey.print(record.getEventTime().getTimeInMillis())
                 + START_INSTANCE + eet.getInstance()
                 + START_SERVER + eet.getServerName()
                 + START_CLASSIFICATION + eet.getClassification();
@@ -255,19 +255,19 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         if (tsec.getTimesPersisted() == 0) {
             logger.info(
                     "External Timing FirstTime Persist for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             insertData(tsec, nextKey);
             logger.info(
                     "External Timing persistData Broadcast Called for ...[Initial Write]:"
-                            + fdfKey.print(tsec.getTime().getTime().getTime()));
+                            + fdfKey.print(tsec.getTime().getTimeInMillis()));
 
             broadcast(tsec, nextKey);
         } else if (shouldCloseRecord(tsec)) {
             logger.info(
                     "External Timing Closing Data for getTime()--lastModTime()"
-                            + fdf.print(tsec.getTime().getTime().getTime())
+                            + fdf.print(tsec.getTime().getTimeInMillis())
                             + "--"
                             + fdf.print(tsec.getLastModDate().getTime()));
             updateAndCloseData(tsec, nextKey);
@@ -280,20 +280,20 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
             if (tsec.getTime().getTime().after(broadcastCutOffTime)) {
                 logger.debug(
                         "External Timing Re-persist for getTime()--lastModTime()"
-                                + fdf.print(tsec.getTime().getTime().getTime())
+                                + fdf.print(tsec.getTime().getTimeInMillis())
                                 + "--"
                                 + fdf.print(tsec.getLastModDate().getTime()));
                 updateData(tsec, nextKey, "O");
                 logger.debug(
                         "External Timing persistData Broadcast Called for ...[Update Time Period]:"
-                                + fdfKey.print(tsec.getTime().getTime().getTime()));
+                                + fdfKey.print(tsec.getTime().getTimeInMillis()));
                 broadcast(tsec, nextKey);
             } else {
                 logger.warn(
                         "External Timing Late Data for Minute Stats nextKey:Actuall Time : "
                                 + nextKey
                                 + ":"
-                                + fdf.print(tsec.getTime().getTime().getTime()));
+                                + fdf.print(tsec.getTime().getTimeInMillis()));
             }
         }
         return shouldRemove;

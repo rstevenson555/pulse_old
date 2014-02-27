@@ -243,7 +243,7 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
-            java.sql.Date sqlDate = new java.sql.Date(sec.getTime().getTime().getTime());
+            java.sql.Date sqlDate = new java.sql.Date(sec.getTime().getTimeInMillis());
             con = getConnection();
             pstmt = con.prepareStatement("insert into daily_online_report_summary (day, classification_id, username, reports, state) values (?,?,?,?,?)");
             pstmt.setDate(1, sqlDate);
@@ -272,7 +272,7 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
-            java.sql.Date sqlDate = new java.sql.Date(sec.getTime().getTime().getTime());
+            java.sql.Date sqlDate = new java.sql.Date(sec.getTime().getTimeInMillis());
             con = getConnection();
             pstmt = con.prepareStatement("update daily_online_report_summary set reports = ? where day = ? and classification_id=? and username = ?");
             pstmt.setInt(1, sec.getTotalLoads());
@@ -300,7 +300,7 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
-            java.sql.Date sqlDate = new java.sql.Date(sec.getTime().getTime().getTime());
+            java.sql.Date sqlDate = new java.sql.Date(sec.getTime().getTimeInMillis());
             con = getConnection();
             pstmt = con.prepareStatement("update daily_online_report_summary set reports = ?, state='C' where day = ? and classification_id=? and username = ?");
             pstmt.setInt(1, sec.getTotalLoads());
