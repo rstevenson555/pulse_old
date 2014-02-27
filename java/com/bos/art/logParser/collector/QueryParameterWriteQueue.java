@@ -90,10 +90,10 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean, 
             return new Integer(0);
         }
     };
-    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 256, executor,
+    private Disruptor<DBQueryParamRecordEvent> disruptor = new Disruptor<DBQueryParamRecordEvent>(DBQueryParamRecordEvent.FACTORY, 512, executor,
             ProducerType.SINGLE, new BlockingWaitStrategy());
     private static long batch = 0;
-    ;
+
     private static DateTime batchOneMinute = new DateTime().plusMinutes(1);
     private static DateTime batchNow = new DateTime();
     private int objectsRemoved;
