@@ -259,7 +259,7 @@ public class AccessRecordPersistanceStrategy extends BasePersistanceStrategy imp
             pstmt.setInt(6, fk.fkContextID);
             pstmt.setInt(7, fk.fkAppID);
             pstmt.setInt(8, fk.fkBranchTagID);
-            pstmt.setTimestamp(9, new java.sql.Timestamp(record.getEventTime().getTime().getTime()));
+            pstmt.setTimestamp(9, new java.sql.Timestamp(record.getEventTime().getTimeInMillis()));
             pstmt.setInt(10, record.getLoadTime());
             pstmt.setInt(11, requestType);
             pstmt.setInt(12, requestToken);

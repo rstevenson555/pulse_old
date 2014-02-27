@@ -10,11 +10,15 @@ import com.bos.art.logParser.records.AccessRecordsForeignKeys;
 import com.bos.art.logParser.tools.MemoryTool;
 import com.bos.art.logServer.utils.TimeIntervalConstants;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -47,7 +51,7 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     // persistOpportunities  - Count How Many Times this is Persisted.
     private boolean dirty = true;
     private boolean databaseDirty = true;
-    private Date lastModDate = new Date();
+    private DateTime lastModDate = new DateTime();
     private boolean isReload = false;
     private int timesPersisted = 0;
     private int persistOpportunities = 0;
@@ -55,8 +59,8 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     //
     private int modDelayMinutes = 65;
     private int dataDelayMinutes = 65;
-    private Calendar closeTimeForMod = null;
-    private Calendar closeTimeForData = null;
+    private DateTime closeTimeForMod = null;
+    private DateTime closeTimeForData = null;
     //  Identifying Attributes.
     //  Some of these won't be used, but I wanted it to contain all possiblilities.
     private String machine;
@@ -102,15 +106,12 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
         this.context = context;
         this.remoteHost = remoteHost;
         this.mtime = time;
-//		this.hashLookupKey = ""+machine+app+context+remoteHost+time.getTime();
-        //tmLoadTimes = new TreeSet(new IntegerComparitor());
-        closeTimeForData = GregorianCalendar.getInstance();
-        closeTimeForData.setTime(mtime.getTime());
-        closeTimeForData.add(Calendar.MINUTE, dataDelayMinutes);
 
-        closeTimeForMod = GregorianCalendar.getInstance();
-        closeTimeForMod.setTime(new Date());
-        closeTimeForMod.add(Calendar.MINUTE, modDelayMinutes);
+        closeTimeForData = new DateTime(mtime);
+        closeTimeForData = closeTimeForData.plusMinutes(dataDelayMinutes);
+
+        closeTimeForMod = new DateTime();
+        closeTimeForMod = closeTimeForMod.plusMinutes(modDelayMinutes);
     }
 
     public TimeSpanEventContainer(String machine, String app, String context, String remoteHost, Calendar time, String instance,
@@ -171,9 +172,9 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     public void tally(int loadtime, boolean firstTimeUser, boolean isErrorPage) {
         dirty = true;
         databaseDirty = true;
-        lastModDate = new java.util.Date();
-        closeTimeForMod.setTime(lastModDate);
-        closeTimeForMod.add(Calendar.MINUTE, modDelayMinutes);
+        lastModDate = new DateTime();
+        closeTimeForMod = new DateTime(lastModDate);
+        closeTimeForMod = closeTimeForMod.plusMinutes(modDelayMinutes);
 
         //++totalLoads;
         totalLoads.incrementAndGet();
@@ -447,8 +448,8 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
     /**
      * @return
      */
-    public java.util.Date getLastModDate() {
-        return lastModDate;
+    public Date getLastModDate() {
+        return lastModDate.toDate();
     }
 
     /**
@@ -511,14 +512,14 @@ public class TimeSpanEventContainer implements Serializable, IEventContainer {
      * @return
      */
     public Calendar getCloseTimeForData() {
-        return closeTimeForData;
+        return closeTimeForData.toGregorianCalendar();
     }
 
     /**
      * @return
      */
     public Calendar getCloseTimeForMod() {
-        return closeTimeForMod;
+        return closeTimeForMod.toGregorianCalendar();
     }
 
     /**

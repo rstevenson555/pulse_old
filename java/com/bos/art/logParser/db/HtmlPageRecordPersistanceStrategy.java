@@ -288,7 +288,7 @@ public class HtmlPageRecordPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setInt(2, fk.fkMachineID);
             pstmt.setInt(3, fk.fkContextID);
             pstmt.setInt(4, fk.fkPageID);
-            pstmt.setTimestamp(5, new java.sql.Timestamp(record.getEventTime().getTime().getTime()));
+            pstmt.setTimestamp(5, new java.sql.Timestamp(record.getEventTime().getTimeInMillis()));
             pstmt.setString(6, pre.getSessionId());
             pstmt.setInt(7, requestToken);
             pstmt.setInt(8, requestTokenCount);

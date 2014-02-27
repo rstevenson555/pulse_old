@@ -209,7 +209,7 @@ public class ExternalTimingPersistanceStrategy extends BasePersistanceStrategy i
             pstmt.setInt(3, eet.getClassification());
             pstmt.setInt(4, fk.fkContextID);
             pstmt.setInt(5, fk.fkBranchTagID);
-            pstmt.setTimestamp(6, new java.sql.Timestamp(record.getEventTime().getTime().getTime()));
+            pstmt.setTimestamp(6, new java.sql.Timestamp(record.getEventTime().getTimeInMillis()));
             pstmt.setInt(7, eet.getLoadTime());
             pstmt.setInt(8, fk.fkInstanceID);
 

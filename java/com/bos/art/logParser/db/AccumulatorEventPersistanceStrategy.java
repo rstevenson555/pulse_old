@@ -176,7 +176,7 @@ public class AccumulatorEventPersistanceStrategy extends BasePersistanceStrategy
             pstmt.setInt(4, fk.fkBranchTagID);
             pstmt.setInt(5, fk.fkAppID);
             //pstmt.setString(6, sdfMySQLDate.format(record.getEventTime().getTime()));
-            pstmt.setTimestamp(6, new java.sql.Timestamp(record.getEventTime().getTime().getTime()));
+            pstmt.setTimestamp(6, new java.sql.Timestamp(record.getEventTime().getTimeInMillis()));
             pstmt.setInt(7, getIntValue(eet));
             pstmt.setDouble(8, getDoubleValue(eet));
             pstmt.setString(9, eet.getValue());

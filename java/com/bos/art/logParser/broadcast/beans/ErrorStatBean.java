@@ -129,7 +129,7 @@ public class ErrorStatBean extends TransferBean implements Serializable {
         branchName = event.getBranchName();
         classification = event.getClassification();
         context = event.getContext();
-        eventTime = event.getEventTime().getTime().getTime();
+        eventTime = event.getEventTime().getTimeInMillis();
         server = event.getServerName();
         value = event.getValue();
     }

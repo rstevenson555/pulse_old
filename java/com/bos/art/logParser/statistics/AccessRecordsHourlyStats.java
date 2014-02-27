@@ -217,9 +217,10 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
     }
 
     private boolean shouldCloseRecord(TimeSpanEventContainer tsec) {
-        java.util.Date currentDate = new java.util.Date();
-        if (currentDate.after(tsec.getCloseTimeForData().getTime())
-                && currentDate.after(tsec.getCloseTimeForMod().getTime())) {
+        DateTime currentDate = new DateTime();
+
+        if ( currentDate.isAfter(tsec.getCloseTimeForData().getTimeInMillis())
+                    && currentDate.isAfter(tsec.getCloseTimeForMod().getTimeInMillis())) {
             return true;
         }
         return false;
