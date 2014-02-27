@@ -140,15 +140,15 @@ public class QueryParameterWriteQueue implements QueryParameterWriteQueueMBean, 
     }
 
     public void addLast(final QueryParameters.DBQueryParamRecord o) {
-        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<DBQueryParamRecordEvent>() {
+        disruptor.publishEvent(new EventTranslator<DBQueryParamRecordEvent>() {
             public void translateTo(DBQueryParamRecordEvent event, long sequence) {
                 event.record = o;
             }
 
         });
-        if (!success && (fullCount++ % 100) == 0) {
-            logger.error("QueryParameterWriteQueue failed adding to the QueryParameterWriteQueue: ");
-        }
+//        if (!success && (fullCount++ % 100) == 0) {
+//            logger.error("QueryParameterWriteQueue failed adding to the QueryParameterWriteQueue: ");
+//        }
 
     }
 
