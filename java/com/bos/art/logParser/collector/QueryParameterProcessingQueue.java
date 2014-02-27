@@ -52,9 +52,6 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     private int objectsRemoved;
     private int objectsProcessed;
     private AtomicLong totalSysTime = new AtomicLong(0);
-    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 512, executor,
-            ProducerType.SINGLE, new BlockingWaitStrategy());
-
 
     /**
      * create and start the disruptor to process query parameters.
@@ -69,6 +66,9 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
 
         registerWithMBeanServer();
     }
+
+    private Disruptor<QueryParametersEvent> disruptor = new Disruptor<QueryParametersEvent>(QueryParametersEvent.FACTORY, 512, executor,
+            ProducerType.SINGLE, new BlockingWaitStrategy());
 
     public static QueryParameterProcessingQueue getInstance() {
         return (QueryParameterProcessingQueue) instance.getInstance();
@@ -103,15 +103,21 @@ public class QueryParameterProcessingQueue implements QueryParameterProcessingQu
     }
 
     public void addLast(final QueryParameters o) {
-        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<QueryParametersEvent>() {
+//        boolean success = disruptor.getRingBuffer().tryPublishEvent(new EventTranslator<QueryParametersEvent>() {
+//            public void translateTo(QueryParametersEvent event, long sequence) {
+//                event.record = o;
+//            }
+//
+//        });
+        disruptor.publishEvent(new EventTranslator<QueryParametersEvent>() {
             public void translateTo(QueryParametersEvent event, long sequence) {
                 event.record = o;
             }
 
         });
-        if (!success && (fullCount++ % 100) == 0) {
-            logger.error("Failed adding to the QueryParameterProcessingQueue Queue: ");
-        }
+//        if (!success && (fullCount++ % 100) == 0) {
+//            logger.error("Failed adding to the QueryParameterProcessingQueue Queue: ");
+//        }
     }
 
     // JMX Interface exposed
