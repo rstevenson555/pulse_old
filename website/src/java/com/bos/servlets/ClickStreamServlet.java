@@ -131,7 +131,7 @@ public class ClickStreamServlet {
         // if from time is empty and session is empty
         if (StringUtils.isEmpty(newFromTime) && StringUtils.isEmpty(sessionTXT)) {
             DateTime dt_fromTime = new DateTime();
-            dt_fromTime.minusHours(1);
+            dt_fromTime = dt_fromTime.minusHours(1);
             //newFromTime = "00:00:00";
             newFromTime = timeformat.print(dt_fromTime);
         } else if (!StringUtils.isEmpty(sessionTXT)) {

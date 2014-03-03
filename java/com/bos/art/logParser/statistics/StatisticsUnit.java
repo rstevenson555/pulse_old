@@ -59,7 +59,7 @@ public abstract class StatisticsUnit extends TimerTask implements Serializable {
     protected boolean shouldCloseRecord(IEventContainer tsec) {
         DateTime currentDate = new DateTime();
 
-        if ( currentDate.isAfter(tsec.getCloseTimeForData().getTimeInMillis())
+        if (currentDate.isAfter(tsec.getCloseTimeForData().getTimeInMillis())
                 && currentDate.isAfter(tsec.getCloseTimeForMod().getTimeInMillis())) {
             return true;
         }

@@ -73,12 +73,12 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
     transient private PersistanceStrategy pStrat;
 
     public AccessRecordsMinuteStats() {
         minutes = new ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
     }
 
@@ -176,35 +176,34 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
      * @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.SECOND, SECONDS_DELAY);
-        Date nextWriteDate = gc.getTime();
-        gc.setTime(new java.util.Date());
-        gc.add(Calendar.HOUR, -2);
-        Date broadcastCutOff = gc.getTime();
+
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusSeconds(SECONDS_DELAY);
+
+        DateTime broadcastCutOff = new DateTime();
+        broadcastCutOff = broadcastCutOff.minusHours(2);
 
         if (logger.isDebugEnabled()) {
             logger.debug(
                     "persistCalled for Minute Stats time:nextWriteDate: -- "
                             + System.currentTimeMillis()
                             + ":"
-                            + nextWriteDate.getTime()
+                            + nextWriteDate.getMillis()
                             + " diff:"
-                            + (System.currentTimeMillis() - nextWriteDate.getTime()));
+                            + (System.currentTimeMillis() - nextWriteDate.getMillis()));
         }
 
-        if (new java.util.Date().after(nextWriteDate)) {
+        if (new DateTime().isAfter(nextWriteDate)) {
             if (logger.isDebugEnabled()) {
                 logger.debug(
                         "persistCalled for Minute Stats time:nextWriteDate: -- "
                                 + System.currentTimeMillis()
                                 + ":"
-                                + nextWriteDate.getTime()
+                                + nextWriteDate.getMillis()
                                 + " diff:"
-                                + (System.currentTimeMillis() - nextWriteDate.getTime()));
+                                + (System.currentTimeMillis() - nextWriteDate.getMillis()));
             }
-            lastDataWriteTime = new java.util.Date();
+            lastDataWriteTime = new DateTime();
             for (MinuteStatsKey nextKey : minutes.keySet()) {
                 TimeSpanEventContainer tsec =
                         (TimeSpanEventContainer) minutes.get(nextKey);
@@ -252,7 +251,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
     private boolean persistData(
             TimeSpanEventContainer tsec,
             MinuteStatsKey nextKey,
-            Date broadcastCutOffTime) {
+            DateTime broadcastCutOffTime) {
         //logger.info("persistData Called for :" + fdfKey.format(tsec.getTime()));
         boolean shouldRemove = false;
 
@@ -285,7 +284,7 @@ public class AccessRecordsMinuteStats extends StatisticsUnit {
                             + fdfKey.print(tsec.getTime().getTimeInMillis()));
             broadcast(tsec, nextKey);
         } else if (tsec.isDatabaseDirty()) {
-            if (tsec.getTime().getTime().after(broadcastCutOffTime)) {
+            if (tsec.getTime().getTime().after(broadcastCutOffTime.toDate())) {
                 if (logger.isDebugEnabled()) {
                     logger.debug(
                             "Re-persist for getTime()--lastModTime()"

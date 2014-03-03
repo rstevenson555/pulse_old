@@ -14,6 +14,7 @@ import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.helper.MutableSingletonInstanceHelper;
 import org.apache.log4j.Logger;
 import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -66,11 +67,11 @@ public class AccumulatorDailyStats extends StatisticsUnit {
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
 
     public AccumulatorDailyStats() {
         days = new ConcurrentHashMap<String, AccumulatorEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
     }
 
     public static AccumulatorDailyStats getInstance() {
@@ -239,15 +240,14 @@ public class AccumulatorDailyStats extends StatisticsUnit {
      * @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.MINUTE, MINUTE_DELAY);
-        Date nextWriteDate = gc.getTime();
 
-        if (new java.util.Date().after(nextWriteDate)) {
-            lastDataWriteTime = new java.util.Date();
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusMinutes(MINUTE_DELAY);
+
+        if (new DateTime().isAfter(nextWriteDate)) {
+            lastDataWriteTime = new DateTime();
             for (String nextKey : days.keySet()) {
-                AccumulatorEventContainer aec = (AccumulatorEventContainer) days.get(nextKey);
+                AccumulatorEventContainer aec =  days.get(nextKey);
                 if (persistData(aec, nextKey)) {
                     days.remove(nextKey);
                 }

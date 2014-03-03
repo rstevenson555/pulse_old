@@ -21,9 +21,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,14 +52,14 @@ public class BrowserStats extends StatisticsUnit {
     //private TreeMap sessionsTallied;
     private ConcurrentHashMap<String, Date> sessionsTallied;
     private int calls;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
     private java.util.Date currentDate;
     private BrowserRecord totalBrowsers;
 
     public BrowserStats() {
         browsers = new ConcurrentHashMap<String, BrowserRecord>();
         initBrowsers();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
         totalBrowsers = new BrowserRecord("total", "total");
     }
 
@@ -263,15 +261,18 @@ public class BrowserStats extends StatisticsUnit {
         }
     }
 
+    public static void main(String []args) {
+        DateTime nextWriteDate = new DateTime();
+        nextWriteDate = nextWriteDate.plusMinutes(10);
+        System.out.println(nextWriteDate);
+    }
+
     /*
      * (non-Javadoc) @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        Calendar gc = new GregorianCalendar();
-
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.MINUTE, MINUTE_DELAY);
-        Date nextWriteDate = gc.getTime();
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusMinutes(MINUTE_DELAY);
 
         if (++writeCount % 20 == 0) {
             if (writeCount == Long.MAX_VALUE) {
@@ -281,12 +282,12 @@ public class BrowserStats extends StatisticsUnit {
             reloadBrowsers();
         }
 
-        if (new java.util.Date().after(nextWriteDate)) {
-            lastDataWriteTime = new java.util.Date();
+        if (new DateTime().isAfter(nextWriteDate)) {
+            lastDataWriteTime = new DateTime();
             insertOrUpdate(totalBrowsers);
 
             for (String brKey : browsers.keySet()) {
-                BrowserRecord br = (BrowserRecord) browsers.get(brKey);
+                BrowserRecord br = browsers.get(brKey);
 
                 insertOrUpdate(br);
                 broadcast(br);

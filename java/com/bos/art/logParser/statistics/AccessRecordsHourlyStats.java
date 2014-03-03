@@ -73,12 +73,12 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
     transient private PersistanceStrategy pStrat;
 
     public AccessRecordsHourlyStats() {
         hours = new ConcurrentHashMap<String, TimeSpanEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
     }
 
@@ -146,16 +146,13 @@ public class AccessRecordsHourlyStats extends StatisticsUnit {
      * @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.MINUTE, MINUTE_DELAY);
-        Date nextWriteDate = gc.getTime();
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusMinutes(MINUTE_DELAY);
 
-        if (new java.util.Date().after(nextWriteDate)) {
-            lastDataWriteTime = new java.util.Date();
+        if (new DateTime().isAfter(nextWriteDate)) {
+            lastDataWriteTime = new DateTime();
             for (String nextKey : hours.keySet()) {
-                TimeSpanEventContainer tsec =
-                        (TimeSpanEventContainer) hours.get(nextKey);
+                TimeSpanEventContainer tsec =  hours.get(nextKey);
                 if (persistData(tsec, nextKey)) {
                     hours.remove(nextKey);
                 }

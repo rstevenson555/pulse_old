@@ -27,6 +27,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.bos.art.logServer.utils.TimeIntervalConstants.TEN_MINUTE_DELAY;
+
 /**
  * @author I0360D3
  *         <p/>
@@ -89,11 +91,11 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
     private int calls;
     private int eventsProcessed;
     volatile private int timeSlices;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
 
     public AccessRecordsDailyStats() {
         days = new ConcurrentHashMap<String, TimeSpanEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
     }
 
     public static AccessRecordsDailyStats getInstance() {
@@ -261,9 +263,6 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
                 }
             }
         }
-        //if (container == null) {
-        //logger.error("AccessRecordsDailyStats container IS NULL");
-        //}
 
         return container;
 
@@ -282,13 +281,11 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
      * @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.MINUTE, MINUTE_DELAY);
-        Date nextWriteDate = gc.getTime();
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusMinutes(MINUTE_DELAY);
 
-        if (new java.util.Date().after(nextWriteDate)) {
-            lastDataWriteTime = new java.util.Date();
+        if (new DateTime().isAfter(nextWriteDate)) {
+            lastDataWriteTime = new DateTime();
             for (String nextKey : days.keySet()) {
                 TimeSpanEventContainer tsec =  days.get(nextKey);
                 if (persistData(tsec, nextKey)) {

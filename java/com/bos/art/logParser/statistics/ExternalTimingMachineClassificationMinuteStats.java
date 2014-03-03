@@ -173,38 +173,37 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
      * @see com.bos.art.logParser.statistics.StatisticsUnit#persistData()
      */
     public void persistData() {
-        DateTime gc = new DateTime(lastDataWriteTime);
-        gc = gc.plusSeconds(FIVE_SECOND_DELAY);
-        Date nextWriteDate = gc.toDate();
-        gc = new DateTime();
-        gc = gc.minusHours(2);
-        Date broadcastCutOff = gc.toDate();
+
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusSeconds(FIVE_SECOND_DELAY);
+
+        DateTime broadcastCutOff = new DateTime();
+        broadcastCutOff = broadcastCutOff.minusHours(2);
 
         if (logger.isDebugEnabled()) {
             logger.debug(
                     "persistCalled for External Minute Stats time:nextWriteDate: -- "
                             + System.currentTimeMillis()
                             + ":"
-                            + nextWriteDate.getTime()
+                            + nextWriteDate.getMillis()
                             + " diff:"
-                            + (System.currentTimeMillis() - nextWriteDate.getTime()));
+                            + (System.currentTimeMillis() - nextWriteDate.getMillis()));
         }
 
         DateTime now = new DateTime();
-        if (now.isAfter(nextWriteDate.getTime())) {
+        if (now.isAfter(nextWriteDate)) {
             if (logger.isDebugEnabled()) {
                 logger.debug(
                         "persistCalled for External Minute Stats time:nextWriteDate: -- "
                                 + System.currentTimeMillis()
                                 + ":"
-                                + nextWriteDate.getTime()
+                                + nextWriteDate.getMillis()
                                 + " diff:"
-                                + (System.currentTimeMillis() - nextWriteDate.getTime()));
+                                + (System.currentTimeMillis() - nextWriteDate.getMillis()));
             }
             lastDataWriteTime = now.toDate();
             for (String nextKey : minutes.keySet()) {
-                TimeSpanEventContainer tsec =
-                        (TimeSpanEventContainer) minutes.get(nextKey);
+                TimeSpanEventContainer tsec = minutes.get(nextKey);
                 if (persistData(tsec, nextKey, broadcastCutOff)) {
                     minutes.remove(nextKey);
                 }
@@ -249,7 +248,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
     private boolean persistData(
             TimeSpanEventContainer tsec,
             String nextKey,
-            Date broadcastCutOffTime) {
+            DateTime broadcastCutOffTime) {
         boolean shouldRemove = false;
 
         if (tsec.getTimesPersisted() == 0) {
@@ -277,7 +276,7 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
                             + fdfKey.print(tsec.getTime().getTimeInMillis()));
             broadcast(tsec, nextKey);
         } else if (tsec.isDatabaseDirty()) {
-            if (tsec.getTime().getTime().after(broadcastCutOffTime)) {
+            if (tsec.getTime().getTime().after(broadcastCutOffTime.toDate())) {
                 logger.debug(
                         "External Timing Re-persist for getTime()--lastModTime()"
                                 + fdf.print(tsec.getTime().getTimeInMillis())
@@ -298,9 +297,6 @@ public class ExternalTimingMachineClassificationMinuteStats extends StatisticsUn
         }
         return shouldRemove;
     }
-//    private SimpleDateFormat sdfForClose =
-//            new SimpleDateFormat("yyyyMMddHHmmss");
-//    private Calendar gcForClose = GregorianCalendar.getInstance();
 
     private void insertData(TimeSpanEventContainer tsec, String nextKey) {
         Connection con = null;

@@ -12,7 +12,6 @@ import com.bos.art.logParser.db.PersistanceStrategy;
 import com.bos.art.logParser.records.AccumulatorEventTiming;
 import com.bos.art.logParser.records.ILiveLogParserRecord;
 import com.bos.helper.MutableSingletonInstanceHelper;
-import com.bos.helper.SingletonInstanceHelper;
 import org.apache.log4j.Logger;
 
 import java.sql.Connection;
@@ -21,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author I0360D3
@@ -50,7 +50,7 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
         OnlineReportingClassificationSet.add(new Integer(113));
     }
 
-    private Hashtable eventContainers;
+    private ConcurrentHashMap eventContainers;
     private int calls;
     private int eventsProcessed;
     private java.util.Date lastDataWriteTime;
@@ -60,7 +60,7 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
 
 
     public OnlineReportingDailyStats() {
-        eventContainers = new Hashtable();
+        eventContainers = new ConcurrentHashMap();
         lastDataWriteTime = new java.util.Date();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
     }
@@ -71,8 +71,8 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
 
     public void setInstance(StatisticsUnit su) {
         if (su instanceof OnlineReportingDailyStats) {
-            if (instance.getInstance()!=null) {
-                ((OnlineReportingDailyStats)instance.getInstance()).setRunnable(false);
+            if (instance.getInstance() != null) {
+                ((OnlineReportingDailyStats) instance.getInstance()).setRunnable(false);
             }
             instance.setInstance(su);
         }
@@ -121,58 +121,56 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
         java.sql.Date sqlDate = new java.sql.Date(d.getTime());
         String key = classification.toString().trim() + type.trim() + d.getTime();
 
+        Object o = eventContainers.get(key);
 
-        synchronized (eventContainers) {
-            Object o = eventContainers.get(key);
-
-            if (o != null && o instanceof SimpleEventContainer) {
-                //   First Check Memory for a record.
-                SimpleEventContainer sec = (SimpleEventContainer) o;
-                return sec;
-            }
-            //   We will only get here if we did not find this object in memory, lets look in the database.
-            Connection con = null;
-            PreparedStatement pstmt = null;
-            ResultSet rs = null;
-            //   Second Check The Database for a record.
-            try {
-                con = getConnection();
-                pstmt = con.prepareStatement("Select * from daily_online_report_summary where day=? and classification_id=? and username = ?");
-                pstmt.setDate(1, sqlDate);
-                pstmt.setInt(2, classification.intValue());
-                pstmt.setString(3, type.trim());
-                rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    int recordCount = rs.getInt("reports");
-                    SimpleEventContainer sec = new SimpleEventContainer(d, classification.intValue(), type, recordCount);
-                    eventContainers.put(key, sec);
-                    return sec;
-                }
-            } catch (SQLException se) {
-                logger.error("Exception trying to retrive daily_online_report_summary from database", se);
-            } finally {
-                try {
-                    if (rs != null) {
-                        rs.close();
-                    }
-                    if (pstmt != null) {
-                        pstmt.close();
-                    }
-                    if (con != null) {
-                        con.close();
-                    }
-                } catch (SQLException se) {
-                    logger.error("Exception trying to close the ResultSet, PreparedStatement, or Connection for daily_online_report_summary, ", se);
-                }
-            }
-            //  If we find ourselves here, then we need to create a new record, and mark it as new so as to insert into the database.
-            //   Finally create a new record. 
-            SimpleEventContainer sec = new SimpleEventContainer(d, classification.intValue(), type);
-            logger.warn("Tally Hit: Create new SimpleEventContainer...");
-            sec.setIsNew(true);
-            eventContainers.put(key, sec);
+        if (o != null && o instanceof SimpleEventContainer) {
+            //   First Check Memory for a record.
+            SimpleEventContainer sec = (SimpleEventContainer) o;
             return sec;
         }
+        //   We will only get here if we did not find this object in memory, lets look in the database.
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        //   Second Check The Database for a record.
+        try {
+            con = getConnection();
+            pstmt = con.prepareStatement("Select * from daily_online_report_summary where day=? and classification_id=? and username = ?");
+            pstmt.setDate(1, sqlDate);
+            pstmt.setInt(2, classification.intValue());
+            pstmt.setString(3, type.trim());
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                int recordCount = rs.getInt("reports");
+                SimpleEventContainer sec = new SimpleEventContainer(d, classification.intValue(), type, recordCount);
+                eventContainers.put(key, sec);
+                return sec;
+            }
+        } catch (SQLException se) {
+            logger.error("Exception trying to retrive daily_online_report_summary from database", se);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (con != null) {
+                    con.close();
+                }
+            } catch (SQLException se) {
+                logger.error("Exception trying to close the ResultSet, PreparedStatement, or Connection for daily_online_report_summary, ", se);
+            }
+        }
+        //  If we find ourselves here, then we need to create a new record, and mark it as new so as to insert into the database.
+        //   Finally create a new record.
+        SimpleEventContainer sec = new SimpleEventContainer(d, classification.intValue(), type);
+        logger.warn("Tally Hit: Create new SimpleEventContainer...");
+        sec.setIsNew(true);
+        eventContainers.put(key, sec);
+        return sec;
+
     }
 
     public String toString() {
@@ -188,6 +186,7 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
      */
     public void persistData() {
         long nextWriteTime = lastDataWriteTime.getTime() + WRITE_DELAY_SECONDS * 1000L;
+
         if (System.currentTimeMillis() > nextWriteTime) {
             Iterator iter = eventContainers.keySet().iterator();
             ArrayList removals = new ArrayList();
@@ -204,11 +203,11 @@ public class OnlineReportingDailyStats extends StatisticsUnit {
                 }
             }
             iter = removals.iterator();
-            synchronized (eventContainers) {
-                while (iter.hasNext()) {
-                    eventContainers.remove(iter.next());
-                }
+
+            while (iter.hasNext()) {
+                eventContainers.remove(iter.next());
             }
+
             lastDataWriteTime = new java.util.Date();
         }
     }

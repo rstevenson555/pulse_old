@@ -80,11 +80,11 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
 
     public AccessRecordsDailyPageStats() {
         hours = new ConcurrentHashMap<String, TimeSpanEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
     }
 
     public static AccessRecordsDailyPageStats getInstance() {
@@ -277,15 +277,14 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
      */
     public void persistData() {
 
-        DateTime gc = new DateTime(lastDataWriteTime);
-        gc.plusMinutes(TEN_MINUTE_DELAY);
-        Date nextWriteDate = gc.toDate();
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusMinutes(TEN_MINUTE_DELAY);
 
-        if (new java.util.Date().after(nextWriteDate)) {
-            lastDataWriteTime = new java.util.Date();
+        if (new DateTime().isAfter(nextWriteDate)) {
+            // need to update the lastDataWriteTime
+            lastDataWriteTime = new DateTime();
             for (String nextKey : hours.keySet()) {
-                TimeSpanEventContainer tsec =
-                        (TimeSpanEventContainer) hours.get(nextKey);
+                TimeSpanEventContainer tsec = hours.get(nextKey);
                 if (persistData(tsec, nextKey)) {
                     hours.remove(nextKey);
                 }

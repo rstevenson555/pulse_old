@@ -89,7 +89,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     private int calls;
     private int eventsProcessed;
     private int timeSlices;
-    private java.util.Date lastDataWriteTime;
+    private DateTime lastDataWriteTime;
     transient private PersistanceStrategy pStrat;
     private java.util.Date lastPersistDate;
 
@@ -97,7 +97,7 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
     public AccessRecordsMinuteMachineStats() {
 
         minutes = new ConcurrentHashMap<MinuteStatsKey, TimeSpanEventContainer>();
-        lastDataWriteTime = new java.util.Date();
+        lastDataWriteTime = new DateTime();
         pStrat = AccessRecordPersistanceStrategy.getInstance();
 
     }
@@ -196,19 +196,17 @@ public class AccessRecordsMinuteMachineStats extends StatisticsUnit {
 
     public void persistData() {
 
-        Calendar gc = new GregorianCalendar();
-        gc.setTime(lastDataWriteTime);
-        gc.add(Calendar.SECOND, SECONDS_DELAY);
-        Date nextWriteDate = gc.getTime();
-        logger.info("persistCalled for Minute Stats time:nextWriteDate: -- " + System.currentTimeMillis() + ":" + nextWriteDate.getTime() + " diff:" + (System.currentTimeMillis() - nextWriteDate.getTime()));
+        DateTime nextWriteDate = new DateTime(lastDataWriteTime);
+        nextWriteDate = nextWriteDate.plusSeconds(SECONDS_DELAY);
 
-        if (new java.util.Date().after(nextWriteDate)) {
-            logger.info("persistCalled for Minute Stats time:nextWriteDate: -- " + System.currentTimeMillis() + ":" + nextWriteDate.getTime() + " diff:" + (System.currentTimeMillis() - nextWriteDate.getTime()));
-            lastDataWriteTime = new java.util.Date();
+        logger.info("persistCalled for Minute Stats time:nextWriteDate: -- " + System.currentTimeMillis() + ":" + nextWriteDate.getMillis() + " diff:" + (System.currentTimeMillis() - nextWriteDate.getMillis()));
+
+        if (new DateTime().isAfter(nextWriteDate)) {
+            logger.info("persistCalled for Minute Stats time:nextWriteDate: -- " + System.currentTimeMillis() + ":" + nextWriteDate.getMillis() + " diff:" + (System.currentTimeMillis() - nextWriteDate.getMillis()));
+            lastDataWriteTime = new DateTime();
 
             for (MinuteStatsKey nextKey : minutes.keySet()) {
-                TimeSpanEventContainer tsec =
-                        (TimeSpanEventContainer) minutes.get(nextKey);
+                TimeSpanEventContainer tsec =  minutes.get(nextKey);
                 if (persistData(tsec, nextKey)) {
                     minutes.remove(nextKey);
                 }
