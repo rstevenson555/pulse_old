@@ -22,12 +22,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static com.bos.art.logServer.utils.TimeIntervalConstants.TEN_MINUTE_DELAY;
 
 /**
  * @author I0360D3
@@ -137,9 +133,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
             ++calls;
             int totalCount = 0;
             for (String nextKey : days.keySet()) {
-                //String nextKey = (String) keys.nextElement();
-                TimeSpanEventContainer tsec =
-                        (TimeSpanEventContainer) days.get(nextKey);
+                TimeSpanEventContainer tsec = days.get(nextKey);
                 totalCount += tsec.getSize();
             }
 
@@ -150,14 +144,13 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
 
     private TimeSpanEventContainer getTimeSpanEventContainer(ILiveLogParserRecord record) {
         String key = sdf.print(record.getEventTime().getTimeInMillis());
-        TimeSpanEventContainer container = (TimeSpanEventContainer) days.get(key);
+        TimeSpanEventContainer container =  days.get(key);
         if (container == null) {
 
-            DateTime ltime = new DateTime();
+            DateTime ltime = null;
             DateTime date = null;
 
             try {
-                //date = record.getEventTime().getTime();
                 date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDateTime();
 
             } catch (IllegalArgumentException e) {
@@ -255,7 +248,6 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         } finally {
             if (con != null) {
                 try {
-//					con.commit();
                     con.close();
                 } catch (Throwable t) {
                     //TODO Logger
@@ -287,7 +279,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         if (new DateTime().isAfter(nextWriteDate)) {
             lastDataWriteTime = new DateTime();
             for (String nextKey : days.keySet()) {
-                TimeSpanEventContainer tsec =  days.get(nextKey);
+                TimeSpanEventContainer tsec = days.get(nextKey);
                 if (persistData(tsec, nextKey)) {
                     days.remove(nextKey);
                 }
@@ -383,7 +375,6 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         } finally {
             if (con != null) {
                 try {
-//					con.commit();
                     con.close();
                 } catch (Throwable t) {
                     //TODO Logger
@@ -418,15 +409,14 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
             pstmt.setString(17, state);
             Date d = null;
             try {
-                //d = sdf.parse( nextKey );
                 DateTime dt = sdf.parseDateTime(nextKey);
                 d = dt.toDate();
 
             } catch (IllegalArgumentException pe) {
+                logger.warn("bad date defaulting the value:");
                 d = new Date();
             }
             pstmt.setDate(18, new java.sql.Date(d.getTime()));
-            //pstmt.setString(18, nextKey                       );
 
             pstmt.execute();
             pstmt.close();
@@ -442,7 +432,6 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         } finally {
             if (con != null) {
                 try {
-//					con.commit();
                     con.close();
                 } catch (Throwable t) {
                     //TODO Logger

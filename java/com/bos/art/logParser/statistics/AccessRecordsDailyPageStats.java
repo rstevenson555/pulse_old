@@ -143,10 +143,8 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                         + ForeignKeyStore.getInstance().getMachineType(urt.getServerName())
                         + START_INSTANCE
                         + "ALL";
-        //+ urt.getInstance();
 
-        TimeSpanEventContainer container =
-                (TimeSpanEventContainer) hours.get(key);
+        TimeSpanEventContainer container = hours.get(key);
         if (container == null) {
 
             ++timeSlices;
@@ -162,7 +160,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                                 record.getRemoteHost(),
                                 record.getEventTime(),
                                 "ALL");
-                //record.getInstance());
             }
             hours.put(key, container);
         }
@@ -175,7 +172,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         int pageID = getPageIDFromKey(key, ltime.toDate());
         int contextID = getContextIDFromKey(key, ltime.toDate());
         String machineType = getMachineTypeFromKey(key, ltime.toDate());
-        //int instanceID = getInstanceIDFromKey(key, ltime.getTime());
         int instanceID = 0;
         try {
 
@@ -244,7 +240,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         } finally {
             if (con != null) {
                 try {
-//					con.commit();
                     con.close();
                 } catch (Throwable t) {
                     logger.error("Exception Closing Connection .. ", t);
@@ -263,8 +258,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         sb.append(calls).append(":").append(eventsProcessed).append(":").append(timeSlices).append("\n");
         for (String nextKey : hours.keySet()) {
             sb.append("\nnextKey   : ").append(nextKey);
-            TimeSpanEventContainer tsec =
-                    (TimeSpanEventContainer) hours.get(nextKey);
+            TimeSpanEventContainer tsec = hours.get(nextKey);
             sb.append(tsec.getTotalLoads());
         }
 
@@ -569,7 +563,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 d = new Date();
             }
             pstmt.setDate(17, new java.sql.Date(d.getTime()));
-            //pstmt.setString(17, nextKey.substring(0, DATE_LENGTH) + "000000");
             pstmt.setInt(18, pageID);
             pstmt.setInt(19, contextID);
             pstmt.setString(20, machineType);
@@ -592,7 +585,6 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         } finally {
             if (con != null) {
                 try {
-//					con.commit();
                     con.close();
                 } catch (Throwable t) {
                     //TODO Logger
