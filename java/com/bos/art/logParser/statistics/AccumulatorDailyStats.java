@@ -80,11 +80,18 @@ public class AccumulatorDailyStats extends StatisticsUnit {
 
     public void setInstance(StatisticsUnit su) {
         if (su instanceof AccumulatorDailyStats) {
-            if (instance.getInstance()!=null) {
+            if (instance.getInstance() != null) {
                 ((AccumulatorDailyStats) instance.getInstance()).setRunnable(false);
             }
             instance.setInstance(su);
         }
+    }
+
+    public static void main(String[] rags) {
+        Date d = new Date();
+        System.out.println(d);
+        d = new DateMidnight(d).toDate();
+        System.out.println(d);
     }
 
     /* (non-Javadoc)
@@ -143,28 +150,26 @@ public class AccumulatorDailyStats extends StatisticsUnit {
 
     /*synchronized*/
     private AccumulatorEventContainer getAccumulatorEventContainer(AccumulatorEventTiming record) {
-        //String dateKey = sdf.format(record.getEventTime().getTime());
         String dateKey = sdf.print(record.getEventTime().getTimeInMillis());
         String context = record.getContext();
         String key = dateKey + record.getClassification() + context;
-        AccumulatorEventContainer lcontainer = (AccumulatorEventContainer) days.get(key);
+        AccumulatorEventContainer lcontainer = days.get(key);
 
         if (lcontainer == null) {
 
-            Calendar ltime = GregorianCalendar.getInstance();
-            java.util.Date date = null;
+            DateTime ltime = null;
+            DateTime date = null;
 
             try {
-                date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDateTime().toDate();
+                date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDateTime();
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
 
-
             if (date != null) {
-                ltime.setTime(date);
+                ltime = new DateTime(date);
             } else {
-                ltime.setTime(new java.util.Date());
+                ltime = new DateTime();
                 logger.error("Accumulator Event Daily Stats -- Setting unparseable date to current time");
             }
 
@@ -172,10 +177,10 @@ public class AccumulatorDailyStats extends StatisticsUnit {
             // Try to get the container from the database.
             int contextid = ForeignKeyStore.getInstance().getForeignKey(null, context, ForeignKeyStore.FK_CONTEXTS_CONTEXT_ID, AccessRecordPersistanceStrategy.getInstance());
 
-            lcontainer = getFromDatabase(stripTime(record.getEventTime().getTime()), key, ltime, record.getClassification(), contextid);
+            lcontainer = getFromDatabase(stripTime(record.getEventTime().getTime()), key, ltime.toGregorianCalendar(), record.getClassification(), contextid);
 
             if (lcontainer == null) {
-                lcontainer = new AccumulatorEventContainer(record.getClassification(), ltime, contextid);
+                lcontainer = new AccumulatorEventContainer(record.getClassification(), ltime.toGregorianCalendar(), contextid);
             }
 
             days.put(key, lcontainer);
@@ -247,7 +252,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
         if (new DateTime().isAfter(nextWriteDate)) {
             lastDataWriteTime = new DateTime();
             for (String nextKey : days.keySet()) {
-                AccumulatorEventContainer aec =  days.get(nextKey);
+                AccumulatorEventContainer aec = days.get(nextKey);
                 if (persistData(aec, nextKey)) {
                     days.remove(nextKey);
                 }
@@ -294,14 +299,14 @@ public class AccumulatorDailyStats extends StatisticsUnit {
     private void insertData(AccumulatorEventContainer tsec, String nextKey) {
         Connection con = null;
         int accumulatorStatID = 0;
-        Date d = null;
+        DateTime d = null;
         try {
             try {
-                d = new DateMidnight(tsec.getTime()).toDate();
+                d = new DateMidnight(tsec.getTime()).toDateTime();
 
             } catch (IllegalArgumentException pe) {
                 logger.error("AccumlatorDailStats error: ", pe);
-                d = new Date();
+                d = new DateTime();
             }
 
 
@@ -310,9 +315,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
 
             con = getConnection();
             PreparedStatement pstmt = con.prepareStatement(SQL_INSERT_STATEMENT);
-            //pstmt.setString(1, time                        );
-            //pstmt.setTimestamp(1, new java.sql.Timestamp( tsec.getTime().getTime().getTime()));
-            pstmt.setTimestamp(1, new java.sql.Timestamp(d.getTime()));
+            pstmt.setTimestamp(1, new java.sql.Timestamp(d.getMillis()));
             pstmt.setInt(2, accumulatorStatID);
             pstmt.setInt(3, value);
             pstmt.setInt(4, tsec.getAccumulationCount());
@@ -329,7 +332,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
                     sse.printStackTrace();
                 }
             } else {
-                logger.error("AccumlatorDailyStats error inserting: time, accumulatorStatID " + mysql2.print(d.getTime()) + " " + accumulatorStatID, se);
+                logger.error("AccumlatorDailyStats error inserting: time, accumulatorStatID " + mysql2.print(d.getMillis()) + " " + accumulatorStatID, se);
             }
 
         } finally {
@@ -357,16 +360,16 @@ public class AccumulatorDailyStats extends StatisticsUnit {
             pstmt.setInt(2, tsec.getAccumulationCount());
             //pstmt.setString(3   ,   time                );
             //
-            Date d = null;
+            DateTime d = null;
             try {
 
-                d = new DateMidnight(tsec.getTime()).toDate();
+                d = new DateMidnight(tsec.getTime()).toDateTime();
 
             } catch (IllegalArgumentException pe) {
-                d = new Date();
+                d = new DateTime();
             }
             //pstmt.setTimestamp(3, new java.sql.Timestamp( tsec.getTime().getTime().getTime() ));
-            pstmt.setTimestamp(3, new java.sql.Timestamp(d.getTime()));
+            pstmt.setTimestamp(3, new java.sql.Timestamp(d.getMillis()));
             pstmt.setInt(4, accumulatorStatID);
             pstmt.setInt(5, tsec.getContextID());
 
