@@ -153,23 +153,23 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         TimeSpanEventContainer container = (TimeSpanEventContainer) days.get(key);
         if (container == null) {
 
-            Calendar ltime = GregorianCalendar.getInstance();
-            java.util.Date date = null;
+            DateTime ltime = new DateTime();
+            DateTime date = null;
 
             try {
                 //date = record.getEventTime().getTime();
-                date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDate();
+                date = new DateMidnight(record.getEventTime().getTimeInMillis()).toDateTime();
 
             } catch (IllegalArgumentException e) {
                 // TODO Auto-generated catch block
-                date = new Date();
+                date = new DateTime();
                 e.printStackTrace();
             }
 
             if (date != null) {
-                ltime.setTime(date);
+                ltime = new DateTime(date);
             } else {
-                ltime.setTime(new java.util.Date());
+                ltime = new DateTime();
                 logger.error("Access Records Daily Stats -- Setting unparseable date to current time");
             }
 
@@ -178,7 +178,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
             container = getFromDatabase(stripTime(record.getEventTime().getTime()), null, ltime);
 
             if (container == null) {
-                container = new TimeSpanEventContainer(record.getServerName(), record.getAppName(), record.getContext(), record.getRemoteHost(), ltime, record.getInstance());
+                container = new TimeSpanEventContainer(record.getServerName(), record.getAppName(), record.getContext(), record.getRemoteHost(), ltime.toGregorianCalendar(), record.getInstance());
             }
 
             days.put(key, container);
@@ -186,7 +186,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
         return container;
     }
 
-    private TimeSpanEventContainer getFromDatabase(Date dateKey, String k, Calendar ltime) {
+    private TimeSpanEventContainer getFromDatabase(Date dateKey, String k, DateTime dateTime) {
         Connection con = null;
         TimeSpanEventContainer container = null;
         try {
@@ -219,7 +219,7 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
                 long ptotalLoadTime = 1l * paverageLoadTime * ptotalLoads;
 
 
-                container = new TimeSpanEventContainer("Summary", "Summary", "Summary", "Summary", ltime, "Summary",
+                container = new TimeSpanEventContainer("Summary", "Summary", "Summary", "Summary", dateTime.toGregorianCalendar(), "Summary",
                         ptotalLoads,
                         paverageLoadTime,
                         ptotalLoadTime,
@@ -337,18 +337,18 @@ public class AccessRecordsDailyStats extends StatisticsUnit {
             con = getConnection();
             PreparedStatement pstmt = con.prepareStatement(SQL_INSERT_STATEMENT);
 
-            Date d = null;
+            DateTime d = null;
             try {
                 //d = sdf.parse( nextKey );
                 DateTime dt = sdf.parseDateTime(nextKey);
-                d = dt.toDate();
+                d = dt;
 
             } catch (IllegalArgumentException pe) {
-                d = new Date();
+                d = new DateTime();
             }
 
             //pstmt.setString(1, nextKey                        );
-            pstmt.setDate(1, new java.sql.Date(d.getTime()));
+            pstmt.setDate(1, new java.sql.Date(d.getMillis()));
             pstmt.setInt(2, tsec.getThirtySecondLoads());
             pstmt.setInt(3, tsec.getTwentySecondLoads());
             pstmt.setInt(4, tsec.getFifteenSecondLoads());

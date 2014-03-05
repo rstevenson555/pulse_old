@@ -151,7 +151,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
 
             ++timeSlices;
 
-            container = getFromDatabase(stripTime(record.getEventTime().getTime()), key, record.getEventTime());
+            container = getFromDatabase(stripTime(record.getEventTime().getTime()), key, new DateTime(record.getEventTime()));
 
             if (container == null) {
                 container =
@@ -169,12 +169,12 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
         return container;
     }
 
-    private TimeSpanEventContainer getFromDatabase(Date dateKey, String key, Calendar ltime) {
+    private TimeSpanEventContainer getFromDatabase(Date dateKey, String key, DateTime ltime) {
         Connection con = null;
         TimeSpanEventContainer container = null;
-        int pageID = getPageIDFromKey(key, ltime.getTime());
-        int contextID = getContextIDFromKey(key, ltime.getTime());
-        String machineType = getMachineTypeFromKey(key, ltime.getTime());
+        int pageID = getPageIDFromKey(key, ltime.toDate());
+        int contextID = getContextIDFromKey(key, ltime.toDate());
+        String machineType = getMachineTypeFromKey(key, ltime.toDate());
         //int instanceID = getInstanceIDFromKey(key, ltime.getTime());
         int instanceID = 0;
         try {
@@ -210,7 +210,7 @@ public class AccessRecordsDailyPageStats extends StatisticsUnit {
                 int ptotalUsers = pdistinctUsers;
                 long ptotalLoadTime = 1l * paverageLoadTime * ptotalLoads;
 
-                container = new TimeSpanEventContainer("Summary", "Summary", "Summary", "Summary", ltime, "Summary",
+                container = new TimeSpanEventContainer("Summary", "Summary", "Summary", "Summary", ltime.toGregorianCalendar(), "Summary",
                         ptotalLoads,
                         paverageLoadTime,
                         ptotalLoadTime,

@@ -177,7 +177,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
             // Try to get the container from the database.
             int contextid = ForeignKeyStore.getInstance().getForeignKey(null, context, ForeignKeyStore.FK_CONTEXTS_CONTEXT_ID, AccessRecordPersistanceStrategy.getInstance());
 
-            lcontainer = getFromDatabase(stripTime(record.getEventTime().getTime()), key, ltime.toGregorianCalendar(), record.getClassification(), contextid);
+            lcontainer = getFromDatabase(stripTime(record.getEventTime().getTime()), key, ltime, record.getClassification(), contextid);
 
             if (lcontainer == null) {
                 lcontainer = new AccumulatorEventContainer(record.getClassification(), ltime.toGregorianCalendar(), contextid);
@@ -188,7 +188,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
         return lcontainer;
     }
 
-    private AccumulatorEventContainer getFromDatabase(Date dateKey, String key, Calendar ltime, int accumulatorID, int contextID) {
+    private AccumulatorEventContainer getFromDatabase(Date dateKey, String key, DateTime ltime, int accumulatorID, int contextID) {
         Connection con = null;
         AccumulatorEventContainer container = null;
         try {
@@ -207,7 +207,7 @@ public class AccumulatorDailyStats extends StatisticsUnit {
             if (returnval) {
                 int value = rs.getInt("Value");
                 int count = rs.getInt("Count");
-                container = new AccumulatorEventContainer(accumulatorID, ltime, value, count, contextID);
+                container = new AccumulatorEventContainer(accumulatorID, ltime.toGregorianCalendar(), value, count, contextID);
                 container.setTimesPersisted(1);
             }
             rs.close();
