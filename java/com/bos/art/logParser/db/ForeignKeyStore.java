@@ -251,16 +251,15 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
 
     private int binaryTreeSearch(String foreignKeyValue, String foreignKeyName, AccessRecordsForeignKeys fk) {
         if (foreignKeyName.equals(ForeignKeyStore.FK_SESSIONS_SESSION_ID)) {
-            Date now = new Date();
             SessionDataClass sdc = new SessionDataClass();
-            sdc.firstRequestDate = fk.eventTime;
-            sdc.lastRequestDate = fk.eventTime;
-            sdc.touchDate = now;
+            sdc.firstRequestDate = new DateTime(fk.eventTime);
+            sdc.lastRequestDate = new DateTime(fk.eventTime);
+            sdc.touchDate = new DateTime();
             sdc.sessionTXT = foreignKeyValue;
             sdc.Context_ID = fk.fkContextID;
             return binaryTreeSearch(sdc, foreignKeyName);
         } else if (foreignKeyName.equals(ForeignKeyStore.FK_QUERY_PARAMETER_ID)) {
-            Date now = new Date();
+            DateTime now = new DateTime();
             QueryParamClass qpc = new QueryParamClass();
             qpc.entryDate = now;
             qpc.lastTouchDate = now;
@@ -310,7 +309,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 //boolean statechange = false;
                 //StringBuilder sb = new StringBuilder();
                 QueryParamClass qpcTree = (QueryParamClass) o;
-                qpcTree.lastTouchDate = new java.util.Date();
+                qpcTree.lastTouchDate = new DateTime();
                 qpcTree.touchCount++;
                 iForeignKey = qpcTree.queryParamID;
 
@@ -345,13 +344,13 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 boolean statechange = false;
                 StringBuilder sb = new StringBuilder();
                 SessionDataClass sdc = (SessionDataClass) o;
-                sdc.touchDate = new java.util.Date();
+                sdc.touchDate = new DateTime();
                 sdc.firstRequestDate =
-                        (sdc.firstRequestDate.before(sessionData.firstRequestDate))
+                        (sdc.firstRequestDate.isBefore(sessionData.firstRequestDate))
                                 ? sdc.firstRequestDate
                                 : sessionData.firstRequestDate;
                 sdc.lastRequestDate =
-                        (sdc.lastRequestDate.after(sessionData.lastRequestDate))
+                        (sdc.lastRequestDate.isAfter(sessionData.lastRequestDate))
                                 ? sdc.lastRequestDate
                                 : sessionData.lastRequestDate;
                 sdc.touchCount++;
@@ -411,9 +410,9 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 foreignKeyTables.put(foreignKeyName, tm);
             }
             SessionDataClass sdc = new SessionDataClass();
-            sdc.firstRequestDate = fk.eventTime;
-            sdc.lastRequestDate = fk.eventTime;
-            sdc.touchDate = new java.util.Date();
+            sdc.firstRequestDate = new DateTime(fk.eventTime);
+            sdc.lastRequestDate = new DateTime(fk.eventTime);
+            sdc.touchDate = new DateTime();
             sdc.sessionTXT = foreignKeyValue;
             sdc.sessionID = intForeignKey;
             sdc.touchCount = 1;
@@ -427,8 +426,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 foreignKeyTables.put(foreignKeyName, tm);
             }
             QueryParamClass qpc = new QueryParamClass();
-            qpc.entryDate = new java.util.Date();
-            qpc.lastTouchDate = new java.util.Date();
+            qpc.entryDate = new DateTime();
+            qpc.lastTouchDate = new DateTime();
             qpc.queryParam = foreignKeyValue;
             qpc.queryParamID = intForeignKey;
             qpc.touchCount = 1;
@@ -496,19 +495,19 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             Map<String, Object> tm = foreignKeyTables.get(ForeignKeyStore.FK_SESSIONS_SESSION_ID);
 
             if (tm != null) {
-                java.util.Date removeDate;
-                java.util.Date oneMinDate;
-                java.util.Date fiveMinDate;
-                java.util.Date tenMinDate;
-                java.util.Date thirtyMinDate;
+                DateTime removeDate;
+                DateTime oneMinDate;
+                DateTime fiveMinDate;
+                DateTime tenMinDate;
+                DateTime thirtyMinDate;
 
                 DateTime now = new DateTime();
 
-                oneMinDate = now.minusMinutes(1).toDate();
-                fiveMinDate = now.minusMinutes(5).toDate();
-                tenMinDate = now.minusMinutes(10).toDate();
-                thirtyMinDate = now.minusMinutes(30).toDate();
-                removeDate = now.minusMinutes(SESSION_REMOVAL_MINUTES).toDate();
+                oneMinDate = now.minusMinutes(1);
+                fiveMinDate = now.minusMinutes(5);
+                tenMinDate = now.minusMinutes(10);
+                thirtyMinDate = now.minusMinutes(30);
+                removeDate = now.minusMinutes(SESSION_REMOVAL_MINUTES);
 
                 List<String> removeKeys = new ArrayList<String>();
 
@@ -517,7 +516,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                     if (o instanceof SessionDataClass) {
                         SessionDataClass sdc = (SessionDataClass) o;
 
-                        if (sdc.lastRequestDate.after(oneMinDate)) {
+                        if (sdc.lastRequestDate.isAfter(oneMinDate)) {
                             sdc.persistOneMinuteSession = true;
                             allPersistableObjects.add(sdc);
                             incrementOneMinSessions(sdc, htSessionCounts);
@@ -525,19 +524,19 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                             incrementTenMinSessions(sdc, htSessionCounts);
                             incrementThirtyMinSessions(sdc, htSessionCounts);
 
-                        } else if (sdc.lastRequestDate.after(fiveMinDate)) {
+                        } else if (sdc.lastRequestDate.isAfter(fiveMinDate)) {
                             incrementFiveMinSessions(sdc, htSessionCounts);
                             incrementTenMinSessions(sdc, htSessionCounts);
                             incrementThirtyMinSessions(sdc, htSessionCounts);
 
-                        } else if (sdc.lastRequestDate.after(tenMinDate)) {
+                        } else if (sdc.lastRequestDate.isAfter(tenMinDate)) {
                             incrementTenMinSessions(sdc, htSessionCounts);
                             incrementThirtyMinSessions(sdc, htSessionCounts);
 
-                        } else if (sdc.lastRequestDate.after(thirtyMinDate)) {
+                        } else if (sdc.lastRequestDate.isAfter(thirtyMinDate)) {
                             incrementThirtyMinSessions(sdc, htSessionCounts);
 
-                        } else if (sdc.lastRequestDate.before(removeDate) && sdc.touchDate.before(removeDate)) {
+                        } else if (sdc.lastRequestDate.isBefore(removeDate) && sdc.touchDate.isBefore(removeDate)) {
                             removeKeys.add(key);
                         }
                     } else {
@@ -577,13 +576,6 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         } catch (SQLException ex) {
             //java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
             logger.error("Error updatating Session Records ", ex);
-//            if ( con!=null) {
-//                try {
-//                    con.rollback();
-//                } catch (SQLException ex1) {
-//                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex1);
-//                }
-//            }
         } finally {
             if (pstmt != null) {
                 try {
@@ -592,13 +584,6 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                     java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-//            if ( con!=null) {
-//                try {
-//                    con.close();
-//                } catch (SQLException ex) {
-//                    java.util.logging.Logger.getLogger(ForeignKeyStore.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
 //
         }
 
@@ -610,8 +595,6 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         BeanBag beanBag = new BeanBag();
         List sdl = new ArrayList<SessionDataBean>();
 
-        //for(String sNext:htCounterClass.keySet()) {
-        //    CounterClass cc = (CounterClass) htCounterClass.get(sNext);
         for (Map.Entry<String, CounterClass> entry : htCounterClass.entrySet()) {
             CounterClass cc = entry.getValue();
             String sNext = entry.getKey();
@@ -731,21 +714,11 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                 sse.printStackTrace();
             }
         } finally {
-//            if (con != null) {
-//                try {
-//                    //					con.commit();
-//                    con.close();
-//                } catch (Throwable t) {
-//                    logger.error("exception trying to close a connection", t);
-//                    //TODO Logger
-//                }
-//            }
         }
     }
 
     private void updateSessionRecordWithConnection(Connection con, PreparedStatement pstmt, SessionDataClass sdc) throws SQLException {
-        long duration = sdc.lastRequestDate.getTime() - sdc.firstRequestDate.getTime();
-        //PreparedStatement pstmt = con.prepareStatement(UPDATE_SESSIONS);
+        long duration = sdc.lastRequestDate.getMillis() - sdc.firstRequestDate.getMillis();
         pstmt.setString(1, sdc.IPAddress);
         if (sdc != null && sdc.browserType != null && sdc.browserType.length() > 254) {
             pstmt.setString(2, sdc.browserType.substring(0, 254));
@@ -755,8 +728,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         }
         pstmt.setInt(3, sdc.User_ID);
         pstmt.setInt(4, sdc.Context_ID);
-        pstmt.setTimestamp(5, new Timestamp(sdc.firstRequestDate.getTime()));
-        pstmt.setTimestamp(6, new Timestamp(sdc.lastRequestDate.getTime()));
+        pstmt.setTimestamp(5, new Timestamp(sdc.firstRequestDate.getMillis()));
+        pstmt.setTimestamp(6, new Timestamp(sdc.lastRequestDate.getMillis()));
         pstmt.setInt(7, sdc.touchCount);
         pstmt.setInt(8, (int) duration);
         pstmt.setInt(9, sdc.sessionID);
@@ -790,9 +763,9 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         sdc.sessionTXT = "TEST INSERT";
         sdc.sessionID = 1;
         sdc.touchCount = 0;
-        sdc.firstRequestDate = new java.util.Date();
-        sdc.lastRequestDate = new java.util.Date();
-        sdc.touchDate = new java.util.Date();
+        sdc.firstRequestDate = new DateTime();
+        sdc.lastRequestDate = new DateTime();
+        sdc.touchDate = new DateTime();
         sdc.IPAddress = "42.42.42.42";
         sdc.browserType = "NONE";
         sdc.User_ID = 1;
@@ -809,9 +782,9 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                         + ":"
                         + sdc.Context_ID
                         + ":"
-                        + sdfMySQLTimestamp.print(sdc.firstRequestDate.getTime())
+                        + sdfMySQLTimestamp.print(sdc.firstRequestDate)
                         + ":"
-                        + sdfMySQLTimestamp.print(sdc.lastRequestDate.getTime())
+                        + sdfMySQLTimestamp.print(sdc.lastRequestDate)
                         + ":"
                         + sdc.touchCount
                         + ":"
@@ -826,8 +799,8 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
 
         public String queryParam;
         public int queryParamID;
-        public Date entryDate;
-        public Date lastTouchDate;
+        public DateTime entryDate;
+        public DateTime lastTouchDate;
         public int touchCount;
     }
 
@@ -881,9 +854,9 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
         public String sessionTXT;
         public int sessionID;
         public int touchCount;
-        public java.util.Date firstRequestDate;
-        public java.util.Date lastRequestDate;
-        public java.util.Date touchDate;
+        public DateTime firstRequestDate;
+        public DateTime lastRequestDate;
+        public DateTime touchDate;
         public String IPAddress;
         public String browserType;
         public int User_ID;
