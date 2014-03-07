@@ -548,7 +548,6 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
                     Object o = tm.remove(key);
                     if (o instanceof SessionDataClass) {
                         if (rone == false) {
-                            //logger.warn("all persistableObjects.add "+removeKeys.size());
                         }
                         allPersistableObjects.add((SessionDataClass) o);
                     }
@@ -563,9 +562,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             for (SessionDataClass sdc : allPersistableObjects) {
                 if (tone == false) {
                     tone = true;
-                    //logger.warn("about to updateSessionRecord "+allPersistableObjects.size());
                 }
-                //updateSessionRecord(sdc);
                 updateSessionRecordWithConnection(con, pstmt, sdc);
                 batchCount++;
             }
@@ -600,7 +597,7 @@ public class ForeignKeyStore extends TimerTask implements Serializable {
             String sNext = entry.getKey();
 
             SessionDataBean sessionBean = new SessionDataBean();
-            sessionBean.setCurrentTime(new java.util.Date());
+            sessionBean.setCurrentTime(new DateTime().toDate());
             sessionBean.setOneMinSessions(cc.oneMin);
             sessionBean.setFiveMinSessions(cc.fiveMin);
             sessionBean.setTenMinSessions(cc.tenMin);
