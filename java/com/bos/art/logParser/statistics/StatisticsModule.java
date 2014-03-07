@@ -6,7 +6,6 @@
  */
 package com.bos.art.logParser.statistics;
 
-import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
 import com.bos.art.logParser.broadcast.beans.AccessRecordsMinuteBean;
 import com.bos.art.logParser.broadcast.beans.ExternalAccessRecordsMinuteBean;
 import com.bos.art.logParser.broadcast.beans.TransferBean;
@@ -21,6 +20,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.bos.art.logServer.utils.TimeIntervalConstants.*;
 
@@ -45,14 +45,14 @@ public class StatisticsModule extends TimerTask implements Serializable {
 
     // made this a copyonwritearraylist, so we don't have to sync, and it's not added to
     // frequently so we don't need to worry about the overhead
-    private CopyOnWriteArrayList statUnits;
+    private CopyOnWriteArrayList<StatisticsUnit> statUnits;
     private Scheduler timer;
     private Scheduler timerClean;
     transient private DateTimeFormatter fdf = DateTimeFormat.forPattern("yyyy-MM/dd HH:mm:ss");
     private int FOUR_HOURS_OF_DATA = 4;
 
     private StatisticsModule() {
-        statUnits = new CopyOnWriteArrayList();
+        statUnits = new CopyOnWriteArrayList<StatisticsUnit>();
         timer = Scheduler.getInstance("timer", Thread.NORM_PRIORITY);
         timerClean = Scheduler.getInstance("cleaner", Thread.NORM_PRIORITY);
 //		        
@@ -135,14 +135,12 @@ public class StatisticsModule extends TimerTask implements Serializable {
     }
 
     public String getAllStatistics() {
-        Iterator iter = iterator();
         StringBuilder sb = new StringBuilder();
         sb.append("\n\n");
         Date now = new java.util.Date();
         sb.append("STATISTICS RUN TIME  ").append(fdf.print(now.getTime()));
-        while (iter.hasNext()) {
-            sb.append("\n\n");
-            StatisticsUnit su = (StatisticsUnit) iter.next();
+        sb.append("\n\n");
+        for (StatisticsUnit su : statUnits) {
             sb.append(su.toString());
         }
         return sb.toString();
