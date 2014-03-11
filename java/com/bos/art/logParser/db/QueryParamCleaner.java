@@ -53,10 +53,10 @@ public class QueryParamCleaner extends Thread {
                 for (String key : tm.keySet()) {
                     if ( tm.get(key) instanceof ForeignKeyStore.QueryParamClass) {
                         ForeignKeyStore.QueryParamClass qpc = tm.get(key);
-                        if (qpc.touchCount < 50 && qpc.lastTouchDate.getTime() < timeCheck) {
+                        if (qpc.touchCount < 50 && qpc.lastTouchDate.getMillis() < timeCheck) {
                             tm.remove(key);
                             ++removed;
-                        } else if (qpc.lastTouchDate.getTime() < timeCheck24) {
+                        } else if (qpc.lastTouchDate.getMillis() < timeCheck24) {
                             tm.remove(key);
                             ++removed24;
                         }
