@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="org.logparser:website (exploded)">
+    <output-path>$PROJECT_DIR$/build/classes/artifacts/org_logparser_website__exploded_</output-path>
+    <root id="root">
+      <element id="javaee-facet-resources" facet="website/web/Web Gradle" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="website" />
+        </element>
+      </element>
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/build/classes/artifacts/org_logparser_website__exploded_/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>

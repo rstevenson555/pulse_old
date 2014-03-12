@@ -1,0 +1,44 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-collections.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-common-as400.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/joda-time-2.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-lang3-3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-common-logging.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/hibernate2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/jsoup-1.7.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/axis.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/jfreechart-1.0.14.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-axis-transport.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-gateway-client.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/jgroups.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-common-arch.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/dom4j.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-digester.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-logging.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/jcommon-1.0.17.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/concurrent.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/jta.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-caching-apis.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-dbcp.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-beanutils.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-caching-impl.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-discovery.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-lang.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-common-utilities.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/struts.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-codec-1.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/ehcache.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/log4j.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/bos-common-db.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/cache.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/odmg-3.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/cglib2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/servlet-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/website/lib/commons-pool.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
