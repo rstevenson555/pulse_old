@@ -28,11 +28,12 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
     transient private AccessRecordsForeignKeys foreignKeys;
     transient private PersistanceStrategy pStrat;
     private static boolean base64Encoded = true; // default to true
+
     static {
-        if (System.getProperty("base64Encoded")!=null)
+        if (System.getProperty("base64Encoded") != null)
             base64Encoded = Boolean.parseBoolean(System.getProperty("base64Encoded"));
     }
-    
+
     public String getBrowser() {
         return null;
     }
@@ -77,7 +78,7 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
         if (StringUtils.isEmpty(pageName)) {
             this.encodedPage = encodedPage;
         } else {
-            if ( base64Encoded)
+            if (base64Encoded)
                 this.encodedPage = new String(Base64.decodeFast(encodedPage));
             else
                 this.encodedPage = encodedPage;
@@ -162,8 +163,6 @@ public class PageRecordEvent extends UserRequestEventDesc implements ILiveLogPar
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
-
-
 
 
     public AccessRecordsForeignKeys obtainForeignKeys() {
