@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="logparser_b2b:jar">
-    <output-path>$PROJECT_DIR$/build/classes/artifacts/logparser_b2b_jar</output-path>
-    <root id="archive" name="logparser_b2b.jar">
-      <element id="module-output" name="logparser_b2b" />
-    </root>
-  </artifact>
-</component>
