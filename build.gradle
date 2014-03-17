@@ -32,7 +32,7 @@ allprojects {
     }
 }
 
-project(':pulse-engine') {
+//project(':pulse-engine') {
     apply plugin: 'java'
 // In this section you declare the dependencies for your production and test code
     dependencies {
@@ -82,6 +82,6 @@ project(':pulse-engine') {
         from sourceSets.main.output
     }
 
-}
+//}
 
 
