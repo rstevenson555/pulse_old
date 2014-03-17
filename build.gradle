@@ -80,8 +80,18 @@ allprojects {
         println "in fooJar"
         baseName = "LiveLogParser"
         from sourceSets.main.output
+        include "**/main/com/bos/*"
     }
 
+    task obfuscate(dependsOn: classes) << {
+    javaexec { // as per
+        http://mrhaki.blogspot.com/2010/09/gradle-goodness-run-java-application.html
+        main = 'ZKM'
+        classpath = configurations.zkm + sourceSets.main.runtimeClasspath
+        args "$projectDir/script.txt"
+        jvmArgs "-DSaveAllDir=$buildDir/obfuscated-classes-extra"
+    }
+}
 //}
 
 
