@@ -8,7 +8,9 @@
  */
 
 // Apply the java plugin to add support for Java
+apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'eclipse'
 
 buildscript {
 // In this section you declare where to find the dependencies of your project
@@ -32,66 +34,58 @@ allprojects {
     }
 }
 
-//project(':pulse-engine') {
-    apply plugin: 'java'
 // In this section you declare the dependencies for your production and test code
-    dependencies {
-        // The production code uses the SLF4J logging API at compile time
-        compile 'org.jsoup:jsoup:1.7.2'
-        compile 'joda-time:joda-time:2.1'
-        compile 'org.yaml:snakeyaml:1.10'
-        compile 'org.apache.commons:commons-lang3:3.2.1'
-        compile 'commons-logging:commons-logging:1.1.1'
-        compile 'log4j:log4j:1.2.17'
-        compile 'commons-pool:commons-pool:1.6'
-        compile 'commons-digester:commons-digester:1.8'
-        compile 'commons-collections:commons-collections:3.2.1'
-        compile 'commons-codec:commons-codec:1.4'
-        compile 'org.postgresql:postgresql:9.3-1100-jdbc4'
-        compile 'concurrent:concurrent:1.3.4'
-        compile 'com.lmax:disruptor:3.2.0'
-        compile 'commons-beanutils:commons-beanutils:1.8.0'
-        compile 'javax.activation:activation:1.1'
-        compile 'javax.mail:mail:1.4'
-        compile 'apache-oro:jakarta-oro:2.0.8'
-        compile 'commons-dbcp:commons-dbcp:1.4'
+dependencies {
+    // The production code uses the SLF4J logging API at compile time
+    compile 'org.jsoup:jsoup:1.7.2'
+    compile 'joda-time:joda-time:2.1'
+    compile 'org.yaml:snakeyaml:1.10'
+    compile 'org.apache.commons:commons-lang3:3.2.1'
+    compile 'commons-logging:commons-logging:1.1.1'
+    compile 'log4j:log4j:1.2.17'
+    compile 'commons-pool:commons-pool:1.6'
+    compile 'commons-digester:commons-digester:1.8'
+    compile 'commons-collections:commons-collections:3.2.1'
+    compile 'commons-codec:commons-codec:1.4'
+    compile 'org.postgresql:postgresql:9.3-1100-jdbc4'
+    compile 'concurrent:concurrent:1.3.4'
+    compile 'com.lmax:disruptor:3.2.0'
+    compile 'commons-beanutils:commons-beanutils:1.8.0'
+    compile 'javax.activation:activation:1.1'
+    compile 'javax.mail:mail:1.4'
+    compile 'apache-oro:jakarta-oro:2.0.8'
+    compile 'commons-dbcp:commons-dbcp:1.4'
 
-        compile files('jars/coloradoER.jar', 'jars/jgroups.jar', 'jars/trull.jar', 'jars/mygraph.jar', 'jars/bos-common-utilities.jar', 'jars/cache.jar')
-        compile files('jars/ojdbc5.jar')
+    compile files('jars/coloradoER.jar', 'jars/jgroups.jar', 'jars/trull.jar', 'jars/mygraph.jar', 'jars/bos-common-utilities.jar', 'jars/cache.jar')
+    compile files('jars/ojdbc5.jar')
 
-        // Declare the dependency for your favourite test framework you want to use in your tests.
-        // TestNG is also supported by the Gradle Test task. Just change the
-        // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
-        // 'test.useTestNG()' to your build script.
-        testCompile "junit:junit:4.11"
-    }
+    // Declare the dependency for your favourite test framework you want to use in your tests.
+    // TestNG is also supported by the Gradle Test task. Just change the
+    // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
+    // 'test.useTestNG()' to your build script.
+    testCompile "junit:junit:4.11"
+}
 
-    sourceSets {
-        main {
-            java {
-                srcDir 'java/'
-            }
-            resources {
-                //srcDir 'src/resources'
-            }
+task buildLiveLogParserJar(type: Jar) {
+    println "in buildLiveLogParserJar; "
+    baseName = "LiveLogParser"
+    from sourceSets.main.output
+}
+
+jar.doLast {
+    buildLiveLogParserJar.execute()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'java/'
+        }
+        resources {
+            //srcDir 'src/resources'
         }
     }
-    task fooJar(type: Jar) {
-        println "in fooJar"
-        baseName = "LiveLogParser"
-        from sourceSets.main.output
-        include "**/main/com/bos/*"
-    }
-
-    task obfuscate(dependsOn: classes) << {
-    javaexec { // as per
-        http://mrhaki.blogspot.com/2010/09/gradle-goodness-run-java-application.html
-        main = 'ZKM'
-        classpath = configurations.zkm + sourceSets.main.runtimeClasspath
-        args "$projectDir/script.txt"
-        jvmArgs "-DSaveAllDir=$buildDir/obfuscated-classes-extra"
-    }
 }
-//}
+
 
 

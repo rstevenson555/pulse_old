@@ -11,5 +11,5 @@
 
 
 rootProject.name = 'pulse'
-include "pulse-engine","website"
+include "website"
 

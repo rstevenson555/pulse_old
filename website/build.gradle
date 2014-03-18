@@ -10,6 +10,7 @@ dependencies {
     compile 'joda-time:joda-time:2.1'
     compile 'org.yaml:snakeyaml:1.10'
     compile 'org.apache.commons:commons-lang3:3.2.1'
+    compile 'commons-lang:commons-lang:2.0'
     compile 'commons-logging:commons-logging:1.1.1'
     compile 'log4j:log4j:1.2.17'
     compile 'commons-pool:commons-pool:1.6'
@@ -29,23 +30,21 @@ dependencies {
     compile 'org.jfree:jcommon:1.0.17'
     compile 'hibernate:hibernate:2.1.7c'
 
-    compile files('lib/bos-common-arch.jar', 'lib/bos-common-as400.jar', 'lib/bos-common-db.jar')
-    compile files('lib/jgroups.jar')
-    compile files('lib/ojdbc5.jar', 'lib/bos-common-utilities.jar', 'lib/bos-common-logging.jar', 'lib/cache.jar');
-    compile files('lib/struts.jar', 'lib/commons-lang.jar', 'lib/jaws.jar', 'lib/axis.jar')
+    compile files('lib/bos-common-arch.jar')
+    compile files('lib/ojdbc5.jar','lib/jgroups.jar')
+    compile files('lib/bos-common-utilities.jar', 'lib/bos-common-logging.jar', 'lib/cache.jar');
+    compile files('lib/struts.jar', 'lib/jaws.jar', 'lib/axis.jar')
 
-    //compile project(':pulse-engine').sourceSets.compile.output
-    //println configurations['pulse-engine']
-    compile files('C:\\apps\\logparser_b2b\\build\\libs\\LiveLogParser.jar')
+    //println "$parent.project.buildDir/libs/LiveLogParser.jar"
+    compile files("$parent.project.buildDir/libs/LiveLogParser.jar")
 
-    //compile files('../build/libs/LiveLogParser.jar')
+    println "$parent.project.buildDir"
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the
     // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
     // 'test.useTestNG()' to your build script.
     testCompile "junit:junit:4.11"
 }
-
 
 sourceSets {
     main {
