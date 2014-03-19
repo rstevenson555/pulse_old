@@ -72,8 +72,16 @@ task buildLiveLogParserJar(type: Jar) {
     from sourceSets.main.output
 }
 
+task buildLiveLogParserBeansJar(type: Jar) {
+    println "in buildLiveLogParserBeansJar; "
+    baseName = "LiveLogParserBeans"
+    include("com/bos/art/logParser/broadcast/beans/**")
+    from sourceSets.main.output
+}
+
 jar.doLast {
     buildLiveLogParserJar.execute()
+    buildLiveLogParserBeansJar.execute()
 }
 
 sourceSets {
